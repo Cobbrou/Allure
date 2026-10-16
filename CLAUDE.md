@@ -57,7 +57,8 @@ src/
   theme.js          shared JS constants (accent color, map style URL)
   pages/            one component per route (Feed, Activity, Record, Profile)
   components/       reusable React components, one per file, default export
-  lib/              pure logic (analyze, sports, format…) + platform modules (db, gpx, story)
+  lib/              pure logic (analyze, records, stats, sports, format…)
+                    + platform modules (db, share, story, importer, formats/)
   styles/global.css design tokens (CSS vars) + all styles
 tests/              node:test files for src/lib
 docs/               ROADMAP, ARCHITECTURE, DECISIONS
@@ -70,10 +71,10 @@ Details and data model: `docs/ARCHITECTURE.md`.
 - **Commits**: Conventional Commits, in English, imperative mood
   (`feat: add activity history`, `fix(map): load maplibre worker under vite`).
 - Keep domain logic in `src/lib/` as pure functions (no React). Browser APIs
-  (`DOMParser`, canvas, IndexedDB) are allowed only in platform modules (`gpx.js`,
-  `story.js`, `db.js`).
+  (`DOMParser`, canvas, IndexedDB, Web Share) are allowed only in platform modules
+  (`formats/`, `story.js`, `db.js`, `share.js`).
 - Storage goes through `lib/db.js` only. Changing the IndexedDB schema means bumping
-  `VERSION` with a migration.
+  `VERSION` and adding an entry to `MIGRATIONS` in `db.js`.
 - No blocking dialogs (`alert`/`confirm`): use `ConfirmButton` or inline UI.
 - Every non-trivial `src/lib` function gets a test in `tests/`. Use `node:test` +
   `node:assert`: no test framework.
@@ -96,3 +97,18 @@ Details and data model: `docs/ARCHITECTURE.md`.
   two fingers zoom.
 - To check phone layout in a maximized desktop browser, load the app in a 390×844
   `<iframe>`. IndexedDB data is per origin, so it is shared with the main tab.
+- The Vite watcher occasionally misses a write done in quick succession (e.g. two
+  shell edits), and HMR then serves a stale module. If the browser shows errors for
+  code that is fixed on disk, `touch` the file or restart `npm run dev`.
+- A tab still running code from before a DB version bump keeps the old connection
+  open. The new tab's upgrade then stays blocked until that tab is reloaded or closed.
+- Browser screenshots of an iframe taller than the viewport can time out. Keep test
+  iframes at ≤ the window height and scroll inside them.
+
+## Motion
+
+- Page transitions live in `router.js` (View Transitions API) + the `Motion` section of
+  `global.css`. Detail pages slide, tabs crossfade.
+- Entrance animations use `animation-fill-mode: backwards`, never `both`/`forwards`:
+  a held final keyframe would override `:active` press transforms.
+- Every animation must be covered by the `prefers-reduced-motion` block.

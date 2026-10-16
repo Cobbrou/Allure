@@ -3,6 +3,24 @@
 Lightweight decision log. Newest first. Each entry: context, decision, consequences.
 Open questions sit at the bottom until decided.
 
+## 2026-10-16: FIT parsing with `@garmin/fitsdk`; hand-written ZIP, CSV and TCX
+
+**Context**: phase 1 imports FIT, TCX, gzip and Strava bulk archives.
+**Decision**: FIT is a complex binary profile, so use Garmin's official SDK. ZIP (stored
+and deflate), CSV and TCX each take a few dozen lines on top of platform APIs
+(`Blob.slice`, `DecompressionStream`, `DOMParser`), so no dependency for them.
+**Consequences**: one new dependency. The ZIP reader has no ZIP64, so archives over
+4 GB fail with a clear message.
+
+## 2026-10-16: Motion with the View Transitions API and CSS only
+
+**Context**: navigation felt abrupt. The app must feel native once wrapped.
+**Decision**: page transitions use `document.startViewTransition` (Chrome/Android
+WebView, Safari 18+), and the other motion is plain CSS. No animation library.
+Everything is disabled under `prefers-reduced-motion`.
+**Consequences**: older WebViews fall back to instant navigation. Edge-swipe back and
+haptics wait for the native shell.
+
 ## 2026-10-16: Allure is a mobile app; the web build is the dev surface
 
 **Context**: the product is used outdoors with a phone: recording runs needs reliable

@@ -14,19 +14,23 @@ Client-only React app with a bottom tab bar and hash routing. Activities are sto
 the device in IndexedDB. There is no backend and no account.
 
 ```
-.gpx file ─► lib/gpx.parseGpx ─► points ─┐
-demo ──────► lib/demo.demoHistory ───────┤
-                                         ▼
-                        lib/activity.createActivity ─► { meta, points } ─► lib/db (IndexedDB)
-                                                                              │
-     FeedPage ◄── listActivities() (meta only) ◄──────────────────────────────┤
-     ActivityPage ◄── getActivity(id) ─► lib/analyze.analyze(points) ─► stats, map, chart, splits
-                                                                  └─► lib/story.exportStory ─► PNG
+.gpx/.tcx/.fit(.gz) ─┐
+Strava .zip archive ─┴► lib/importer (collectTasks → parse → dedupe) ─┐
+demo ──────────────────► lib/demo.demoHistory ────────────────────────┤
+                                                                      ▼
+                     lib/activity.createActivity ─► { meta, points } ─► lib/db (IndexedDB)
+                                                                           │
+  FeedPage, ProfilePage ◄── listActivities() (meta only) ◄─────────────────┤
+  ActivityPage ◄── getActivity(id) ─► lib/analyze ─► stats, map, chart, splits, best efforts
+                                              ├─► lib/story.exportStory ─► PNG ─┐
+                                              └─► lib/formats/gpxExport ─► GPX ─┴► lib/share
 ```
 
 ## Routing
 
 `src/router.js`: hash routes, so it works in a native WebView without server rewrites.
+Route changes run inside `document.startViewTransition` (slide or fade, see
+`data-nav` in the CSS). The router also restores each route's scroll position.
 
 | Hash             | Page           |
 |------------------|----------------|
@@ -37,12 +41,21 @@ demo ──────► lib/demo.demoHistory ───────┤
 
 ## Storage (`lib/db.js`)
 
-IndexedDB database `allure`, version 1:
+IndexedDB database `allure`, version 2:
 
 - `activities` (keyPath `id`): **meta** records, small enough to list everything at once
 - `tracks` (key = activity id): raw **points** arrays, read only on the detail page
 
-Schema changes must bump `VERSION` and migrate in `onupgradeneeded`.
+Schema changes bump `VERSION` and add an entry to `MIGRATIONS`, which run in order
+inside the upgrade transaction:
+
+| Version | Migration |
+|---------|-----------|
+| 1 | create `activities` and `tracks` |
+| 2 | backfill `bestEfforts` on every meta from its track |
+
+Open connections close on `versionchange`, so a newer tab can upgrade. If an older tab
+still blocks the upgrade, `open()` rejects with a "close the other tab" message.
 
 ## Data model
 
@@ -53,22 +66,23 @@ Schema changes must bump `VERSION` and migrate in `onupgradeneeded`.
 // ActivityMeta: stored in `activities`
 {
   id, name, sport,       // sport: 'run' | 'ride' | 'hike' | 'walk' | 'swim' (lib/sports.js)
-  source,                // 'gpx' | 'demo'
+  source,                // 'gpx' (any imported file) | 'demo'
   date,                  // ms epoch (first point, or import time when no timestamps)
   distance, movingTime, avgPace, gain, avgHr,  // summary, same units as analyze()
-  preview,               // ~80 [lon, lat] pairs for feed thumbnails
+  preview,               // ≤ 81 [lon, lat] pairs for feed thumbnails
+  bestEfforts,           // { '1k': s, '5k': s, … } fastest elapsed time per distance
 }
 
 // analyze(points): computed on demand, never stored
 {
   track: Point & { dist /* cumulative m */, ele /* smoothed */ }[],
   distance, movingTime, avgPace, gain, avgHr, date,
-  splits: { dist, time, gain, loss, pace }[],  // one per km, last one partial
+  splits,                // per km; the detail page uses computeSplits(track, sport.split)
 }
 ```
 
 Units are SI everywhere (m, s, ms epoch). Display conversion happens in `lib/format.js`
-and `lib/sports.js` (`effort()` picks pace or speed by sport).
+and `lib/sports.js` (`effort()` picks km/h, min/km or min/100 m by sport).
 
 ## Algorithms
 
@@ -77,19 +91,37 @@ and `lib/sports.js` (`effort()` picks pace or speed by sport).
   device auto-pause gaps are excluded.
 - **Elevation gain**: 7-point moving average before summing positive deltas. Raw GPS
   altitude noise would inflate D+ heavily.
-- **Splits**: each segment is attributed to the km bucket where it starts. Error is under
-  one GPS sample per split. A trailing bucket under 20 m is dropped.
+- **Splits** (`computeSplits`): each segment is attributed to the split where it starts.
+  Split size comes from the sport: 1 km, 5 km for rides, 100 m for swims. A trailing
+  split under 2 % of the size is dropped.
+- **Best efforts** (`lib/records.js`): a two-pointer sliding window on cumulative
+  distance finds the fastest elapsed time over 1 km, 5 km, 10 km, half and full
+  marathon, scaled to the exact distance. Personal records = the best of all runs.
+- **Duplicates on import**: same start second and distance within 10 m (`dupKey`).
+- **Profile stats** (`lib/stats.js`): local time, weeks start on Monday.
+
+## Import (`lib/importer.js`, `lib/formats/`)
+
+- `gpx.js`, `tcx.js`: DOMParser based. TCX input is trimmed, because Strava exports
+  start with whitespace before `<?xml`.
+- `fit.js`: official `@garmin/fitsdk`. Semicircles are converted to degrees.
+- `zip.js`: reads only the central directory and the requested entries via
+  `Blob.slice`, so multi-GB Strava archives never load fully into memory. No ZIP64.
+- `.gz`: platform `DecompressionStream`.
+- Strava archive: `activities.csv` provides names and sport types, matched by `Filename`.
 
 ## UI structure
 
 ```
 src/
-  App.jsx        route switch, activity list state, GPX import, demo seeding
-  router.js      useRoute() / go()
+  App.jsx        route switch, activity list state, import (progress + summary toast), demo seeding
+  router.js      useRoute() / go(), view transitions, scroll restoration
   pages/         one component per route
   components/    reusable UI (TabBar, ActivityCard, RoutePreview, StatsGrid, TrackMap,
-                 ProfileChart, SplitsTable, ImportButton, ConfirmButton)
-  lib/           pure logic + platform modules (db, gpx, story)
+                 ProfileChart, SplitsTable, BestEfforts, ImportButton, ConfirmButton,
+                 Segmented, WeeklyChart, ActivityCalendar, RecordsList)
+  lib/           pure logic (analyze, records, stats, sports, format, activity, demo)
+                 + platform modules (db, share, story, formats/)
 ```
 
 - **Chart ↔ map sync**: `ActivityPage` owns a `hover` ref. `TrackMap` assigns
