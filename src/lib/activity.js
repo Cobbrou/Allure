@@ -34,7 +34,7 @@ export function defaultName(sport, date) {
 
 /** ~n [lon, lat] pairs for feed thumbnails. */
 export function preview(points, n = 80) {
-  const step = Math.max(1, Math.floor(points.length / n));
+  const step = Math.max(1, Math.ceil(points.length / n));
   const r = (v) => Math.round(v * 1e5) / 1e5;
   return points.filter((_, i) => i % step === 0 || i === points.length - 1).map((p) => [r(p.lon), r(p.lat)]);
 }
