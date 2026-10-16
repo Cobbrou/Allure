@@ -1,5 +1,6 @@
 import { ACCENT } from '../theme.js';
-import { fmtDuration, fmtPace } from './format.js';
+import { fmtDuration } from './format.js';
+import { effort } from './sports.js';
 
 const FONT = 'Inter, system-ui, sans-serif';
 
@@ -81,9 +82,10 @@ export async function exportStory(act) {
   g.font = `700 60px ${FONT}`;
   g.fillText('km', 84 + kmW + 20, 1480);
 
+  const e = effort(act.sport, act.avgPace);
   const stats = [
     ['TEMPS', fmtDuration(act.movingTime)],
-    ['ALLURE', act.avgPace ? `${fmtPace(act.avgPace)} /km` : '—'],
+    [e.short.toUpperCase(), act.avgPace ? `${e.value} ${e.unit}` : '—'],
     ['D+', act.gain != null ? `${Math.round(act.gain)} m` : '—'],
     ['FC MOY.', act.avgHr ? `${Math.round(act.avgHr)} bpm` : '—'],
   ];

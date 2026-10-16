@@ -13,7 +13,8 @@ export default function TrackMap({ track, hover }) {
   useEffect(() => {
     const coords = track.map((p) => [p.lon, p.lat]);
     const bounds = coords.reduce((b, c) => b.extend(c), new LngLatBounds(coords[0], coords[0]));
-    const map = new MapLibre({ container: el.current, style: MAP_STYLE, bounds, fitBoundsOptions: { padding: 50 } });
+    // cooperativeGestures: one finger scrolls the page, two fingers move the map (ctrl+wheel on desktop).
+    const map = new MapLibre({ container: el.current, style: MAP_STYLE, bounds, fitBoundsOptions: { padding: 40 }, cooperativeGestures: true });
 
     map.on('load', () => {
       map.addSource('route', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } } });

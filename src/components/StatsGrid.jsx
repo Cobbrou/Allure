@@ -1,10 +1,12 @@
-import { fmtDuration, fmtPace } from '../lib/format.js';
+import { fmtDuration } from '../lib/format.js';
+import { effort } from '../lib/sports.js';
 
 export default function StatsGrid({ act }) {
+  const e = effort(act.sport, act.avgPace);
   const items = [
     ['Distance', (act.distance / 1000).toFixed(2), 'km'],
     ['Temps en mouvement', fmtDuration(act.movingTime), ''],
-    ['Allure moyenne', fmtPace(act.avgPace), act.avgPace ? '/km' : ''],
+    [e.label, e.value, act.avgPace ? e.unit : ''],
     ['Dénivelé positif', act.gain != null ? Math.round(act.gain) : '—', act.gain != null ? 'm' : ''],
     ['FC moyenne', act.avgHr ? Math.round(act.avgHr) : '—', act.avgHr ? 'bpm' : ''],
   ];

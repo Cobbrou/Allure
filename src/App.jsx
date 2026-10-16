@@ -1,83 +1,64 @@
-import { useRef, useState } from 'react';
-import Dropzone from './components/Dropzone.jsx';
-import ProfileChart from './components/ProfileChart.jsx';
-import SplitsTable from './components/SplitsTable.jsx';
-import StatsGrid from './components/StatsGrid.jsx';
-import TrackMap from './components/TrackMap.jsx';
-import { analyze } from './lib/analyze.js';
-import { demoTrack } from './lib/demo.js';
+import { useCallback, useEffect, useState } from 'react';
+import TabBar from './components/TabBar.jsx';
+import { createActivity } from './lib/activity.js';
+import { listActivities, saveActivities } from './lib/db.js';
+import { demoHistory } from './lib/demo.js';
 import { parseGpx } from './lib/gpx.js';
-import { exportStory } from './lib/story.js';
+import { go, useRoute } from './router.js';
+import { sportFromGpxType } from './lib/sports.js';
+import ActivityPage from './pages/ActivityPage.jsx';
+import FeedPage from './pages/FeedPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import RecordPage from './pages/RecordPage.jsx';
 
 export default function App() {
-  const [act, setAct] = useState(null);
+  const [page, id] = useRoute();
+  const [activities, setActivities] = useState(null);
   const [error, setError] = useState('');
   const [dragging, setDragging] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const hover = useRef(() => {});
 
-  const load = (name, points) => {
-    setError('');
-    setAct({ name: name || 'Course', ...analyze(points) });
-  };
-  const loadDemo = () => load('Boucle de Chamonix', demoTrack());
+  const reload = useCallback(
+    () => listActivities().then(setActivities, (e) => setError(`Stockage indisponible : ${e.message}`)),
+    [],
+  );
+  useEffect(() => { reload(); }, [reload]);
 
-  const openFile = async (file) => {
+  const importFile = async (file) => {
     if (!file) return;
+    setError('');
     if (!/\.gpx$/i.test(file.name)) return setError('Format non supporté : choisis un fichier .gpx');
     try {
-      const { name, points } = parseGpx(await file.text());
-      load(name || file.name.replace(/\.gpx$/i, ''), points);
+      const { name, type, points } = parseGpx(await file.text());
+      const item = createActivity({ name, sport: sportFromGpxType(type), points });
+      await saveActivities([item]);
+      await reload();
+      go(`/activity/${item.meta.id}`);
     } catch (e) {
       setError(e.message);
     }
   };
 
-  const story = async () => {
-    setExporting(true);
-    try { await exportStory(act); } finally { setExporting(false); }
+  const addDemo = async () => {
+    await saveActivities(demoHistory().map((h) => createActivity({ ...h, source: 'demo' })));
+    await reload();
   };
+
+  let content;
+  if (page === 'activity') content = <ActivityPage id={id} onChange={reload} />;
+  else if (page === 'record') content = <RecordPage />;
+  else if (page === 'profile') content = <ProfilePage activities={activities} onDemo={addDemo} onChange={reload} />;
+  else content = <FeedPage activities={activities} onImport={importFile} onDemo={addDemo} />;
 
   return (
     <div
       className={`app ${dragging ? 'dragging' : ''}`}
       onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
       onDragLeave={(e) => e.currentTarget === e.target && setDragging(false)}
-      onDrop={(e) => { e.preventDefault(); setDragging(false); openFile(e.dataTransfer.files[0]); }}
+      onDrop={(e) => { e.preventDefault(); setDragging(false); importFile(e.dataTransfer.files[0]); }}
     >
-      <header>
-        <div className="logo"><span>▲</span> Allure</div>
-        <div className="actions">
-          <button className="ghost" onClick={loadDemo}>Charger une course de démo</button>
-          <label className="ghost button">
-            Importer .gpx
-            <input type="file" accept=".gpx" hidden onChange={(e) => { openFile(e.target.files[0]); e.target.value = ''; }} />
-          </label>
-          {act && <button onClick={story} disabled={exporting}>{exporting ? 'Génération…' : 'Exporter la Story'}</button>}
-        </div>
-      </header>
-
-      {error && <div className="error" role="alert">{error}</div>}
-
-      {!act ? (
-        <Dropzone onFile={openFile} onDemo={loadDemo} />
-      ) : (
-        <main>
-          <div className="title">
-            <h1>{act.name}</h1>
-            {act.date && <p>{new Date(act.date).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short' })}</p>}
-          </div>
-          <StatsGrid act={act} />
-          <section className="card map-card">
-            <TrackMap track={act.track} hover={hover} />
-          </section>
-          <section className="card">
-            <h3>Profil <span className="legend ele">Altitude</span> <span className="legend hr">Cardio</span></h3>
-            <ProfileChart track={act.track} hover={hover} />
-          </section>
-          <SplitsTable splits={act.splits} />
-        </main>
-      )}
+      {error && <div className="error" role="alert" onClick={() => setError('')}>{error}</div>}
+      {content}
+      <TabBar active={page === 'activity' ? '' : page} />
     </div>
   );
 }

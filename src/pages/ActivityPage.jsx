@@ -1,0 +1,115 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { fmtDate } from '../components/ActivityCard.jsx';
+import ConfirmButton from '../components/ConfirmButton.jsx';
+import ProfileChart from '../components/ProfileChart.jsx';
+import SplitsTable from '../components/SplitsTable.jsx';
+import StatsGrid from '../components/StatsGrid.jsx';
+import TrackMap from '../components/TrackMap.jsx';
+import { analyze } from '../lib/analyze.js';
+import { deleteActivities, getActivity, updateActivity } from '../lib/db.js';
+import { SPORTS } from '../lib/sports.js';
+import { exportStory } from '../lib/story.js';
+import { go } from '../router.js';
+
+export default function ActivityPage({ id, onChange }) {
+  const [data, setData] = useState(); // undefined: loading, null: not found
+  const [editing, setEditing] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const hover = useRef(() => {});
+
+  useEffect(() => {
+    getActivity(id).then((d) => setData(d ?? null), () => setData(null));
+  }, [id]);
+  // Keyed on points only, so renaming doesn't rebuild the map and chart.
+  const analysis = useMemo(() => data && analyze(data.points), [data?.points]);
+
+  if (data === undefined) return <TopBar />;
+  if (data === null) return (<><TopBar /><p className="empty">Activité introuvable.</p></>);
+
+  const act = { ...analysis, ...data.meta };
+
+  const save = async (patch) => {
+    const meta = { ...data.meta, ...patch };
+    await updateActivity(meta);
+    setData({ ...data, meta });
+    setEditing(false);
+    onChange();
+  };
+  const remove = async () => {
+    await deleteActivities([id]);
+    await onChange();
+    go('/');
+  };
+  const story = async () => {
+    setExporting(true);
+    try { await exportStory(act); } finally { setExporting(false); }
+  };
+
+  return (
+    <>
+      <TopBar>
+        <button className="ghost small" onClick={() => setEditing(!editing)}>{editing ? 'Fermer' : 'Modifier'}</button>
+        <button className="small" onClick={story} disabled={exporting}>{exporting ? '…' : 'Story'}</button>
+      </TopBar>
+      <main className="detail">
+        {editing ? (
+          <EditForm meta={data.meta} onSave={save} onDelete={remove} />
+        ) : (
+          <div className="title">
+            <span className="sport-icon">{SPORTS[act.sport]?.icon}</span>
+            <div>
+              <h1>{act.name}</h1>
+              <p>{SPORTS[act.sport]?.label} · {fmtDate(act.date)}</p>
+            </div>
+          </div>
+        )}
+        <StatsGrid act={act} />
+        <section className="card map-card">
+          <TrackMap track={act.track} hover={hover} />
+        </section>
+        <section className="card">
+          <h3>Profil <span className="legend ele">Altitude</span> <span className="legend hr">Cardio</span></h3>
+          <ProfileChart track={act.track} hover={hover} />
+        </section>
+        <SplitsTable splits={act.splits} sport={act.sport} />
+      </main>
+    </>
+  );
+}
+
+function TopBar({ children }) {
+  return (
+    <header className="topbar">
+      <a className="back" href="#/" aria-label="Retour aux activités">‹</a>
+      <div className="actions">{children}</div>
+    </header>
+  );
+}
+
+function EditForm({ meta, onSave, onDelete }) {
+  const [name, setName] = useState(meta.name);
+  const [sport, setSport] = useState(meta.sport);
+  return (
+    <form className="card edit" onSubmit={(e) => { e.preventDefault(); onSave({ name: name.trim() || meta.name, sport }); }}>
+      <label>
+        Titre
+        <input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
+      </label>
+      <fieldset>
+        <legend>Sport</legend>
+        <div className="sport-picker">
+          {Object.entries(SPORTS).map(([sid, s]) => (
+            <label key={sid} className={sid === sport ? 'selected' : ''}>
+              <input type="radio" name="sport" value={sid} checked={sid === sport} onChange={() => setSport(sid)} />
+              <span>{s.icon}</span>{s.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <div className="edit-actions">
+        <ConfirmButton onConfirm={onDelete} confirmLabel="Confirmer">Supprimer</ConfirmButton>
+        <button type="submit">Enregistrer</button>
+      </div>
+    </form>
+  );
+}
