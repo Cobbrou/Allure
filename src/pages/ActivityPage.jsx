@@ -5,7 +5,7 @@ import ProfileChart from '../components/ProfileChart.jsx';
 import SplitsTable from '../components/SplitsTable.jsx';
 import StatsGrid from '../components/StatsGrid.jsx';
 import TrackMap from '../components/TrackMap.jsx';
-import { analyze } from '../lib/analyze.js';
+import { analyze, computeSplits } from '../lib/analyze.js';
 import { deleteActivities, getActivity, updateActivity } from '../lib/db.js';
 import { SPORTS } from '../lib/sports.js';
 import { exportStory } from '../lib/story.js';
@@ -22,6 +22,8 @@ export default function ActivityPage({ id, onChange }) {
   }, [id]);
   // Keyed on points only, so renaming doesn't rebuild the map and chart.
   const analysis = useMemo(() => data && analyze(data.points), [data?.points]);
+  const splitSize = SPORTS[data?.meta.sport]?.split ?? 1000;
+  const splits = useMemo(() => analysis && computeSplits(analysis.track, splitSize), [analysis, splitSize]);
 
   if (data === undefined) return (<><TopBar /><DetailSkeleton /></>);
   if (data === null) return (<><TopBar /><p className="empty">Activité introuvable.</p></>);
@@ -71,7 +73,7 @@ export default function ActivityPage({ id, onChange }) {
           <h3>Profil <span className="legend ele">Altitude</span> <span className="legend hr">Cardio</span></h3>
           <ProfileChart track={act.track} hover={hover} />
         </section>
-        <SplitsTable splits={act.splits} sport={act.sport} />
+        <SplitsTable splits={splits} sport={act.sport} size={splitSize} />
       </main>
     </>
   );

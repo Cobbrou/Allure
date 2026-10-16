@@ -34,5 +34,6 @@ test('sport helpers', () => {
   assert.equal(sportFromGpxType(), 'run');
   assert.deepEqual(effort('ride', 120), { label: 'Vitesse moyenne', short: 'Vitesse', value: '30.0', unit: 'km/h' });
   assert.equal(effort('run', 300).value, '5:00');
+  assert.deepEqual([effort('swim', 1200).value, effort('swim', 1200).unit], ['2:00', '/100m']);
   assert.equal(defaultName('run', new Date(2026, 0, 1, 8).getTime()), 'Course du matin');
 });

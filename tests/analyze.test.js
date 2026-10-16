@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { analyze } from '../src/lib/analyze.js';
+import { analyze, computeSplits } from '../src/lib/analyze.js';
 import { demoTrack } from '../src/lib/demo.js';
 import { fmtDuration, fmtPace } from '../src/lib/format.js';
 
@@ -25,4 +25,12 @@ test('formatters', () => {
   assert.equal(fmtDuration(3723), '1:02:03');
   assert.equal(fmtDuration(332), '5:32');
   assert.equal(fmtPace(299.6), '5:00');
+});
+
+test('computeSplits supports custom split sizes', () => {
+  const a = analyze(demoTrack());
+  const five = computeSplits(a.track, 5000);
+  assert.equal(five.length, 2);
+  assert.ok(Math.abs(five.reduce((s, x) => s + x.time, 0) - a.movingTime) < 1);
+  assert.equal(computeSplits(a.track, 100).length, 100);
 });
