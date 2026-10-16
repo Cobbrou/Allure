@@ -22,18 +22,20 @@ Phases are ordered by dependency: each one unlocks the next.
 
 ## Phase 1: Mobile UI & history (local-first)
 
-- [ ] Mobile-first layout of the existing screens (phone portrait, safe areas, touch
+- [x] Mobile-first layout of the existing screens (phone portrait, safe areas, touch
       scrubbing on the chart)
-- [ ] App shell with bottom tab bar (Feed · Record · Profile)
-- [ ] Persist activities in IndexedDB
-- [ ] Activity list / personal feed, activity detail page (routing)
-- [ ] Rename, delete, set sport type (run, ride, hike, walk, swim)
+- [x] App shell with bottom tab bar (Feed · Record · Profile)
+- [x] Persist activities in IndexedDB
+- [x] Activity list / personal feed, activity detail page (routing)
+- [x] Rename, delete, set sport type (run, ride, hike, walk, swim)
+- [x] Demo history generator (20 activities over 60 days) for testing
 - [ ] Bulk import (several GPX files, Strava bulk export archive)
 - [ ] TCX and FIT import
 - [ ] GPX export
 - [ ] Profile dashboard: weekly/monthly/yearly totals, activity calendar
 - [ ] Personal records: best 1 km / 5 km / 10 km / half / marathon
-- [ ] Sport-aware stats (speed in km/h for rides, pace for runs)
+- [x] Sport-aware stats (speed in km/h for rides, pace for runs)
+- [ ] Swim pace per 100 m, ride splits per 5 km
 
 ## Phase 2: Native app & live recording
 

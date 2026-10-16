@@ -52,10 +52,12 @@ No native shell yet: the app runs in the browser during development.
 ```
 src/
   main.jsx          entry point
-  App.jsx           top-level state (current activity, import, story export)
+  App.jsx           route switch, activity list, GPX import, demo seeding
+  router.js         hash routing: useRoute() / go()
   theme.js          shared JS constants (accent color, map style URL)
-  components/       React components, one per file, default export
-  lib/              pure logic: parsing, analysis, formatting, export
+  pages/            one component per route (Feed, Activity, Record, Profile)
+  components/       reusable React components, one per file, default export
+  lib/              pure logic (analyze, sports, format…) + platform modules (db, gpx, story)
   styles/global.css design tokens (CSS vars) + all styles
 tests/              node:test files for src/lib
 docs/               ROADMAP, ARCHITECTURE, DECISIONS
@@ -67,8 +69,12 @@ Details and data model: `docs/ARCHITECTURE.md`.
 
 - **Commits**: Conventional Commits, in English, imperative mood
   (`feat: add activity history`, `fix(map): load maplibre worker under vite`).
-- Keep domain logic in `src/lib/` as pure functions (no React). DOM-only APIs
-  (`DOMParser`, canvas) are allowed only where unavoidable (`gpx.js`, `story.js`).
+- Keep domain logic in `src/lib/` as pure functions (no React). Browser APIs
+  (`DOMParser`, canvas, IndexedDB) are allowed only in platform modules (`gpx.js`,
+  `story.js`, `db.js`).
+- Storage goes through `lib/db.js` only. Changing the IndexedDB schema means bumping
+  `VERSION` with a migration.
+- No blocking dialogs (`alert`/`confirm`): use `ConfirmButton` or inline UI.
 - Every non-trivial `src/lib` function gets a test in `tests/`. Use `node:test` +
   `node:assert`: no test framework.
 - Don't add a dependency when a few lines or a platform API do the job.
@@ -86,4 +92,7 @@ Details and data model: `docs/ARCHITECTURE.md`.
   `setWorkerUrl(import 'maplibre-gl/dist/maplibre-gl-worker.mjs?url')`. Keep it.
 - Chart hover → map cursor is imperative (`hover` ref), so hovering never re-renders
   React. Don't move that into state.
-- Scrolling over the map zooms it. Use `window.scrollTo` when testing in a browser.
+- The map uses `cooperativeGestures`: wheel scroll passes through, and ctrl+wheel or
+  two fingers zoom.
+- To check phone layout in a maximized desktop browser, load the app in a 390×844
+  `<iframe>`. IndexedDB data is per origin, so it is shared with the main tab.

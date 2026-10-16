@@ -8,19 +8,41 @@ the browser for development speed. It will be packaged in a native shell later (
 background execution) must sit behind small modules in `src/lib/`, so a native plugin
 can replace the web API without touching components.
 
-## Current state (v0, client-only)
+## Current state (phase 1, local-first)
 
-Single-page React app. No backend, no persistence: one activity is loaded in memory at a
-time, from a GPX file or the built-in demo generator.
+Client-only React app with a bottom tab bar and hash routing. Activities are stored on
+the device in IndexedDB. There is no backend and no account.
 
 ```
-.gpx file ──► lib/gpx.parseGpx ──► Point[] ──► lib/analyze.analyze ──► Activity
-demo button ─► lib/demo.demoTrack ─┘                                     │
-                                                                         ▼
-                        App ──► StatsGrid · TrackMap · ProfileChart · SplitsTable
-                                                                         │
-                                          "Exporter la Story" ──► lib/story.exportStory ──► PNG
+.gpx file ─► lib/gpx.parseGpx ─► points ─┐
+demo ──────► lib/demo.demoHistory ───────┤
+                                         ▼
+                        lib/activity.createActivity ─► { meta, points } ─► lib/db (IndexedDB)
+                                                                              │
+     FeedPage ◄── listActivities() (meta only) ◄──────────────────────────────┤
+     ActivityPage ◄── getActivity(id) ─► lib/analyze.analyze(points) ─► stats, map, chart, splits
+                                                                  └─► lib/story.exportStory ─► PNG
 ```
+
+## Routing
+
+`src/router.js`: hash routes, so it works in a native WebView without server rewrites.
+
+| Hash             | Page           |
+|------------------|----------------|
+| `#/`             | `FeedPage`     |
+| `#/activity/:id` | `ActivityPage` |
+| `#/record`       | `RecordPage` (placeholder until phase 2) |
+| `#/profile`      | `ProfilePage`  |
+
+## Storage (`lib/db.js`)
+
+IndexedDB database `allure`, version 1:
+
+- `activities` (keyPath `id`): **meta** records, small enough to list everything at once
+- `tracks` (key = activity id): raw **points** arrays, read only on the detail page
+
+Schema changes must bump `VERSION` and migrate in `onupgradeneeded`.
 
 ## Data model
 
@@ -28,19 +50,25 @@ demo button ─► lib/demo.demoTrack ─┘                                    
 // Point: one GPS fix as read from the source
 { lat, lon, ele: number|null, time: msEpoch|null, hr: bpm|null }
 
-// Activity: output of analyze(), plus `name`
+// ActivityMeta: stored in `activities`
 {
-  name,
+  id, name, sport,       // sport: 'run' | 'ride' | 'hike' | 'walk' | 'swim' (lib/sports.js)
+  source,                // 'gpx' | 'demo'
+  date,                  // ms epoch (first point, or import time when no timestamps)
+  distance, movingTime, avgPace, gain, avgHr,  // summary, same units as analyze()
+  preview,               // ~80 [lon, lat] pairs for feed thumbnails
+}
+
+// analyze(points): computed on demand, never stored
+{
   track: Point & { dist /* cumulative m */, ele /* smoothed */ }[],
-  distance,    // m
-  movingTime,  // s, null if no timestamps
-  avgPace,     // s/km, null if no timestamps
-  gain,        // m (D+), null if no elevation
-  avgHr,       // bpm, null if no HR
-  date,        // ms epoch of first point, or null
+  distance, movingTime, avgPace, gain, avgHr, date,
   splits: { dist, time, gain, loss, pace }[],  // one per km, last one partial
 }
 ```
+
+Units are SI everywhere (m, s, ms epoch). Display conversion happens in `lib/format.js`
+and `lib/sports.js` (`effort()` picks pace or speed by sport).
 
 ## Algorithms
 
@@ -52,27 +80,28 @@ demo button ─► lib/demo.demoTrack ─┘                                    
 - **Splits**: each segment is attributed to the km bucket where it starts. Error is under
   one GPS sample per split. A trailing bucket under 20 m is dropped.
 
-## Components
+## UI structure
 
-| Component      | Role |
-|----------------|------|
-| `App`          | Holds the current activity, error, drag state; import + story export |
-| `Dropzone`     | Empty state: file picker + demo button |
-| `StatsGrid`    | Five key metric cards |
-| `TrackMap`     | MapLibre map: glowing route, start/finish pins, hover cursor |
-| `ProfileChart` | Recharts elevation area + HR line, sends hover index to the map |
-| `SplitsTable`  | Per-km pace bars + D+/D- |
+```
+src/
+  App.jsx        route switch, activity list state, GPX import, demo seeding
+  router.js      useRoute() / go()
+  pages/         one component per route
+  components/    reusable UI (TabBar, ActivityCard, RoutePreview, StatsGrid, TrackMap,
+                 ProfileChart, SplitsTable, ImportButton, ConfirmButton)
+  lib/           pure logic + platform modules (db, gpx, story)
+```
 
-**Chart ↔ map sync**: `App` owns a `hover` ref. `TrackMap` assigns
-`hover.current = (index) => moveCursor(index)`, and `ProfileChart` calls it on mouse
-move. No React state is involved, so hovering costs no re-render.
+- **Chart ↔ map sync**: `ActivityPage` owns a `hover` ref. `TrackMap` assigns
+  `hover.current = (index) => moveCursor(index)`, and `ProfileChart` calls it on
+  pointer/touch move. No React state is involved, so scrubbing costs no re-render.
+- **Destructive actions** use `ConfirmButton` (second tap within 4 s) rather than
+  `window.confirm`, which blocks and looks out of place in a native app.
+- **Map gestures**: `cooperativeGestures`: one finger scrolls the page, two fingers move
+  the map.
 
 ## Where things will go
 
-When the roadmap needs it. Don't create these ahead of time:
-
-- `src/lib/db.js`: IndexedDB activity store (phase 1)
-- `src/pages/`: once there is more than one screen and a router
 - `src/lib/recorder.js`: live recording, web Geolocation first, then a native
   background-location plugin (phase 2)
 - `ios/`, `android/`: generated by the native shell (phase 2)

@@ -8,7 +8,9 @@ Analyze, record and share your runs and rides. A Strava-inspired **mobile app**
 
 ## Features (today)
 
-- Import a `.gpx` file (drag & drop) or load a demo run
+- Activity feed stored on the device (IndexedDB), with route thumbnails
+- Import a `.gpx` file, or generate a 20-activity demo history
+- Edit title and sport (run, ride, hike, walk, swim), delete activities
 - Route on a dark interactive map
 - Distance, moving time, average pace, elevation gain, average heart rate
 - Elevation + heart rate chart synced with the map
