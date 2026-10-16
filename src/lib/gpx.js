@@ -1,4 +1,4 @@
-/** Parse GPX text into { name, points: [{ lat, lon, ele, time, hr }] }. Browser only (DOMParser). */
+/** Parse GPX text into { name, type, points: [{ lat, lon, ele, time, hr }] }. Browser only (DOMParser). */
 export function parseGpx(text) {
   const doc = new DOMParser().parseFromString(text, 'application/xml');
   if (doc.querySelector('parsererror')) throw new Error('Fichier GPX invalide (XML illisible).');
@@ -19,5 +19,6 @@ export function parseGpx(text) {
     .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon));
   if (points.length < 2) throw new Error('Aucun point GPS exploitable dans ce fichier.');
   const name = doc.getElementsByTagNameNS('*', 'name')[0]?.textContent?.trim();
-  return { name, points };
+  const type = doc.getElementsByTagNameNS('*', 'type')[0]?.textContent?.trim();
+  return { name, type, points };
 }
