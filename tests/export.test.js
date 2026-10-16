@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { toGpx } from '../src/lib/gpxExport.js';
+import { toGpx } from '../src/lib/formats/gpxExport.js';
 import { safeName } from '../src/lib/share.js';
 
 test('toGpx writes points, heart rate and escapes the title', () => {

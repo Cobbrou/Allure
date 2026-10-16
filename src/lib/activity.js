@@ -25,6 +25,9 @@ export function createActivity({ name, sport = 'run', points, source = 'gpx' }) 
   return { meta, points };
 }
 
+/** Same start second and distance within 10 m: treated as the same activity on re-import. */
+export const dupKey = (meta) => `${Math.round(meta.date / 1000)}|${Math.round(meta.distance / 10)}`;
+
 /** "Course du matin", "Vélo du soir"… */
 export function defaultName(sport, date) {
   const h = new Date(date).getHours();

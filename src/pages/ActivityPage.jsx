@@ -8,7 +8,7 @@ import TrackMap from '../components/TrackMap.jsx';
 import { analyze, computeSplits } from '../lib/analyze.js';
 import { deleteActivities, getActivity, updateActivity } from '../lib/db.js';
 import { SPORTS } from '../lib/sports.js';
-import { toGpx } from '../lib/gpxExport.js';
+import { toGpx } from '../lib/formats/gpxExport.js';
 import { safeName, shareFile } from '../lib/share.js';
 import { exportStory } from '../lib/story.js';
 import { go } from '../router.js';

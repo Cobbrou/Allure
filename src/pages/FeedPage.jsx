@@ -19,7 +19,7 @@ export default function FeedPage({ activities, onImport, onDemo }) {
         <div className="empty">
           <div className="drop-icon">⤓</div>
           <h2>Aucune activité pour l'instant</h2>
-          <p>Importe un fichier .gpx (Strava, Garmin, Coros…) ou génère un historique pour essayer l'app.</p>
+          <p>Importe tes sorties (.gpx, .tcx, .fit) ou ton archive Strava complète (.zip), ou génère un historique pour essayer l'app.</p>
           <ImportButton onImport={onImport} />
           <button type="button" className="ghost" onClick={demo} disabled={busy}>
             {busy ? 'Génération…' : 'Générer un historique de démo'}
