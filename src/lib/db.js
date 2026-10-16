@@ -2,19 +2,52 @@
 // lists, `tracks` holds the raw points by activity id, loaded only on the detail screen.
 // Platform module: a native storage plugin can replace it without touching components.
 
+import { analyze } from './analyze.js';
+import { bestEfforts } from './records.js';
+
 const DB_NAME = 'allure';
-const VERSION = 1;
+const VERSION = 2;
 let dbPromise;
+
+// Schema migrations, keyed by the version they upgrade to. They run inside the upgrade
+// transaction, in order, for every version above the one stored on the device.
+const MIGRATIONS = {
+  1: (db) => {
+    db.createObjectStore('activities', { keyPath: 'id' });
+    db.createObjectStore('tracks');
+  },
+  // v2: metas gain `bestEfforts`, computed from the stored tracks.
+  2: (db, tx) => {
+    const tracks = tx.objectStore('tracks');
+    tx.objectStore('activities').openCursor().onsuccess = (e) => {
+      const cursor = e.target.result;
+      if (!cursor) return;
+      tracks.get(cursor.key).onsuccess = (t) => {
+        const points = t.target.result;
+        cursor.update({ ...cursor.value, bestEfforts: points ? bestEfforts(analyze(points).track) : {} });
+        cursor.continue();
+      };
+    };
+  },
+};
 
 function open() {
   return (dbPromise ??= new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, VERSION);
-    req.onupgradeneeded = () => {
-      req.result.createObjectStore('activities', { keyPath: 'id' });
-      req.result.createObjectStore('tracks');
+    req.onupgradeneeded = (e) => {
+      for (let v = e.oldVersion + 1; v <= VERSION; v++) MIGRATIONS[v](req.result, req.transaction);
     };
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => {
+      // Let a newer version of the app (another tab) upgrade the schema.
+      req.result.onversionchange = () => req.result.close();
+      resolve(req.result);
+    };
     req.onerror = () => reject(req.error);
+    // An older version of the app open elsewhere holds the DB: the upgrade waits for it.
+    req.onblocked = () => {
+      dbPromise = null; // retry on next access
+      reject(new Error("Allure est ouvert dans un autre onglet : ferme-le pour terminer la mise à jour."));
+    };
   }));
 }
 

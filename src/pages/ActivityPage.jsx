@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fmtDate } from '../components/ActivityCard.jsx';
+import BestEfforts from '../components/BestEfforts.jsx';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import ProfileChart from '../components/ProfileChart.jsx';
 import SplitsTable from '../components/SplitsTable.jsx';
@@ -13,7 +14,7 @@ import { safeName, shareFile } from '../lib/share.js';
 import { exportStory } from '../lib/story.js';
 import { go } from '../router.js';
 
-export default function ActivityPage({ id, onChange }) {
+export default function ActivityPage({ id, activities, onChange }) {
   const [data, setData] = useState(); // undefined: loading, null: not found
   const [editing, setEditing] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -78,6 +79,7 @@ export default function ActivityPage({ id, onChange }) {
           <ProfileChart track={act.track} hover={hover} />
         </section>
         <SplitsTable splits={splits} sport={act.sport} size={splitSize} />
+        <BestEfforts meta={data.meta} activities={activities} />
       </main>
     </>
   );

@@ -1,4 +1,5 @@
 import { analyze } from './analyze.js';
+import { bestEfforts } from './records.js';
 import { SPORTS } from './sports.js';
 
 /**
@@ -21,6 +22,7 @@ export function createActivity({ name, sport = 'run', points, source = 'gpx' }) 
     gain: a.gain,
     avgHr: a.avgHr,
     preview: preview(points),
+    bestEfforts: bestEfforts(a.track),
   };
   return { meta, points };
 }

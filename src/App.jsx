@@ -45,7 +45,7 @@ export default function App() {
   };
 
   let content;
-  if (page === 'activity') content = <ActivityPage id={id} onChange={reload} />;
+  if (page === 'activity') content = <ActivityPage id={id} activities={activities} onChange={reload} />;
   else if (page === 'record') content = <RecordPage />;
   else if (page === 'profile') content = <ProfilePage activities={activities} onDemo={addDemo} onChange={reload} />;
   else content = <FeedPage activities={activities} onImport={onImport} onDemo={addDemo} />;
