@@ -8,6 +8,8 @@ import TrackMap from '../components/TrackMap.jsx';
 import { analyze, computeSplits } from '../lib/analyze.js';
 import { deleteActivities, getActivity, updateActivity } from '../lib/db.js';
 import { SPORTS } from '../lib/sports.js';
+import { toGpx } from '../lib/gpxExport.js';
+import { safeName, shareFile } from '../lib/share.js';
 import { exportStory } from '../lib/story.js';
 import { go } from '../router.js';
 
@@ -42,6 +44,8 @@ export default function ActivityPage({ id, onChange }) {
     await onChange();
     go('/');
   };
+  const exportGpx = () =>
+    shareFile(new Blob([toGpx(data.meta, data.points)], { type: 'application/gpx+xml' }), `${safeName(act.name)}.gpx`);
   const story = async () => {
     setExporting(true);
     try { await exportStory(act); } finally { setExporting(false); }
@@ -55,7 +59,7 @@ export default function ActivityPage({ id, onChange }) {
       </TopBar>
       <main className="detail">
         {editing ? (
-          <EditForm meta={data.meta} onSave={save} onDelete={remove} />
+          <EditForm meta={data.meta} onSave={save} onDelete={remove} onExport={exportGpx} />
         ) : (
           <div className="title">
             <span className="sport-icon">{SPORTS[act.sport]?.icon}</span>
@@ -88,7 +92,7 @@ function TopBar({ children }) {
   );
 }
 
-function EditForm({ meta, onSave, onDelete }) {
+function EditForm({ meta, onSave, onDelete, onExport }) {
   const [name, setName] = useState(meta.name);
   const [sport, setSport] = useState(meta.sport);
   return (
@@ -110,6 +114,7 @@ function EditForm({ meta, onSave, onDelete }) {
       </fieldset>
       <div className="edit-actions">
         <ConfirmButton onConfirm={onDelete} confirmLabel="Confirmer">Supprimer</ConfirmButton>
+        <button type="button" className="ghost" onClick={onExport}>Exporter .gpx</button>
         <button type="submit">Enregistrer</button>
       </div>
     </form>

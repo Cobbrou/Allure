@@ -1,10 +1,11 @@
 import { ACCENT } from '../theme.js';
 import { fmtDuration } from './format.js';
 import { effort } from './sports.js';
+import { safeName, shareFile } from './share.js';
 
 const FONT = 'Inter, system-ui, sans-serif';
 
-/** Render a 1080x1920 social story PNG (glowing track + key stats) and download it. */
+/** Render a 1080x1920 social story PNG (glowing track + key stats) and share or download it. */
 export async function exportStory(act) {
   await document.fonts.ready;
   const W = 1080, H = 1920;
@@ -100,11 +101,7 @@ export async function exportStory(act) {
   });
 
   const blob = await new Promise((r) => c.toBlob(r, 'image/png'));
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `${act.name.replace(/[^\w\- ]+/g, '').trim() || 'course'}-story.png`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  await shareFile(blob, `${safeName(act.name)}-story.png`);
 }
 
 function dot(g, [x, y], color) {

@@ -163,7 +163,8 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 .sport-picker label.selected { border-color: var(--accent); background: rgba(252, 76, 2, 0.15); }
 .sport-picker label:focus-within { outline: 2px solid #fff; }
 .sport-picker input { position: absolute; opacity: 0; pointer-events: none; }
-.edit-actions { display: flex; justify-content: space-between; gap: 8px; }
+.edit-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.edit-actions > * { flex: 1 1 auto; }
 
 /* Profile */
 .profile-head { display: flex; gap: 14px; align-items: center; }
