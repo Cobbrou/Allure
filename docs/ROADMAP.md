@@ -29,6 +29,20 @@ Phases are ordered by dependency: each one unlocks the next.
 - [x] Activity list / personal feed, activity detail page (routing)
 - [x] Rename, delete, set sport type (run, ride, hike, walk, swim)
 - [x] Demo history generator (20 activities over 60 days) for testing
+
+Motion & polish
+- [x] Page transitions (View Transitions API): slide forward/back for detail pages,
+      crossfade between tabs, tab bar pinned
+- [x] Feed scroll position restored when coming back from a detail page
+- [x] Press feedback on cards, buttons and tabs
+- [x] Staggered card entrances, route thumbnails drawn on appear, splits bars grow in
+- [x] Loading skeleton on the detail page, map fades in once tiles are ready
+- [x] `prefers-reduced-motion` disables all motion
+- [ ] Animated route drawing on the detail map
+- [ ] Stat count-up on the detail page
+- [ ] Edge swipe to go back (iOS-style), pull to refresh on the feed
+- [ ] Haptic feedback on key actions (native shell)
+- [ ] Bottom sheets for edit / share actions
 - [ ] Bulk import (several GPX files, Strava bulk export archive)
 - [ ] TCX and FIT import
 - [ ] GPX export

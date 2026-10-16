@@ -23,7 +23,7 @@ export default function ActivityPage({ id, onChange }) {
   // Keyed on points only, so renaming doesn't rebuild the map and chart.
   const analysis = useMemo(() => data && analyze(data.points), [data?.points]);
 
-  if (data === undefined) return <TopBar />;
+  if (data === undefined) return (<><TopBar /><DetailSkeleton /></>);
   if (data === null) return (<><TopBar /><p className="empty">Activité introuvable.</p></>);
 
   const act = { ...analysis, ...data.meta };
@@ -111,5 +111,16 @@ function EditForm({ meta, onSave, onDelete }) {
         <button type="submit">Enregistrer</button>
       </div>
     </form>
+  );
+}
+
+function DetailSkeleton() {
+  return (
+    <main className="detail" aria-busy="true">
+      <div className="skeleton" style={{ height: 52 }} />
+      <div className="skeleton" style={{ height: 96 }} />
+      <div className="stats">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton" style={{ height: 84 }} />)}</div>
+      <div className="skeleton" style={{ height: 320 }} />
+    </main>
   );
 }

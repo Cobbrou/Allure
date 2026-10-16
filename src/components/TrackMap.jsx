@@ -17,6 +17,7 @@ export default function TrackMap({ track, hover }) {
     const map = new MapLibre({ container: el.current, style: MAP_STYLE, bounds, fitBoundsOptions: { padding: 40 }, cooperativeGestures: true });
 
     map.on('load', () => {
+      el.current?.classList.add('ready');
       map.addSource('route', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } } });
       map.addLayer({ id: 'route-glow', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: { 'line-color': ACCENT, 'line-width': 14, 'line-blur': 10, 'line-opacity': 0.55 } });

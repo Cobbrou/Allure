@@ -11,10 +11,11 @@ export default function RoutePreview({ coords }) {
   const k = Math.min((W - 2 * PAD) / w, (H - 2 * PAD) / h);
   const ox = (W - w * k) / 2, oy = (H - h * k) / 2;
   const line = pts.map(([x, y]) => `${(ox + (x - minX) * k).toFixed(2)},${(oy + (y - minY) * k).toFixed(2)}`).join(' ');
+  // pathLength=1 lets CSS animate the stroke being drawn regardless of route length.
   return (
     <svg className="route-preview" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
-      <polyline points={line} className="glow" />
-      <polyline points={line} />
+      <polyline points={line} pathLength="1" className="glow" />
+      <polyline points={line} pathLength="1" />
     </svg>
   );
 }

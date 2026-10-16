@@ -2,10 +2,10 @@ import { fmtDuration } from '../lib/format.js';
 import { effort, SPORTS } from '../lib/sports.js';
 import RoutePreview from './RoutePreview.jsx';
 
-export default function ActivityCard({ a }) {
+export default function ActivityCard({ a, i = 0 }) {
   const e = effort(a.sport, a.avgPace);
   return (
-    <a className="card activity-card" href={`#/activity/${a.id}`}>
+    <a className="card activity-card" href={`#/activity/${a.id}`} style={{ '--i': Math.min(i, 8) }}>
       <div className="activity-head">
         <span className="sport-icon" aria-label={SPORTS[a.sport]?.label}>{SPORTS[a.sport]?.icon}</span>
         <div>

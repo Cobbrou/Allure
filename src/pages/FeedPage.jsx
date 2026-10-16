@@ -28,7 +28,7 @@ export default function FeedPage({ activities, onImport, onDemo }) {
       )}
       {activities?.length > 0 && (
         <main className="feed">
-          {activities.map((a) => <ActivityCard key={a.id} a={a} />)}
+          {activities.map((a, i) => <ActivityCard key={a.id} a={a} i={i} />)}
         </main>
       )}
     </>
