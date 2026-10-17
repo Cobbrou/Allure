@@ -126,7 +126,7 @@ src/
   pages/         one component per route
   components/    reusable UI (TabBar, ActivityCard, RoutePreview, StatsGrid, TrackMap,
                  ProfileChart, SplitsTable, BestEfforts, ImportButton, ConfirmButton,
-                 Segmented, WeeklyChart, ActivityCalendar, RecordsList, LiveMap, HrZones, FitnessChart)
+                 Segmented, WeeklyChart, ActivityCalendar, RecordsList, LiveMap, HrZones, FitnessChart, RacePredictions)
   lib/           pure logic (analyze, gap, records, stats, sports, format, activity, demo, recorder, training)
                  + platform modules (db, share, story, location, formats/)
 ```

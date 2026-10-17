@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import ActivityCalendar from '../components/ActivityCalendar.jsx';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import FitnessChart from '../components/FitnessChart.jsx';
+import RacePredictions from '../components/RacePredictions.jsx';
 import RecordsList from '../components/RecordsList.jsx';
 import Segmented from '../components/Segmented.jsx';
 import WeeklyChart from '../components/WeeklyChart.jsx';
 import { deleteActivities } from '../lib/db.js';
 import { fmtDuration } from '../lib/format.js';
-import { personalRecords } from '../lib/records.js';
+import { personalRecords, predictRaces } from '../lib/records.js';
 import { SPORTS } from '../lib/sports.js';
 import { periodStart, totals, weeklyDistance } from '../lib/stats.js';
 
@@ -32,6 +33,7 @@ export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, onDemo,
   const t = useMemo(() => totals(list, { from: periodStart(period), sport: sport || undefined }), [list, period, sport]);
   const weeks = useMemo(() => weeklyDistance(list, Date.now(), 12, sport || undefined), [list, sport]);
   const records = useMemo(() => personalRecords(list), [list]);
+  const predictions = useMemo(() => predictRaces(list), [list]);
   const demoIds = list.filter((a) => a.source === 'demo').map((a) => a.id);
   const allKm = list.reduce((s, a) => s + a.distance, 0) / 1000;
 
@@ -72,6 +74,7 @@ export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, onDemo,
             <FitnessChart activities={list} hr={hr} />
             <ActivityCalendar activities={list} sport={sport || undefined} />
             <RecordsList records={records} />
+            <RacePredictions predictions={predictions} />
           </>
         )}
 

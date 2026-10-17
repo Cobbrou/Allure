@@ -38,3 +38,29 @@ export function personalRecords(metas) {
     return { ...r, ...best };
   });
 }
+
+const RIEGEL = 1.06; // fatigue exponent: time grows slightly faster than distance
+const MIN_SOURCE = 1 / 4; // a source must cover this share of the target: Riegel is too optimistic from short efforts
+
+/**
+ * Race time predictions per record distance from runs in the last `days` days, with the
+ * Riegel formula T2 = T1 * (D2 / D1)^1.06. Sources are each run's best efforts and the
+ * run itself; the fastest prediction wins. [{ ...distance, time?, from?: { m, time, activity } }].
+ */
+export function predictRaces(metas, now = Date.now(), days = 90) {
+  const sources = [];
+  for (const a of metas) {
+    if (a.sport !== 'run' || a.date < now - days * 86400e3) continue;
+    for (const r of RECORD_DISTANCES) if (a.bestEfforts?.[r.id]) sources.push({ m: r.m, time: a.bestEfforts[r.id], activity: a });
+    if (a.movingTime && a.distance > 1000) sources.push({ m: a.distance, time: a.movingTime, activity: a });
+  }
+  return RECORD_DISTANCES.map((r) => {
+    let best = null;
+    for (const s of sources) {
+      if (s.m < r.m * MIN_SOURCE) continue;
+      const time = Math.round(s.time * (r.m / s.m) ** RIEGEL);
+      if (!best || time < best.time) best = { time, from: s };
+    }
+    return { ...r, ...best };
+  });
+}

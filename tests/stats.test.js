@@ -68,3 +68,21 @@ test('monthGrid pads to whole Monday-first weeks', () => {
   assert.ok(grid.every((w) => w.length === 7));
   assert.equal(grid.flat().filter(Boolean).length, 31);
 });
+
+test('predictRaces: Riegel from recent runs, ignoring short efforts for long races', async () => {
+  const { predictRaces } = await import('../src/lib/records.js');
+  const now = Date.parse('2026-10-17T12:00:00Z');
+  const day = 86400e3;
+  const metas = [
+    { id: 'a', sport: 'run', date: now - 10 * day, distance: 10000, movingTime: 3000, bestEfforts: { '1k': 240, '5k': 1450, '10k': 3000 } },
+    { id: 'old', sport: 'run', date: now - 200 * day, distance: 5000, movingTime: 1000, bestEfforts: { '1k': 190, '5k': 1000 } },
+    { id: 'ride', sport: 'ride', date: now - day, distance: 40000, movingTime: 3600, bestEfforts: {} },
+  ];
+  const p = Object.fromEntries(predictRaces(metas, now).map((r) => [r.id, r]));
+  assert.equal(p['5k'].time, Math.round(3000 * 0.5 ** 1.06)); // 10 km scaled down beats the own 5 km; 1 km too short
+  assert.equal(p['10k'].time, 3000);
+  assert.equal(p.half.time, Math.round(3000 * 2.10975 ** 1.06));
+  assert.equal(p.half.from.activity.id, 'a');
+  assert.equal(p.marathon.time, undefined); // nothing recent covers a quarter of a marathon
+  assert.equal(predictRaces([], now)[0].time, undefined);
+});
