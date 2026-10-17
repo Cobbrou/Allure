@@ -370,6 +370,11 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 .route-tools button { flex: 1; }
 .route-card { justify-content: flex-start; }
 .route-card .route-preview { flex: none; width: 72px; height: 36px; }
+.edit .switch { display: flex; color: var(--text); font-size: 15px; }
+.suggest-form .field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 500; }
+.suggest-form input[type='range'] { width: 100%; min-height: 44px; padding: 0; accent-color: var(--accent); }
+button.suggestion { width: 100%; text-align: left; font-weight: 400; background: var(--card); border-color: var(--border); color: var(--text); }
+button.suggestion.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 .route-card > span:nth-child(2) { flex: 1; min-width: 0; display: grid; gap: 2px; font-size: 15px; color: var(--text); }
 .pin.me { background: #3b82f6; box-shadow: 0 0 0 2px #fff, 0 0 14px 4px rgba(59, 130, 246, 0.6); }
 .record-controls { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }

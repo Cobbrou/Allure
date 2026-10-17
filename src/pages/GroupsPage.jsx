@@ -1,5 +1,3 @@
-import { Soon } from './MapsPage.jsx';
-
 /** Groups tab: clubs and events. Both need accounts and a backend (roadmap phase 4). */
 export default function GroupsPage() {
   return (
@@ -14,5 +12,15 @@ export default function GroupsPage() {
         <Soon title="Challenges" text="Défie tes amis sur la distance, le dénivelé ou la régularité" />
       </main>
     </>
+  );
+}
+
+// ponytail: static placeholders until clubs and events ship (roadmap phase 4).
+function Soon({ title, text }) {
+  return (
+    <div className="card link-card">
+      <span><b>{title}</b><span className="muted">{text}</span></span>
+      <span className="pill">Bientôt</span>
+    </div>
   );
 }

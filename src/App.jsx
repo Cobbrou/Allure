@@ -22,6 +22,7 @@ const pages = {
   maps: () => import('./pages/MapsPage.jsx'),
   groups: () => import('./pages/GroupsPage.jsx'),
   route: () => import('./pages/RoutePage.jsx'),
+  suggest: () => import('./pages/SuggestPage.jsx'),
   segment: () => import('./pages/SegmentPage.jsx'),
 };
 const ActivityPage = lazy(pages.activity);
@@ -31,6 +32,7 @@ const TrainingLogPage = lazy(pages.log);
 const MapsPage = lazy(pages.maps);
 const GroupsPage = lazy(pages.groups);
 const RoutePage = lazy(pages.route);
+const SuggestPage = lazy(pages.suggest);
 const SegmentPage = lazy(pages.segment);
 
 export default function App() {
@@ -68,6 +70,7 @@ export default function App() {
   const loadRoutes = () => listRoutes().then(setRoutes, () => setRoutes([]));
   useEffect(() => { loadRoutes(); }, []);
   const addRoute = async (r) => { await saveRoute(r); await loadRoutes(); back('/maps'); };
+  const pickRoute = async (r) => { await saveRoute(r); await loadRoutes(); go(`/route/${r.id}`); };
   const removeRoute = async (rid) => { await deleteRoute(rid); await loadRoutes(); back('/maps'); };
   const saveGoals = async (g) => { await setSetting('goals', g); setGoals(g); };
   const [gears, setGears] = useState([]);
@@ -118,6 +121,7 @@ ${cur.text}` } : summary));
   if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} ftp={ftp} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} />;
   else if (page === 'log') content = <TrainingLogPage activities={activities} hr={hr} />;
   else if (page === 'maps') content = <MapsPage activities={activities} routes={routes} />;
+  else if (page === 'suggest') content = <SuggestPage activities={activities} onPick={pickRoute} />;
   else if (page === 'route') content = <RoutePage id={id} routes={routes} activities={activities} onSave={addRoute} onDelete={removeRoute} />;
   else if (page === 'groups') content = <GroupsPage />;
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
@@ -146,7 +150,7 @@ ${cur.text}` } : summary));
       <ErrorBoundary key={`${page}/${id ?? ''}`}>
         <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
       </ErrorBoundary>
-      <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'log' ? 'profile' : page === 'route' ? 'maps' : page} />
+      <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'log' ? 'profile' : page === 'route' || page === 'suggest' ? 'maps' : page} />
     </div>
   );
 }

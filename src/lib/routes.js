@@ -14,9 +14,11 @@ export const legKey = (a, b, sport, snap) => `${snap ? PROFILE[sport] ?? 'hiking
 
 export const straightLeg = (a, b) => [{ lon: a[0], lat: a[1] }, { lon: b[0], lat: b[1] }];
 
-export function legUrl(a, b, sport) {
-  return `${BROUTER}?lonlats=${a.join(',')}|${b.join(',')}&profile=${PROFILE[sport] ?? 'hiking-mountain'}&alternativeidx=0&format=geojson`;
-}
+/** BRouter URL for a route through [lon, lat] waypoints. */
+export const routeUrl = (lonlats, sport) =>
+  `${BROUTER}?lonlats=${lonlats.map((c) => c.join(',')).join('|')}&profile=${PROFILE[sport] ?? 'hiking-mountain'}&alternativeidx=0&format=geojson`;
+
+export const legUrl = (a, b, sport) => routeUrl([a, b], sport);
 
 /** Points { lon, lat, ele } of a BRouter GeoJSON answer. */
 export function parseLeg(geojson) {
@@ -25,10 +27,56 @@ export function parseLeg(geojson) {
   return coords.map(([lon, lat, ele]) => ({ lon, lat, ele: Number.isFinite(ele) ? ele : null }));
 }
 
-export async function fetchLeg(a, b, sport) {
-  const res = await fetch(legUrl(a, b, sport));
+async function fetchGeojson(url) {
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`Routage indisponible (${res.status})`);
-  return parseLeg(await res.json());
+  return res.json();
+}
+
+export const fetchLeg = async (a, b, sport) => parseLeg(await fetchGeojson(legUrl(a, b, sport)));
+
+/** A whole route through waypoints in one request: { points, unpaved }. */
+export async function fetchRoute(lonlats, sport) {
+  const json = await fetchGeojson(routeUrl(lonlats, sport));
+  return { points: parseLeg(json), unpaved: unpavedShare(json) };
+}
+
+const PAVED = new Set(['asphalt', 'paved', 'concrete', 'concrete:plates', 'paving_stones', 'sett', 'chipseal']);
+const TRAIL = new Set(['track', 'path', 'bridleway']);
+
+/** Share (0..1) of a BRouter route's distance on unpaved ways, from the OSM tags of its messages. */
+export function unpavedShare(geojson) {
+  const [head, ...rows] = geojson?.features?.[0]?.properties?.messages ?? [];
+  if (!head) return null;
+  const dCol = head.indexOf('Distance'), tCol = head.indexOf('WayTags');
+  let all = 0, unpaved = 0;
+  for (const r of rows) {
+    const d = Number(r[dCol]) || 0;
+    const tags = Object.fromEntries(String(r[tCol]).split(' ').map((t) => t.split('=')));
+    all += d;
+    if (tags.surface ? !PAVED.has(tags.surface) : TRAIL.has(tags.highway)) unpaved += d;
+  }
+  return all ? unpaved / all : null;
+}
+
+/**
+ * Cut a point list routed through `waypoints` into one leg per waypoint pair, at the point
+ * nearest each intermediate waypoint (searched in order), so the route can be edited later.
+ */
+export function splitLegs(points, waypoints) {
+  const legs = [];
+  let from = 0;
+  for (const w of waypoints.slice(1, -1)) {
+    let best = from, bestD = Infinity;
+    for (let i = from; i < points.length; i++) {
+      const d = (points[i].lon - w[0]) ** 2 + (points[i].lat - w[1]) ** 2;
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    legs.push(points.slice(from, best + 1));
+    from = best;
+  }
+  legs.push(points.slice(from));
+  return legs;
 }
 
 /** One point list from consecutive legs, without repeating the waypoint shared by two legs. */

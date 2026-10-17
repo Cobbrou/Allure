@@ -58,3 +58,13 @@ export function speak(text) {
   if (!window.speechSynthesis) return;
   speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance(text), { lang: 'fr-FR' }));
 }
+
+/** One position fix ({ lat, lon }), or null if the GPS gives nothing within `timeout` ms. */
+export function currentPosition(timeout = 10000) {
+  return new Promise((resolve) => {
+    let stop = () => {};
+    const done = (v) => { clearTimeout(t); stop(); resolve(v); };
+    const t = setTimeout(() => done(null), timeout);
+    stop = watchPosition((f) => done({ lat: f.lat, lon: f.lon }), () => done(null));
+  });
+}

@@ -55,7 +55,10 @@ export default function MapsPage({ activities, routes }) {
             <span aria-hidden="true">›</span>
           </a>
         ))}
-        <Soon title="Idées d'itinéraires" text="Des parcours proposés selon ta distance et ton dénivelé" />
+        <a className="card link-card" href="#/suggest">
+          <span><b>Idées d'itinéraires</b><span className="muted">Des boucles proposées selon ta distance, ton dénivelé et tes envies</span></span>
+          <span aria-hidden="true">›</span>
+        </a>
       </main>
     </>
   );
@@ -99,12 +102,3 @@ function HeatMap({ lines }) {
   return <div ref={el} className="map heatmap" />;
 }
 
-// ponytail: static placeholders until route suggestions (phase 5), clubs and events (phase 4) ship.
-export function Soon({ title, text }) {
-  return (
-    <div className="card link-card">
-      <span><b>{title}</b><span className="muted">{text}</span></span>
-      <span className="pill">Bientôt</span>
-    </div>
-  );
-}

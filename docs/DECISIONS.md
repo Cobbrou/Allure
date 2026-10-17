@@ -115,6 +115,10 @@ back to a straight line.
 self-host BRouter or move to a hosted engine (GraphHopper, Valhalla); only
 `lib/routes.js` changes.
 
+Suggested loops (`lib/suggest.js`) don't use BRouter's round-trip mode: on the public
+server it times out (70 s watchdog). They route waypoints placed on a circle through the
+start, in 6 directions, resized once when the first try misses the target distance.
+
 ## Open questions
 
 - **Backend stack** (phase 3). Candidates: Supabase (Postgres + PostGIS + auth, fastest

@@ -40,6 +40,7 @@ Route changes run inside `document.startViewTransition` (slide or fade, see
 | `#/log`          | `TrainingLogPage`: week-by-week bubbles, opened from the profile |
 | `#/segment/:id`  | `SegmentPage`: segment map, distance / grade, your efforts fastest first |
 | `#/maps`         | `MapsPage` (tab): personal heatmap and saved routes |
+| `#/suggest`      | `SuggestPage`: routes made for you, loops from your position ranked on your preferences |
 | `#/route/:id`    | `RoutePage`: route builder (`new`) or a saved route, editable |
 | `#/groups`       | `GroupsPage` (tab): clubs and events (placeholders until accounts land) |
 | `#/profile`      | `ProfilePage`  |
