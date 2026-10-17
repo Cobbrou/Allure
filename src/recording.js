@@ -3,7 +3,7 @@ import { createActivity } from './lib/activity.js';
 import { clearDraft, loadDraft, saveActivities, saveDraft } from './lib/db.js';
 import { keepAwake, speak, watchPosition } from './lib/location.js';
 import { followCue } from './lib/follow.js';
-import { addFix, pause, recover, resume, splitCue, startRecording, tick } from './lib/recorder.js';
+import { addFix, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, splitCue, startRecording, tick } from './lib/recorder.js';
 
 const SAVE_EVERY = 5000; // ms between draft autosaves
 
@@ -58,11 +58,17 @@ export function useRecording() {
     pause: () => set(pause(ref.current, Date.now())),
     resume: () => set(resume(ref.current, Date.now())),
     discard: () => set(null),
+    lap: () => {
+      const now = Date.now();
+      const done = lapStatus(ref.current, now);
+      set(lap(ref.current, now));
+      if (ref.current.audio) speak(lapCue(done.n, done.time));
+    },
     /** Saves the activity and returns its id, or null if the track is too short. */
     finish: async () => {
       const r = ref.current;
       if (r.points.length < 2) return null;
-      const act = createActivity({ sport: r.sport, points: r.points, source: 'record' });
+      const act = createActivity({ sport: r.sport, points: r.points, source: 'record', laps: lapStarts(r) });
       await saveActivities([act]);
       await set(null);
       return act.meta.id;

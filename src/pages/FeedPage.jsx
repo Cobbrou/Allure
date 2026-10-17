@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import ActivityCard from '../components/ActivityCard.jsx';
 import ImportButton from '../components/ImportButton.jsx';
+import { analyze } from '../lib/analyze.js';
+import { getActivity } from '../lib/db.js';
+import { exportStory } from '../lib/story.js';
+
+/** Share an activity as a story image, from its stored track. */
+async function share(id) {
+  const d = await getActivity(id);
+  if (d) await exportStory({ ...analyze(d.points), ...d.meta });
+}
 
 export default function FeedPage({ activities, onImport, onDemo }) {
   const [busy, setBusy] = useState(false);
@@ -28,7 +37,7 @@ export default function FeedPage({ activities, onImport, onDemo }) {
       )}
       {activities?.length > 0 && (
         <main className="feed">
-          {activities.map((a, i) => <ActivityCard key={a.id} a={a} i={i} />)}
+          {activities.map((a, i) => <ActivityCard key={a.id} a={a} i={i} onShare={share} />)}
         </main>
       )}
     </>

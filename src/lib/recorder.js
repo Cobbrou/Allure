@@ -16,7 +16,7 @@ const PACE_WINDOW = 30000; // ms of track used for the current pace
 
 /** route: optional route to follow, from followRoute(). */
 export function startRecording({ sport = 'run', autoPause = true, audio = true, route = null }, now) {
-  return { sport, autoPause, audio, route, follow: null, start: now, points: [], distance: 0, active: 0, runningSince: now, paused: false, autoPaused: false, lastMove: now, pos: null };
+  return { sport, autoPause, audio, route, follow: null, laps: [], start: now, points: [], distance: 0, active: 0, runningSince: now, paused: false, autoPaused: false, lastMove: now, pos: null };
 }
 
 /** Running time in seconds. */
@@ -29,6 +29,24 @@ export const pause = (rec, now) => (rec.paused ? rec : { ...stopClock(rec, now),
 
 export const resume = (rec, now) =>
   rec.paused ? { ...rec, paused: false, autoPaused: false, runningSince: now, lastMove: now } : rec;
+
+/** Start a new lap now (manual lap button). laps: [{ time, at }], at = running seconds then. */
+export const lap = (rec, now) => (rec.paused ? rec : { ...rec, laps: [...(rec.laps ?? []), { time: now, at: elapsed(rec, now) }] });
+
+/** Current lap number (from 1) and its running seconds so far. */
+export function lapStatus(rec, now) {
+  const laps = rec.laps ?? [];
+  return { n: laps.length + 1, time: elapsed(rec, now) - (laps.at(-1)?.at ?? 0) };
+}
+
+/** Spoken summary of a finished lap. */
+export function lapCue(n, seconds) {
+  const s = Math.round(seconds), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  return `Tour ${n} : ${h ? `${h} heure${h > 1 ? 's' : ''} ` : ''}${m} minute${m > 1 ? 's' : ''} ${s % 60}.`;
+}
+
+/** Lap start times (ms) for the saved activity: the start, then each lap press. Null without laps. */
+export const lapStarts = (rec) => (rec.laps?.length ? [rec.points[0]?.time ?? rec.start, ...rec.laps.map((l) => l.time)] : null);
 
 /** After a crash or reload: paused, with the clock stopped at the last saved point. */
 export const recover = (rec) => ({ ...stopClock(rec, rec.points.at(-1)?.time ?? rec.start), paused: true, autoPaused: false });

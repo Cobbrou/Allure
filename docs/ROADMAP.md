@@ -72,6 +72,8 @@ Motion & polish
 - [ ] Edge swipe to go back (iOS-style), pull to refresh on the feed
 - [ ] Haptic feedback on key actions (native shell)
 - [ ] Bottom sheets for edit / share actions
+- [x] UI redesign: neutral dark palette, `StatMetric` metrics, feed cards with action bar,
+      bento stats, split bars, full-screen live tracker with a thumb dock
 
 ## Phase 2: Native app & live recording
 
@@ -83,6 +85,7 @@ Motion & polish
 - [x] Record screen: start / pause / resume / finish (web `watchPosition` in dev,
       native plugin on device)
 - [x] Live stats: time, distance, current & average pace, live map
+- [x] Manual lap button (spoken lap time, laps saved with the activity)
 - [x] Auto-pause
 - [x] Audio cues per km (`speechSynthesis`)
 - [x] Screen Wake Lock while recording, crash-safe autosave of the in-progress track

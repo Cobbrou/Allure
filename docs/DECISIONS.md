@@ -102,6 +102,17 @@ Vite's pre-bundled deps folder where the worker file does not exist. Result: a b
 `setWorkerUrl`.
 **Consequences**: works in dev and production builds. Re-check after MapLibre upgrades.
 
+## 2026-10-17: UI redesign, neutral dark palette
+
+**Context**: the slate-blue theme competed with the GPS tracks and charts, and metrics
+were styled ad hoc per screen.
+**Decision**: neutral anthracite palette (`#0f1115` / `#181b22` / `#262a34`), accent
+`#ff5500` kept for CTAs, active states, records and the main track. Tabular digits on
+`:root`. One `StatMetric` component for every metric. The live tracker hides the tab bar
+and puts its controls in a floating bottom dock (Lap / Pause / Finish).
+**Consequences**: `color-mix()` derives accent tints (Chrome 111+, Safari 16.2+, fine
+for the WebView targets). Charts read their colours from `theme.js`.
+
 ## 2026-10-17: Route builder routes through the public BRouter server
 
 **Context**: the route builder needs legs snapped to roads and trails, with elevation,

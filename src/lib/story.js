@@ -1,4 +1,4 @@
-import { ACCENT } from '../theme.js';
+import { ACCENT, BG, TICK } from '../theme.js';
 import { fmtDuration } from './format.js';
 import { effort } from './sports.js';
 import { safeName, shareFile } from './share.js';
@@ -15,13 +15,13 @@ export async function exportStory(act) {
   const g = c.getContext('2d');
 
   const bg = g.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0, '#0f172a');
-  bg.addColorStop(1, '#020617');
+  bg.addColorStop(0, BG);
+  bg.addColorStop(1, '#050608');
   g.fillStyle = bg;
   g.fillRect(0, 0, W, H);
   const glow = g.createRadialGradient(W / 2, 780, 50, W / 2, 780, 700);
-  glow.addColorStop(0, 'rgba(252,76,2,0.16)');
-  glow.addColorStop(1, 'rgba(252,76,2,0)');
+  glow.addColorStop(0, 'rgba(255,85,0,0.16)');
+  glow.addColorStop(1, 'rgba(255,85,0,0)');
   g.fillStyle = glow;
   g.fillRect(0, 0, W, H);
 
@@ -33,7 +33,7 @@ export async function exportStory(act) {
   g.font = `800 76px ${FONT}`;
   g.fillText(truncate(g, act.name, W - 180), 90, 250);
   if (act.date) {
-    g.fillStyle = '#94a3b8';
+    g.fillStyle = TICK;
     g.font = `500 36px ${FONT}`;
     g.fillText(new Date(act.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }), 90, 310);
   }
@@ -71,7 +71,7 @@ export async function exportStory(act) {
   dot(g, proj(pts.at(-1)), '#f8fafc');
 
   // Stats
-  g.fillStyle = '#94a3b8';
+  g.fillStyle = TICK;
   g.font = `600 34px ${FONT}`;
   g.fillText('DISTANCE', 90, 1330);
   g.fillStyle = '#f8fafc';
@@ -92,7 +92,7 @@ export async function exportStory(act) {
   ];
   stats.forEach(([label, value], i) => {
     const x = 90 + (i % 2) * 460, y = 1590 + Math.floor(i / 2) * 150;
-    g.fillStyle = '#94a3b8';
+    g.fillStyle = TICK;
     g.font = `600 30px ${FONT}`;
     g.fillText(label, x, y);
     g.fillStyle = '#f8fafc';
@@ -110,7 +110,7 @@ function dot(g, [x, y], color) {
   g.fillStyle = color;
   g.fill();
   g.lineWidth = 6;
-  g.strokeStyle = '#0f172a';
+  g.strokeStyle = BG;
   g.stroke();
 }
 

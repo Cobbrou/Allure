@@ -79,8 +79,12 @@ Details and data model: `docs/ARCHITECTURE.md`.
 - Every non-trivial `src/lib` function gets a test in `tests/`. Use `node:test` +
   `node:assert`: no test framework.
 - Don't add a dependency when a few lines or a platform API do the job.
-- Colors: CSS vars in `styles/global.css`, JS-side constants in `theme.js`. Accent is
-  `#fc4c02`, background `#0f172a`.
+- Colors: CSS vars in `styles/global.css`, JS-side constants in `theme.js` (charts, map
+  layers, canvas). Accent is `#ff5500` (CTAs, active states, records, main GPS track only),
+  background `#0f1115`, cards `#181b22`, borders `#262a34`. No hard-coded colours in
+  components: use a token.
+- Metrics go through `StatMetric` (label, big value, unit). Digits are tabular app-wide
+  (set on `:root`), so live numbers never jump.
 - Units internally are SI: meters, seconds, ms epoch timestamps. Convert only for display
   (`lib/format.js`).
 - Record decisions with lasting impact in `docs/DECISIONS.md`. Tick roadmap items in

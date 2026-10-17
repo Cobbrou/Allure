@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { ACCENT } from '../theme.js';
+import { ACCENT, GRID, AXIS, TICK } from '../theme.js';
 
 // memo: the chart must not re-render on hover, the map cursor is updated imperatively.
 const ProfileChart = memo(function ProfileChart({ track, hover }) {
@@ -27,17 +27,17 @@ const ProfileChart = memo(function ProfileChart({ track, hover }) {
       >
         <defs>
           <linearGradient id="eleFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#94a3b8" stopOpacity={0.45} />
-            <stop offset="100%" stopColor="#94a3b8" stopOpacity={0.02} />
+            <stop offset="0%" stopColor={TICK} stopOpacity={0.45} />
+            <stop offset="100%" stopColor={TICK} stopOpacity={0.02} />
           </linearGradient>
         </defs>
-        <CartesianGrid stroke="#1e293b" vertical={false} />
+        <CartesianGrid stroke={GRID} vertical={false} />
         <XAxis dataKey="km" type="number" domain={[0, 'dataMax']} tickFormatter={(v) => `${v.toFixed(1)} km`}
-          stroke="#475569" tick={{ fill: '#94a3b8', fontSize: 12 }} tickCount={8} />
+          stroke={AXIS} tick={{ fill: TICK, fontSize: 12 }} tickCount={8} />
         {hasEle && <YAxis yAxisId="ele" domain={[(v) => Math.floor((v - 10) / 50) * 50, (v) => Math.ceil((v + 10) / 50) * 50]}
-          tickFormatter={(v) => `${Math.round(v)} m`} stroke="#475569" tick={{ fill: '#94a3b8', fontSize: 12 }} width={60} />}
+          tickFormatter={(v) => `${Math.round(v)} m`} stroke={AXIS} tick={{ fill: TICK, fontSize: 12 }} width={60} />}
         {hasHr && <YAxis yAxisId="hr" orientation="right" domain={[(v) => Math.floor((v - 5) / 20) * 20, (v) => Math.ceil((v + 5) / 20) * 20]}
-          tickFormatter={(v) => Math.round(v)} stroke="#475569" tick={{ fill: '#f87171', fontSize: 12 }} width={40} />}
+          tickFormatter={(v) => Math.round(v)} stroke={AXIS} tick={{ fill: '#f87171', fontSize: 12 }} width={40} />}
         <Tooltip content={<ChartTip />} cursor={{ stroke: ACCENT, strokeWidth: 1 }} />
         {hasEle && <Area yAxisId="ele" dataKey="ele" stroke="#cbd5e1" strokeWidth={1.5} fill="url(#eleFill)" isAnimationActive={false} />}
         {hasHr && <Line yAxisId="hr" dataKey="hr" stroke="#ef4444" strokeWidth={1.5} dot={false} isAnimationActive={false} />}

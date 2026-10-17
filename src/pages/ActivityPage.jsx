@@ -157,7 +157,7 @@ function DetailSkeleton() {
     <main className="detail" aria-busy="true">
       <div className="skeleton" style={{ height: 52 }} />
       <div className="skeleton" style={{ height: 96 }} />
-      <div className="stats">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton" style={{ height: 84 }} />)}</div>
+      <div className="bento">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton" style={{ height: 84 }} />)}</div>
       <div className="skeleton" style={{ height: 320 }} />
     </main>
   );

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { addFix, currentPace, elapsed, pause, recover, resume, splitCue, startRecording, tick } from '../src/lib/recorder.js';
+import { addFix, currentPace, elapsed, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, splitCue, startRecording, tick } from '../src/lib/recorder.js';
 
 const M = 1 / 111195; // degrees of latitude per meter
 /** Fix `m` meters north of the origin at second `s`. */
@@ -70,4 +70,14 @@ test('splitCue speaks once per split, per sport', () => {
   const ride = startRecording({ sport: 'ride' }, 0);
   assert.equal(splitCue({ ...ride, distance: 4990 }, { ...ride, distance: 5000, active: 600_000, runningSince: null }, 0),
     '5 kilomètres. Vitesse moyenne 30,0 kilomètres heure.');
+});
+
+test('laps: lap press, current lap time, saved lap starts and cue', () => {
+  let rec = run(startRecording({}, 0), 0, 60);
+  rec = lap(rec, 60_000);
+  assert.deepEqual(lapStatus(rec, 90_000), { n: 2, time: 30 });
+  assert.deepEqual(lapStarts(rec), [0, 60_000]);
+  assert.equal(lap(pause(rec, 61_000), 62_000).laps.length, 1); // no lap while paused
+  assert.equal(lapStarts(startRecording({}, 5)), null);
+  assert.equal(lapCue(2, 3725), 'Tour 2 : 1 heure 2 minutes 5.');
 });

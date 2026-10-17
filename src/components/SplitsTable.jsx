@@ -1,12 +1,16 @@
 import { fmtPace } from '../lib/format.js';
 import { effort, usesGap } from '../lib/sports.js';
 
-/** size: split length in meters (100 for swims, 1000 for runs, 5000 for rides). */
+/**
+ * Splits as rows of bars, longer the faster the split: from 35 % for the slowest to full
+ * width for the fastest, so small pace differences still show. Pace is written on the bar. size: split length in meters (100 swims, 1000 runs, 5000 rides).
+ */
 export default function SplitsTable({ splits, sport, size = 1000 }) {
   const speeds = splits.map((s) => (s.pace ? 1 / s.pace : 0));
   const max = Math.max(...speeds);
+  const min = Math.min(...speeds.filter((v) => v > 0));
   const best = speeds.indexOf(max);
-  const maxElev = Math.max(1, ...splits.map((s) => Math.max(s.gain, s.loss)));
+  const fill = (v) => (!v ? 0 : max > min ? 0.35 + (0.65 * (v - min)) / (max - min) : 1);
   const km = size >= 1000;
   const gap = usesGap(sport) && splits.some((s) => s.gap);
   const label = (s, i) => {
@@ -16,24 +20,28 @@ export default function SplitsTable({ splits, sport, size = 1000 }) {
   };
   return (
     <section className="card">
-      <h3>Splits</h3>
-      <table className="splits">
-        <thead><tr><th>{km ? 'Km' : 'm'}</th><th>{effort(sport).short}</th>{gap && <th title="Allure ajustée à la pente">GAP</th>}<th className="bar-col"></th><th>Dénivelé</th></tr></thead>
-        <tbody>
-          {splits.map((s, i) => (
-            <tr key={i} className={i === best && max ? 'best' : ''}>
-              <td>{label(s, i)}</td>
-              <td className="pace">{effort(sport, s.pace).value}</td>
-              {gap && <td className="gap">{fmtPace(s.gap)}</td>}
-              <td className="bar-col"><div className="bar" style={{ width: `${max ? (speeds[i] / max) * 100 : 0}%` }} /></td>
-              <td className="elev">
-                <span className="up" style={{ '--w': `${(s.gain / maxElev) * 30}px` }}>+{Math.round(s.gain)}</span>
-                <span className="down" style={{ '--w': `${(s.loss / maxElev) * 30}px` }}>−{Math.round(s.loss)}</span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <h3>Splits <span className="muted small-label">{effort(sport).short}{gap && ' · GAP'} · dénivelé</span></h3>
+      <ol className="splits">
+        {splits.map((s, i) => (
+          <SplitRow key={i} label={label(s, i)} best={i === best && max > 0} fill={fill(speeds[i])}
+            pace={effort(sport, s.pace).value} gap={gap ? fmtPace(s.gap) : null}
+            up={s.gain} down={s.loss} />
+        ))}
+      </ol>
     </section>
+  );
+}
+
+function SplitRow({ label, best, fill, pace, gap, up, down }) {
+  return (
+    <li className={best ? 'best' : ''}>
+      <span className="split-km">{label}</span>
+      <span className="split-bar">
+        <span className="bar" style={{ width: `${fill * 100}%` }} />
+        <b>{pace}</b>
+        {gap && <span className="split-gap" title="Allure ajustée à la pente">{gap}</span>}
+      </span>
+      <span className="split-elev"><span className="up">+{Math.round(up)}</span> <span className="down">−{Math.round(down)}</span></span>
+    </li>
   );
 }

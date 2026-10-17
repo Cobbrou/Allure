@@ -150,7 +150,7 @@ ${cur.text}` } : summary));
       <ErrorBoundary key={`${page}/${id ?? ''}`}>
         <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
       </ErrorBoundary>
-      <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'log' ? 'profile' : page === 'route' || page === 'suggest' ? 'maps' : page} />
+      {!(page === 'record' && recording.rec) && <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'log' ? 'profile' : page === 'route' || page === 'suggest' ? 'maps' : page} />}
     </div>
   );
 }

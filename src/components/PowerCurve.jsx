@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { bestCurve, CURVE, trainingStress } from '../lib/power.js';
-import { ACCENT } from '../theme.js';
+import { ACCENT, GRID, AXIS, TICK, BG } from '../theme.js';
 
 const LABEL = { 5: '5 s', 15: '15 s', 30: '30 s', 60: '1 min', 120: '2 min', 300: '5 min', 600: '10 min', 1200: '20 min', 1800: '30 min', 3600: '1 h' };
 const RECENT = 90 * 86400e3;
@@ -39,10 +39,10 @@ export default function PowerCurve({ meta, activities, ftp }) {
       </div>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={data} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid stroke="#1e293b" vertical={false} />
-          <XAxis dataKey="d" stroke="#475569" tick={{ fill: '#94a3b8', fontSize: 11 }} interval="preserveStartEnd" />
-          <YAxis stroke="#475569" tick={{ fill: '#94a3b8', fontSize: 12 }} width={36} />
-          <Tooltip contentStyle={{ background: '#0b1222', border: '1px solid #1e293b', borderRadius: 8 }} labelStyle={{ color: '#e2e8f0' }}
+          <CartesianGrid stroke={GRID} vertical={false} />
+          <XAxis dataKey="d" stroke={AXIS} tick={{ fill: TICK, fontSize: 11 }} interval="preserveStartEnd" />
+          <YAxis stroke={AXIS} tick={{ fill: TICK, fontSize: 12 }} width={36} />
+          <Tooltip contentStyle={{ background: BG, border: `1px solid ${GRID}`, borderRadius: 8 }} labelStyle={{ color: '#f2f4f8' }}
             formatter={(v, k) => [`${v} W`, k === 'w' ? (meta ? 'Cette sortie' : 'Meilleur 90 j') : 'Meilleur 90 j']} />
           {meta && <Line dataKey="best" stroke="#64748b" strokeDasharray="4 4" strokeWidth={1.5} dot={false} isAnimationActive={false} />}
           <Line dataKey="w" stroke={ACCENT} strokeWidth={2.5} dot={{ r: 2.5, fill: ACCENT }} isAnimationActive={false} />
