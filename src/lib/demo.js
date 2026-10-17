@@ -58,7 +58,7 @@ export function demoTrack({ place = PLACES[0], sport = 'run', km = 10, start = D
       const slope = (base[i] - base[i - 1]) / d; // noise-free: vertex gaps can be under 1 m
       const v = Math.min(1.4 * prof.speed, Math.max(0.45 * prof.speed, prof.speed * Math.exp(-prof.k * slope)));
       t += (d / (v * (0.97 + rand() * 0.06))) * 1000;
-      const target = prof.hr + 260 * slope + 18 * (i / dist.length);
+      const target = Math.min(prof.hr + 45, prof.hr + 260 * slope + 18 * (i / dist.length));
       hr += (target - hr) * 0.04 + (rand() - 0.5) * 1.5;
     }
     return {

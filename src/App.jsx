@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import TabBar from './components/TabBar.jsx';
 import { createActivity } from './lib/activity.js';
-import { listActivities, saveActivities } from './lib/db.js';
+import { getSetting, listActivities, saveActivities, setSetting } from './lib/db.js';
 import { demoHistory } from './lib/demo.js';
 import { importFiles } from './lib/importer.js';
+import { DEFAULT_REST_HR, estimateMaxHr } from './lib/training.js';
 import ActivityPage from './pages/ActivityPage.jsx';
 import FeedPage from './pages/FeedPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
@@ -18,6 +19,13 @@ export default function App() {
   const [progress, setProgress] = useState(null); // { done, total }
   const [dragging, setDragging] = useState(false);
   const recording = useRecording();
+  const [hrSaved, setHrSaved] = useState(null); // { max?, rest? } set by the athlete
+  useEffect(() => { getSetting('hr').then(setHrSaved, () => {}); }, []);
+  const hr = useMemo(
+    () => ({ max: hrSaved?.max || estimateMaxHr(activities ?? []), rest: hrSaved?.rest || DEFAULT_REST_HR }),
+    [hrSaved, activities],
+  );
+  const saveHr = async (v) => { await setSetting('hr', v); setHrSaved(v); };
 
   const reload = useCallback(
     () => listActivities().then(setActivities, (e) => setToast({ kind: 'error', text: `Stockage indisponible : ${e.message}` })),
@@ -47,9 +55,9 @@ export default function App() {
   };
 
   let content;
-  if (page === 'activity') content = <ActivityPage id={id} activities={activities} onChange={reload} />;
+  if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} onChange={reload} />;
   else if (page === 'record') content = <RecordPage recording={recording} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
-  else if (page === 'profile') content = <ProfilePage activities={activities} onDemo={addDemo} onChange={reload} />;
+  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} hrSaved={hrSaved} onSaveHr={saveHr} onDemo={addDemo} onChange={reload} />;
   else content = <FeedPage activities={activities} onImport={onImport} onDemo={addDemo} />;
 
   return (

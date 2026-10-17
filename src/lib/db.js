@@ -1,12 +1,13 @@
-// Local activity store (IndexedDB). Two stores: `activities` holds light meta records for
-// lists, `tracks` holds the raw points by activity id, loaded only on the detail screen.
+// Local store (IndexedDB): `activities` holds light meta records for lists, `tracks` the
+// raw points by activity id (loaded only on the detail screen), plus `drafts` and `settings`.
 // Platform module: a native storage plugin can replace it without touching components.
 
 import { analyze } from './analyze.js';
 import { bestEfforts } from './records.js';
+import { hrTime } from './training.js';
 
 const DB_NAME = 'allure';
-const VERSION = 3;
+const VERSION = 4;
 let dbPromise;
 
 // Schema migrations, keyed by the version they upgrade to. They run inside the upgrade
@@ -17,21 +18,30 @@ const MIGRATIONS = {
     db.createObjectStore('tracks');
   },
   // v2: metas gain `bestEfforts`, computed from the stored tracks.
-  2: (db, tx) => {
-    const tracks = tx.objectStore('tracks');
-    tx.objectStore('activities').openCursor().onsuccess = (e) => {
-      const cursor = e.target.result;
-      if (!cursor) return;
-      tracks.get(cursor.key).onsuccess = (t) => {
-        const points = t.target.result;
-        cursor.update({ ...cursor.value, bestEfforts: points ? bestEfforts(analyze(points).track) : {} });
-        cursor.continue();
-      };
-    };
-  },
+  2: (db, tx) => backfill(tx, (points) => ({ bestEfforts: points ? bestEfforts(analyze(points).track) : {} })),
   // v3: `drafts` holds the in-progress live recording, so a crash or reload loses nothing.
   3: (db) => db.createObjectStore('drafts'),
+  // v4: metas gain `hrTime` (seconds per bpm); `settings` holds user preferences by key.
+  4: (db, tx) => {
+    db.createObjectStore('settings');
+    backfill(tx, (points) => ({ hrTime: points ? hrTime(points) : {} }));
+  },
 };
+
+// Patch every meta with fields computed from its track.
+// ponytail: each migration runs its own cursor, so a v1 -> v4 upgrade could interleave two
+// backfills on one record; only pre-v2 dev databases could hit it. Merge them if that matters.
+function backfill(tx, patch) {
+  const tracks = tx.objectStore('tracks');
+  tx.objectStore('activities').openCursor().onsuccess = (e) => {
+    const cursor = e.target.result;
+    if (!cursor) return;
+    tracks.get(cursor.key).onsuccess = (t) => {
+      cursor.update({ ...cursor.value, ...patch(t.target.result) });
+      cursor.continue();
+    };
+  };
+}
 
 function open() {
   return (dbPromise ??= new Promise((resolve, reject) => {
@@ -105,3 +115,7 @@ export function deleteActivities(ids) {
 export const saveDraft = (rec) => tx(['drafts'], 'readwrite', (s) => s.put(rec, 'current'));
 export const loadDraft = () => tx(['drafts'], 'readonly', (s) => s.get('current'));
 export const clearDraft = () => tx(['drafts'], 'readwrite', (s) => s.delete('current'));
+
+/** User preferences, e.g. getSetting('hr') -> { max, rest }. */
+export const getSetting = (key) => tx(['settings'], 'readonly', (s) => s.get(key));
+export const setSetting = (key, value) => tx(['settings'], 'readwrite', (s) => s.put(value, key));

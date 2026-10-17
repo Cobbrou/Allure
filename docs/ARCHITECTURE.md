@@ -41,11 +41,12 @@ Route changes run inside `document.startViewTransition` (slide or fade, see
 
 ## Storage (`lib/db.js`)
 
-IndexedDB database `allure`, version 3:
+IndexedDB database `allure`, version 4:
 
 - `activities` (keyPath `id`): **meta** records, small enough to list everything at once
 - `tracks` (key = activity id): raw **points** arrays, read only on the detail page
 - `drafts` (key `current`): the in-progress live recording, autosaved every 5 s
+- `settings` (key = setting name): user preferences, e.g. `hr` → `{ max, rest }`
 
 Schema changes bump `VERSION` and add an entry to `MIGRATIONS`, which run in order
 inside the upgrade transaction:
@@ -55,6 +56,7 @@ inside the upgrade transaction:
 | 1 | create `activities` and `tracks` |
 | 2 | backfill `bestEfforts` on every meta from its track |
 | 3 | create `drafts` |
+| 4 | create `settings`, backfill `hrTime` on every meta from its track |
 
 Open connections close on `versionchange`, so a newer tab can upgrade. If an older tab
 still blocks the upgrade, `open()` rejects with a "close the other tab" message.
@@ -73,6 +75,7 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
   distance, movingTime, avgPace, gain, avgHr,  // summary, same units as analyze()
   preview,               // ≤ 81 [lon, lat] pairs for feed thumbnails
   bestEfforts,           // { '1k': s, '5k': s, … } fastest elapsed time per distance
+  hrTime,                // { [bpm]: s } moving seconds per heart rate (lib/training.js)
 }
 
 // analyze(points): computed on demand, never stored
@@ -122,8 +125,8 @@ src/
   pages/         one component per route
   components/    reusable UI (TabBar, ActivityCard, RoutePreview, StatsGrid, TrackMap,
                  ProfileChart, SplitsTable, BestEfforts, ImportButton, ConfirmButton,
-                 Segmented, WeeklyChart, ActivityCalendar, RecordsList, LiveMap)
-  lib/           pure logic (analyze, records, stats, sports, format, activity, demo, recorder)
+                 Segmented, WeeklyChart, ActivityCalendar, RecordsList, LiveMap, HrZones, FitnessChart)
+  lib/           pure logic (analyze, records, stats, sports, format, activity, demo, recorder, training)
                  + platform modules (db, share, story, location, formats/)
 ```
 

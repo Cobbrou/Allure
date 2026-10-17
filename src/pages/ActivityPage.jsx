@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { fmtDate } from '../components/ActivityCard.jsx';
 import BestEfforts from '../components/BestEfforts.jsx';
 import ConfirmButton from '../components/ConfirmButton.jsx';
+import HrZones from '../components/HrZones.jsx';
 import ProfileChart from '../components/ProfileChart.jsx';
 import SplitsTable from '../components/SplitsTable.jsx';
 import StatsGrid from '../components/StatsGrid.jsx';
@@ -14,7 +15,7 @@ import { safeName, shareFile } from '../lib/share.js';
 import { exportStory } from '../lib/story.js';
 import { go } from '../router.js';
 
-export default function ActivityPage({ id, activities, onChange }) {
+export default function ActivityPage({ id, activities, hr, onChange }) {
   const [data, setData] = useState(); // undefined: loading, null: not found
   const [editing, setEditing] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -78,6 +79,7 @@ export default function ActivityPage({ id, activities, onChange }) {
           <h3>Profil <span className="legend ele">Altitude</span> <span className="legend hr">Cardio</span></h3>
           <ProfileChart track={act.track} hover={hover} />
         </section>
+        <HrZones hist={data.meta.hrTime} hr={hr} />
         <SplitsTable splits={splits} sport={act.sport} size={splitSize} />
         <BestEfforts meta={data.meta} activities={activities} />
       </main>

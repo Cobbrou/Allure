@@ -25,12 +25,12 @@ parity": every line must be covered before the app can claim it.
 | 5 | *Enregistrez des itinéraires pour les utiliser hors ligne* (save routes for offline use) | Offline routes + offline map tiles | 5 | Planned |
 | 6 | *Tracez vos propres itinéraires* (draw your own routes) | Route builder with road/trail snapping and elevation profile | 5 | Planned |
 | 7 | *Consultez votre historique d'entraînement à un seul et même endroit* (all your training history in one place) | Feed, profile totals, calendar, training log | 1 / 5 | Partly done (feed, totals, calendar). Training log in phase 5 |
-| 8 | *Analysez vos entraînements grâce à des statistiques avancées* (advanced stats) | HR zones, GAP, intervals, matched activities, predictions, power | 5 | Partly done (splits, best efforts) |
+| 8 | *Analysez vos entraînements grâce à des statistiques avancées* (advanced stats) | HR zones, GAP, intervals, matched activities, predictions, power | 5 | Partly done (splits, best efforts, HR zones) |
 | 9 | *Définissez des objectifs personnalisés et suivez vos progrès* (custom goals and progress) | Weekly / monthly / yearly goals per sport, progress rings | 5 | Planned |
 | 10 | *Mesurez-vous aux autres dans les classements sur les segments* (segment leaderboards) | Segments, auto-matching, leaderboards, live segments | 5 | Planned |
 | 11 | *Rejoignez et créez des challenges avec des amis* (join and create challenges with friends) | Platform challenges + user-created group challenges | 4 / 5 | Planned |
-| 12 | *Mesurez vos efforts dans différentes activités* (measure effort across sports) | Relative Effort: HR-based load comparable across sports | 5 | Planned |
-| 13 | *Découvrez votre score de condition physique au fil du temps* (fitness score over time) | Fitness & Freshness (CTL / ATL / TSB) chart | 5 | Planned |
+| 12 | *Mesurez vos efforts dans différentes activités* (measure effort across sports) | Relative Effort: HR-based load comparable across sports | 5 | Done (Banister TRIMP) |
+| 13 | *Découvrez votre score de condition physique au fil du temps* (fitness score over time) | Fitness & Freshness (CTL / ATL / TSB) chart | 5 | Done |
 
 ## Phase 0: Activity analysis ✅
 
@@ -115,9 +115,9 @@ Motion & polish
 
 Analysis & training (features 7, 8, 12, 13)
 - [ ] Training log: week-by-week view of every activity, sized by effort **(premium)**
-- [ ] Heart-rate zones and time in zone **(premium)**
-- [ ] Relative Effort: HR-based training load (e.g. TRIMP), comparable across sports **(premium)**
-- [ ] Fitness & Freshness: fitness score over time (CTL / ATL / TSB) **(premium)**
+- [x] Heart-rate zones and time in zone **(premium)**
+- [x] Relative Effort: HR-based training load (e.g. TRIMP), comparable across sports **(premium)**
+- [x] Fitness & Freshness: fitness score over time (CTL / ATL / TSB) **(premium)**
 - [ ] Grade Adjusted Pace (GAP) **(premium)**
 - [ ] Matched activities (same route, progress over time) **(premium)**
 - [ ] Race time predictions **(premium)**
