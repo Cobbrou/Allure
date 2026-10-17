@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fmtDuration } from '../lib/format.js';
+import { fmtDuration, fmtLength } from '../lib/format.js';
 import { detectIntervals, lapIntervals } from '../lib/intervals.js';
 import { effort } from '../lib/sports.js';
 import Segmented from './Segmented.jsx';
@@ -44,7 +44,7 @@ export default function Intervals({ meta, track, range }) {
       {laps.length > 0 && auto.length > 0 && <Segmented label="Source" options={SOURCES} value={source} onChange={choose} />}
       {work.length > 0 && (
         <p className="matched-sum intervals-sum">
-          {work.length} × {fmtDist(work.reduce((s, l) => s + l.dist, 0) / work.length)} · moy. {e(avg).value} {e(avg).unit}
+          {work.length} × {fmtLength(work.reduce((s, l) => s + l.dist, 0) / work.length)} · moy. {e(avg).value} {e(avg).unit}
         </p>
       )}
       <div className="iv-bars" role="group" aria-label="Intervalles">
@@ -61,7 +61,7 @@ export default function Intervals({ meta, track, range }) {
           {list.map((l, i) => (
             <tr key={i} className={`${l.work === false ? 'rest' : ''} ${sel === i ? 'on' : ''}`} onClick={() => pick(i)}>
               <td>{label(l, i)}</td>
-              <td>{fmtDist(l.dist)}</td>
+              <td>{fmtLength(l.dist)}</td>
               <td>{fmtDuration(l.time)}</td>
               <td className="pace">{e(l.pace).value}</td>
               <td>{l.hr ? Math.round(l.hr) : '—'}</td>
@@ -73,4 +73,3 @@ export default function Intervals({ meta, track, range }) {
   );
 }
 
-const fmtDist = (m) => (m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(2)} km`);

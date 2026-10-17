@@ -1,7 +1,7 @@
 import { useMemo, useRef } from 'react';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import TrackMap from '../components/TrackMap.jsx';
-import { fmtDuration } from '../lib/format.js';
+import { distUnit, elevUnit, fmtDist, fmtDuration, fmtElev } from '../lib/format.js';
 import { leaderboard } from '../lib/segments.js';
 import { effort, SPORTS } from '../lib/sports.js';
 import { back } from '../router.js';
@@ -36,9 +36,9 @@ export default function SegmentPage({ id, segments, activities, onDelete }) {
         </div>
         <section className="card">
           <div className="totals seg-totals">
-            <div><span>Distance</span><b>{(seg.distance / 1000).toFixed(2)} <small>km</small></b></div>
+            <div><span>Distance</span><b>{fmtDist(seg.distance)} <small>{distUnit()}</small></b></div>
             <div><span>Pente moy.</span><b>{seg.grade != null ? seg.grade.toFixed(1) : '—'} <small>%</small></b></div>
-            <div><span>Dénivelé</span><b>{seg.gain != null ? Math.round(seg.gain) : '—'} <small>m</small></b></div>
+            <div><span>Dénivelé</span><b>{seg.gain != null ? fmtElev(seg.gain) : '—'} <small>{elevUnit()}</small></b></div>
           </div>
         </section>
         <section className="card map-card"><TrackMap track={track} hover={hover} /></section>

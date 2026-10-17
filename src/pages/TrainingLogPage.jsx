@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import Segmented from '../components/Segmented.jsx';
-import { fmtDuration } from '../lib/format.js';
+import { distUnit, fmtDist, fmtDuration } from '../lib/format.js';
 import { SPORTS, sportOptions } from '../lib/sports.js';
 import { trainingWeeks } from '../lib/stats.js';
 import { relativeEffort } from '../lib/training.js';
@@ -46,7 +46,7 @@ export default function TrainingLogPage({ activities, hr }) {
             <div key={w.start} className="log-week">
               <p className="log-head">
                 <b>{fmtWeek(w.start)}</b>
-                <span className="muted">{(w.totals.distance / 1000).toFixed(1)} km · {fmtDuration(w.totals.movingTime)}</span>
+                <span className="muted">{fmtDist(w.totals.distance, 1)} {distUnit()} · {fmtDuration(w.totals.movingTime)}</span>
               </p>
               <div className="log-days">
                 {w.days.map((acts, k) => {
@@ -57,7 +57,7 @@ export default function TrainingLogPage({ activities, hr }) {
                   const main = acts.reduce((a, b) => (of(b, hr) > of(a, hr) ? b : a));
                   return (
                     <a key={k} className="log-day" href={`#/activity/${main.id}`}
-                      aria-label={acts.map((a) => `${SPORTS[a.sport]?.label} ${(a.distance / 1000).toFixed(1)} km`).join(', ')}>
+                      aria-label={acts.map((a) => `${SPORTS[a.sport]?.label} ${fmtDist(a.distance, 1)} ${distUnit()}`).join(', ')}>
                       <span className="bubble" style={{ '--d': `${d}px` }}>{d >= 28 && SPORTS[main.sport]?.icon}</span>
                       {acts.length > 1 && <span className="log-n">{acts.length}</span>}
                     </a>

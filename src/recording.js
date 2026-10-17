@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createActivity } from './lib/activity.js';
 import { clearDraft, loadDraft, saveActivities, saveDraft } from './lib/db.js';
 import { followCue } from './lib/follow.js';
-import { fmtDuration } from './lib/format.js';
+import { distUnit, fmtDist, fmtDuration } from './lib/format.js';
 import { haptic } from './lib/haptics.js';
 import { segmentCue } from './lib/liveSegments.js';
 import { keepAwake, speak, watchPosition } from './lib/location.js';
@@ -72,7 +72,7 @@ export function useRecording() {
     const timer = setInterval(() => {
       update((r) => tick(r, Date.now()));
       const r = ref.current;
-      lock.current?.update({ title: `${(r.distance / 1000).toFixed(2)} km · ${fmtDuration(elapsed(r, Date.now()))}`, paused: r.paused || r.autoPaused });
+      lock.current?.update({ title: `${fmtDist(r.distance)} ${distUnit()} · ${fmtDuration(elapsed(r, Date.now()))}`, paused: r.paused || r.autoPaused });
     }, 1000);
     const release = keepAwake();
     return () => { stop(); clearInterval(timer); release(); };

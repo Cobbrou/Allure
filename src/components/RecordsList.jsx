@@ -1,4 +1,4 @@
-import { fmtDuration, fmtPace } from '../lib/format.js';
+import { fmtDuration, fmtPaceUnit, paceUnit } from '../lib/format.js';
 
 /** Personal records table. records: [{ id, label, m, time?, activity? }]. */
 export default function RecordsList({ records }) {
@@ -15,7 +15,7 @@ export default function RecordsList({ records }) {
               {r.time ? (
                 <a href={`#/activity/${r.activity.id}`}>
                   <b>{fmtDuration(r.time)}</b>
-                  <span className="muted">{fmtPace(r.time / (r.m / 1000))} /km · {new Date(r.activity.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  <span className="muted">{fmtPaceUnit(r.time / (r.m / 1000))} {paceUnit()} · {new Date(r.activity.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </a>
               ) : (
                 <span className="muted">—</span>

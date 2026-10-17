@@ -1,5 +1,6 @@
 import { memo, useMemo } from 'react';
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { distLen, distUnit, elevLen, elevUnit } from '../lib/format.js';
 import { ACCENT, GRID, AXIS, TICK } from '../theme.js';
 
 // memo: the chart must not re-render on hover, the map cursor is updated imperatively.
@@ -11,7 +12,7 @@ const ProfileChart = memo(function ProfileChart({ track, hover }) {
     const out = [];
     track.forEach((p, i) => {
       if (i % step === 0 || i === track.length - 1)
-        out.push({ i, km: p.dist / 1000, ele: p.ele != null ? Math.round(p.ele) : null, hr: p.hr });
+        out.push({ i, km: p.dist / distLen(), ele: p.ele != null ? Math.round(p.ele / elevLen()) : null, hr: p.hr });
     });
     return out;
   }, [track]);
@@ -32,10 +33,10 @@ const ProfileChart = memo(function ProfileChart({ track, hover }) {
           </linearGradient>
         </defs>
         <CartesianGrid stroke={GRID} vertical={false} />
-        <XAxis dataKey="km" type="number" domain={[0, 'dataMax']} tickFormatter={(v) => `${v.toFixed(1)} km`}
+        <XAxis dataKey="km" type="number" domain={[0, 'dataMax']} tickFormatter={(v) => `${v.toFixed(1)} ${distUnit()}`}
           stroke={AXIS} tick={{ fill: TICK, fontSize: 12 }} tickCount={8} />
         {hasEle && <YAxis yAxisId="ele" domain={[(v) => Math.floor((v - 10) / 50) * 50, (v) => Math.ceil((v + 10) / 50) * 50]}
-          tickFormatter={(v) => `${Math.round(v)} m`} stroke={AXIS} tick={{ fill: TICK, fontSize: 12 }} width={60} />}
+          tickFormatter={(v) => `${Math.round(v)} ${elevUnit()}`} stroke={AXIS} tick={{ fill: TICK, fontSize: 12 }} width={60} />}
         {hasHr && <YAxis yAxisId="hr" orientation="right" domain={[(v) => Math.floor((v - 5) / 20) * 20, (v) => Math.ceil((v + 5) / 20) * 20]}
           tickFormatter={(v) => Math.round(v)} stroke={AXIS} tick={{ fill: '#f87171', fontSize: 12 }} width={40} />}
         <Tooltip content={<ChartTip />} cursor={{ stroke: ACCENT, strokeWidth: 1 }} />
@@ -51,8 +52,8 @@ function ChartTip({ active, payload }) {
   const p = payload[0].payload;
   return (
     <div className="tip">
-      <b>{p.km.toFixed(2)} km</b>
-      {p.ele != null && <span>⛰ {p.ele} m</span>}
+      <b>{p.km.toFixed(2)} {distUnit()}</b>
+      {p.ele != null && <span>⛰ {p.ele} {elevUnit()}</span>}
       {p.hr != null && <span className="hr">♥ {p.hr} bpm</span>}
     </div>
   );

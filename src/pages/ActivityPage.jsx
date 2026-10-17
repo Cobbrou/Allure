@@ -16,7 +16,7 @@ import TrackMap from '../components/TrackMap.jsx';
 import { analyze, computeSplits } from '../lib/analyze.js';
 import { deleteActivities, getActivity, updateActivity } from '../lib/db.js';
 import { defaultGear, GEAR_KINDS, gearFor } from '../lib/gear.js';
-import { SPORTS } from '../lib/sports.js';
+import { SPORTS, splitSize as splitSizeOf } from '../lib/sports.js';
 import { toGpx } from '../lib/formats/gpxExport.js';
 import { safeName, shareFile } from '../lib/share.js';
 import { go } from '../router.js';
@@ -32,7 +32,7 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
   }, [id]);
   // Keyed on points only, so renaming doesn't rebuild the map and chart.
   const analysis = useMemo(() => data && analyze(data.points), [data?.points]);
-  const splitSize = SPORTS[data?.meta.sport]?.split ?? 1000;
+  const splitSize = splitSizeOf(data?.meta.sport);
   const splits = useMemo(() => analysis && computeSplits(analysis.track, splitSize), [analysis, splitSize]);
 
   if (data === undefined) return (<><TopBar /><DetailSkeleton /></>);

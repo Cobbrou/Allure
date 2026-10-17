@@ -4,7 +4,7 @@ import LiveMap from '../components/LiveMap.jsx';
 import StatMetric from '../components/StatMetric.jsx';
 import { followRoute } from '../lib/follow.js';
 import { liveSegments } from '../lib/liveSegments.js';
-import { fmtDuration } from '../lib/format.js';
+import { distUnit, fmtDist, fmtDuration, fmtLength } from '../lib/format.js';
 import { haptic } from '../lib/haptics.js';
 import { speak, watchPosition } from '../lib/location.js';
 import { currentPace, elapsed, lapStatus } from '../lib/recorder.js';
@@ -55,7 +55,7 @@ function Setup({ recording, contacts, routes, routeId, segments, activities }) {
           Itinéraire à suivre
           <select value={routeSel} onChange={(e) => { setRouteSel(e.target.value); const r = routes.find((x) => x.id === e.target.value); if (r) setSport(r.sport); }}>
             <option value="">Aucun</option>
-            {routes.map((r) => <option key={r.id} value={r.id}>{r.name} · {(r.distance / 1000).toFixed(1)} km</option>)}
+            {routes.map((r) => <option key={r.id} value={r.id}>{r.name} · {fmtDist(r.distance, 1)} {distUnit()}</option>)}
           </select>
         </label>
       )}
@@ -66,7 +66,7 @@ function Setup({ recording, contacts, routes, routeId, segments, activities }) {
         ? <label className="switch"><input type="checkbox" checked={safety} onChange={(e) => setSafety(e.target.checked)} />Alerte si je reste immobile</label>
         : <p className="muted small-label">🛟 Ajoute un contact d'urgence dans ton <a href="#/profile">profil</a> pour être alerté si tu restes immobile.</p>}
       <p className={`gps ${gps?.error ? 'bad' : gps?.accuracy <= 20 ? 'good' : ''}`} role="status">
-        {gps?.error ?? (gps ? `GPS : précision ${Math.round(gps.accuracy)} m` : 'Recherche du GPS…')}
+        {gps?.error ?? (gps ? `GPS : précision ${fmtLength(gps.accuracy)}` : 'Recherche du GPS…')}
       </p>
       <button type="button" className="record-button" onClick={go}>GO</button>
     </main>
@@ -99,7 +99,7 @@ function Live({ recording, contacts, onSaved }) {
       <section className="live-hero">
         <StatMetric label="Temps" value={fmtDuration(time)} size="xl" />
         <div className="live-row">
-          <StatMetric label="Distance" value={(rec.distance / 1000).toFixed(2)} unit="km" size="lg" />
+          <StatMetric label="Distance" value={fmtDist(rec.distance)} unit={distUnit()} size="lg" />
           <StatMetric label={`${cur.short} actuelle`} value={cur.value} unit={cur.unit} size="lg" />
         </div>
       </section>
@@ -113,7 +113,7 @@ function Live({ recording, contacts, onSaved }) {
           {rec.laps?.length > 0 && <span key={rec.laps.length} className="chip lap">Tour {lapNow.n} <b>{fmtDuration(lapNow.time)}</b></span>}
           <SegmentChip rec={rec} now={now} />
           {rec.route && (
-            <span className="chip follow">🧭 <b>{rec.follow?.done ? 'Terminé' : `${(Math.max(0, rec.route.distance - (rec.follow?.along ?? 0)) / 1000).toFixed(2)} km`}</b></span>
+            <span className="chip follow">🧭 <b>{rec.follow?.done ? 'Terminé' : `${fmtDist(Math.max(0, rec.route.distance - (rec.follow?.along ?? 0)))} ${distUnit()}`}</b></span>
           )}
         </div>
         {contacts.length > 0 && <a className="sos" href={smsUrl(contacts, alertText(rec, now, true))} aria-label="Envoyer ma position à mes contacts d'urgence">SOS</a>}
@@ -184,7 +184,7 @@ function SegmentChip({ rec, now }) {
   const seg = (id) => rec.liveSegs.find((s) => s.id === id);
   if (active) {
     const left = seg(active.id).line.distance - (active.follow?.along ?? 0);
-    return <span className="chip seg">⚡ {seg(active.id).name} <b>{fmtDuration((now - active.start) / 1000)}</b> {Math.round(Math.max(0, left))} m</span>;
+    return <span className="chip seg">⚡ {seg(active.id).name} <b>{fmtDuration((now - active.start) / 1000)}</b> {fmtLength(Math.max(0, left))}</span>;
   }
   if (!last || now - last.at > RECENT) return null;
   const pr = last.pr != null && last.time < last.pr;

@@ -1,12 +1,13 @@
-import { fmtPace } from './format.js';
+import { distLen, fmtPace, fmtPaceUnit, fmtSpeed, paceUnit, shortLen, shortUnit, speedUnit } from './format.js';
 
-// display: how average effort is shown. 'speed' = km/h, 'pace' = min/km, 'pace100' = min/100 m.
-// split: split length in meters.
+// display: how average effort is shown. 'speed' = km/h, 'pace' = min/km, 'pace100' = min/100 m
+// (mi/h, min/mi and min/100 yd in imperial units).
+// split: split length in display units (km or mi; m or yd for swims), see splitSize.
 export const SPORTS = {
-  run: { label: 'Course', icon: '🏃', display: 'pace', split: 1000 },
-  ride: { label: 'Vélo', icon: '🚴', display: 'speed', split: 5000 },
-  hike: { label: 'Randonnée', icon: '🥾', display: 'pace', split: 1000 },
-  walk: { label: 'Marche', icon: '🚶', display: 'pace', split: 1000 },
+  run: { label: 'Course', icon: '🏃', display: 'pace', split: 1 },
+  ride: { label: 'Vélo', icon: '🚴', display: 'speed', split: 5 },
+  hike: { label: 'Randonnée', icon: '🥾', display: 'pace', split: 1 },
+  walk: { label: 'Marche', icon: '🚶', display: 'pace', split: 1 },
   swim: { label: 'Natation', icon: '🏊', display: 'pace100', split: 100 },
 };
 
@@ -23,12 +24,18 @@ export function sportFromGpxType(type = '') {
 export function effort(sport, sPerKm) {
   switch (SPORTS[sport]?.display) {
     case 'speed':
-      return { label: 'Vitesse moyenne', short: 'Vitesse', value: sPerKm ? (3600 / sPerKm).toFixed(1) : '—', unit: 'km/h' };
+      return { label: 'Vitesse moyenne', short: 'Vitesse', value: fmtSpeed(sPerKm), unit: speedUnit() };
     case 'pace100':
-      return { label: 'Allure moyenne', short: 'Allure', value: fmtPace(sPerKm / 10), unit: '/100m' };
+      return { label: 'Allure moyenne', short: 'Allure', value: fmtPace((sPerKm / 10) * shortLen()), unit: `/100${shortUnit()}` };
     default:
-      return { label: 'Allure moyenne', short: 'Allure', value: fmtPace(sPerKm), unit: '/km' };
+      return { label: 'Allure moyenne', short: 'Allure', value: fmtPaceUnit(sPerKm), unit: paceUnit() };
   }
+}
+
+/** Split length in meters for the current unit system. */
+export function splitSize(sport) {
+  const s = SPORTS[sport] ?? SPORTS.run;
+  return s.split * (s.display === 'pace100' ? shortLen() : distLen());
 }
 
 /** Grade Adjusted Pace only makes sense on foot. */

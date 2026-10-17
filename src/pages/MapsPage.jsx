@@ -6,6 +6,7 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import RoutePreview from '../components/RoutePreview.jsx';
 import Segmented from '../components/Segmented.jsx';
 import { forEachTrack } from '../lib/db.js';
+import { distUnit, elevUnit, fmtDist, fmtElev } from '../lib/format.js';
 import { homeLines, thin } from '../lib/heatmap.js';
 import { sportOptions, SPORTS } from '../lib/sports.js';
 import { MAP_STYLE } from '../lib/offline.js';
@@ -51,7 +52,7 @@ export default function MapsPage({ activities, routes }) {
             <RoutePreview coords={r.preview} />
             <span>
               <b>{SPORTS[r.sport]?.icon} {r.name}</b>
-              <span className="muted">{(r.distance / 1000).toFixed(1)} km{r.gain != null && ` · ${Math.round(r.gain)} m D+`}</span>
+              <span className="muted">{fmtDist(r.distance, 1)} {distUnit()}{r.gain != null && ` · ${fmtElev(r.gain)} ${elevUnit()} D+`}</span>
             </span>
             <span aria-hidden="true">›</span>
           </a>

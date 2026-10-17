@@ -190,6 +190,19 @@ watcher asks for it; the GPS warm-up on the setup screen stays on the WebView AP
 granted; asking for it needs another plugin (`@capacitor/local-notifications`), not added
 yet. The paid Transistorsoft plugin (motion detection, better battery) stays an option.
 
+## 2026-10-17: Display units as module state in format.js
+
+**Context**: imperial units touch ~30 components and the pure lib code that builds labels
+(spoken cues, story images, goals). Passing a `units` prop through all of them would be noisy.
+**Decision**: `lib/format.js` holds the unit system in a module variable (`setUnits`), and
+exposes converters and unit labels (`fmtDist`, `distUnit`, `fmtPaceUnit`…). Storage stays
+SI. App calls `setUnits` from the `units` setting during render, and the page tree remounts
+when it changes (`ErrorBoundary` key), so components read it during render. Split lengths
+are in display units (`SPORTS[sport].split`, see `splitSize`), so imperial runs get mile splits.
+**Consequences**: lib code reading the unit is not a pure function of its arguments any
+more; tests reset it with `setUnits('metric')`. Named race distances (5 km, 10 km…) and
+monthly challenges stay metric, as on the reference app.
+
 ## Open questions
 
 - **Backend stack** (phase 3). Candidates: Supabase (Postgres + PostGIS + auth, fastest

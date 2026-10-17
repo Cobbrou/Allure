@@ -13,7 +13,7 @@ import RecordsList from '../components/RecordsList.jsx';
 import Segmented from '../components/Segmented.jsx';
 import WeeklyChart from '../components/WeeklyChart.jsx';
 import { deleteActivities } from '../lib/db.js';
-import { fmtDuration } from '../lib/format.js';
+import { distUnit, elevUnit, fmtDist, fmtDuration, fmtElev } from '../lib/format.js';
 import { personalRecords, predictRaces } from '../lib/records.js';
 import { leaderboard } from '../lib/segments.js';
 import { SPORTS, sportOptions as sportOptionsOf } from '../lib/sports.js';
@@ -26,7 +26,12 @@ const PERIODS = [
   { id: 'all', label: 'Total' },
 ];
 
-export default function ProfilePage({ activities, hr, ftp, zones, onSaveZones, contacts, onSaveContacts, hrSaved, onSaveHr, goals, onSaveGoals, segments, gears, onSaveGears, onDemo, onChange }) {
+const UNITS = [
+  { id: 'metric', label: 'Métrique (km, m)' },
+  { id: 'imperial', label: 'Impérial (mi, ft)' },
+];
+
+export default function ProfilePage({ activities, hr, ftp, zones, onSaveZones, contacts, onSaveContacts, hrSaved, onSaveHr, goals, onSaveGoals, segments, gears, onSaveGears, units, onSaveUnits, onDemo, onChange }) {
   const list = activities ?? [];
   const [sport, setSport] = useState('');
   const [period, setPeriod] = useState('week');
@@ -39,7 +44,7 @@ export default function ProfilePage({ activities, hr, ftp, zones, onSaveZones, c
   const records = useMemo(() => personalRecords(list), [list]);
   const predictions = useMemo(() => predictRaces(list), [list]);
   const demoIds = list.filter((a) => a.source === 'demo').map((a) => a.id);
-  const allKm = list.reduce((s, a) => s + a.distance, 0) / 1000;
+  const allDist = list.reduce((s, a) => s + a.distance, 0);
 
   const generate = async () => {
     setBusy(true);
@@ -58,7 +63,7 @@ export default function ProfilePage({ activities, hr, ftp, zones, onSaveZones, c
           <div className="avatar">A</div>
           <div>
             <h2>Athlète Allure</h2>
-            <p className="muted">{list.length} activités · {allKm.toFixed(0)} km au total</p>
+            <p className="muted">{list.length} activités · {fmtDist(allDist, 0)} {distUnit()} au total</p>
           </div>
         </section>
 
@@ -71,9 +76,9 @@ export default function ProfilePage({ activities, hr, ftp, zones, onSaveZones, c
               <Segmented label="Période" options={PERIODS} value={period} onChange={setPeriod} />
               <div className="totals">
                 <div><span>Activités</span><b>{t.count}</b></div>
-                <div><span>Distance</span><b>{(t.distance / 1000).toFixed(1)} <small>km</small></b></div>
+                <div><span>Distance</span><b>{fmtDist(t.distance, 1)} <small>{distUnit()}</small></b></div>
                 <div><span>Temps</span><b>{fmtDuration(t.movingTime)}</b></div>
-                <div><span>Dénivelé</span><b>{Math.round(t.gain)} <small>m</small></b></div>
+                <div><span>Dénivelé</span><b>{fmtElev(t.gain)} <small>{elevUnit()}</small></b></div>
               </div>
             </section>
             <WeeklyChart weeks={weeks} />
@@ -91,6 +96,10 @@ export default function ProfilePage({ activities, hr, ftp, zones, onSaveZones, c
         )}
 
         <Gear gears={gears} activities={list} onSave={onSaveGears} />
+        <section className="card">
+          <h3>Unités</h3>
+          <Segmented label="Unités" options={UNITS} value={units} onChange={onSaveUnits} />
+        </section>
         <HrSettings hr={hr} saved={hrSaved} onSave={onSaveHr} />
         <PrivacyZones zones={zones} activities={list} onSave={onSaveZones} />
         <EmergencyContacts contacts={contacts} onSave={onSaveContacts} />
@@ -156,7 +165,7 @@ function SegmentsList({ segments, activities }) {
               <a className="rec-label seg-name" href={`#/segment/${seg.id}`}>{SPORTS[seg.sport]?.icon} {seg.name}</a>
               <a href={`#/segment/${seg.id}`}>
                 <b>{board.length ? fmtDuration(board[0].time) : '—'}</b>
-                <span className="muted">{(seg.distance / 1000).toFixed(2)} km · {board.length}×</span>
+                <span className="muted">{fmtDist(seg.distance)} {distUnit()} · {board.length}×</span>
               </a>
             </li>
           );

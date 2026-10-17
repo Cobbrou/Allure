@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { fmtDuration } from '../lib/format.js';
+import { distUnit, fmtDist, fmtDuration } from '../lib/format.js';
 import { effort, SPORTS } from '../lib/sports.js';
 import RoutePreview from './RoutePreview.jsx';
 import StatMetric from './StatMetric.jsx';
@@ -26,7 +26,7 @@ export default function ActivityCard({ a, i = 0, onShare }) {
       </header>
       <h2><a className="stretched" href={`#/activity/${a.id}`}>{a.name}</a></h2>
       <div className="metrics-row">
-        <StatMetric label="Distance" value={(a.distance / 1000).toFixed(2)} unit="km" size="lg" />
+        <StatMetric label="Distance" value={fmtDist(a.distance)} unit={distUnit()} size="lg" />
         <StatMetric label={e.short} value={e.value} unit={a.avgPace ? e.unit : ''} size="lg" />
         <StatMetric label="Temps" value={fmtDuration(a.movingTime)} size="lg" />
       </div>

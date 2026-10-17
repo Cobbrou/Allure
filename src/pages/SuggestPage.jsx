@@ -5,6 +5,7 @@ import TrackMap from '../components/TrackMap.jsx';
 import { preview } from '../lib/activity.js';
 import { analyze } from '../lib/analyze.js';
 import { forEachTrack } from '../lib/db.js';
+import { distUnit, elevUnit, fmtDist, fmtElev, isImperial } from '../lib/format.js';
 import { currentPosition } from '../lib/location.js';
 import { createRoute, fetchRoute, splitLegs } from '../lib/routes.js';
 import { SPORTS } from '../lib/sports.js';
@@ -65,7 +66,7 @@ export default function SuggestPage({ activities, onPick }) {
   };
 
   const keep = (c) => onPick(createRoute({
-    name: `Boucle de ${(c.distance / 1000).toFixed(0)} km`, sport, snap: true,
+    name: `Boucle de ${fmtDist(c.distance, 0)} ${distUnit()}`, sport, snap: true,
     waypoints: c.waypoints, legs: splitLegs(c.points, c.waypoints),
   }));
 
@@ -81,7 +82,7 @@ export default function SuggestPage({ activities, onPick }) {
       <main className="detail">
         <section className="card edit suggest-form">
           <Segmented label="Sport" options={SPORT_OPTIONS} value={sport} onChange={pickSport} />
-          <label>Distance : {km} km
+          <label>Distance : {fmtDist(km * 1000, isImperial() ? 1 : 0)} {distUnit()}
             <input type="range" min={min} max={max} step={sport === 'ride' ? 5 : 1} value={km} onChange={(e) => setKm(Number(e.target.value))} />
           </label>
           <div className="field"><span>Dénivelé</span><Segmented label="Dénivelé" options={TERRAIN} value={terrain} onChange={setTerrain} /></div>
@@ -101,7 +102,7 @@ export default function SuggestPage({ activities, onPick }) {
               <button key={c.bearing} type="button" className={`card link-card route-card suggestion ${i === picked ? 'on' : ''}`} onClick={() => setPicked(i)} aria-pressed={i === picked}>
                 <RoutePreview coords={preview(c.points)} />
                 <span>
-                  <b>{(c.distance / 1000).toFixed(1)} km · {Math.round(c.gain ?? 0)} m D+</b>
+                  <b>{fmtDist(c.distance, 1)} {distUnit()} · {fmtElev(c.gain ?? 0)} {elevUnit()} D+</b>
                   <span className="muted">
                     {c.unpaved != null && `${Math.round(c.unpaved * 100)} % de chemins · `}
                     {cells.current?.size ? `${Math.round((1 - c.familiar) * 100)} % de nouveau` : 'Nouveau terrain'}

@@ -1,9 +1,9 @@
 import { ACCENT, BG, GOOD, TEXT, TICK, TRACK } from '../theme.js';
 import { computeSplits } from './analyze.js';
-import { fmtDuration, fmtPace } from './format.js';
+import { distUnit, elevUnit, fmtDist, fmtDuration, fmtElev, shortUnit } from './format.js';
 import { fitToBox, toPlane } from './geo.js';
 import { hidePrivate } from './privacy.js';
-import { effort, SPORTS } from './sports.js';
+import { effort, SPORTS, splitSize } from './sports.js';
 import { safeName, shareFile } from './share.js';
 
 // Platform module (canvas): 1080x1920 social story images, in several templates, over a
@@ -14,7 +14,7 @@ export const W = 1080, H = 1920;
 const FONT = 'Inter, system-ui, sans-serif';
 const MAX_SPLITS = 20; // ponytail: longer activities show their first 20 splits only
 
-const splitsOf = (act) => computeSplits(act.track, SPORTS[act.sport]?.split ?? 1000).filter((s) => s.pace);
+const splitsOf = (act) => computeSplits(act.track, splitSize(act.sport)).filter((s) => s.pace);
 
 export const TEMPLATES = [
   { id: 'track', label: 'Tracé' },
@@ -118,7 +118,7 @@ function stats(act) {
   return {
     time: ['TEMPS', fmtDuration(act.movingTime)],
     effort: [e.short.toUpperCase(), act.avgPace ? `${e.value} ${e.unit}` : '—'],
-    gain: ['D+', act.gain != null ? `${Math.round(act.gain)} m` : '—'],
+    gain: ['D+', act.gain != null ? `${fmtElev(act.gain)} ${elevUnit()}` : '—'],
     hr: ['FC MOY.', act.avgHr ? `${Math.round(act.avgHr)} bpm` : '—'],
   };
 }
@@ -126,8 +126,8 @@ function stats(act) {
 /** Big distance figure with its unit, left-aligned at x. */
 function distance(s, act, x, y) {
   text(s, 'DISTANCE', x + 6, y - 150, '600 34px', s.muted);
-  const w = text(s, (act.distance / 1000).toFixed(2), x, y, '800 150px', TEXT);
-  text(s, 'km', x + w + 20, y, '700 60px', ACCENT);
+  const w = text(s, fmtDist(act.distance), x, y, '800 150px', TEXT);
+  text(s, distUnit(), x + w + 20, y, '700 60px', ACCENT);
 }
 
 /** Grid of [label, value] pairs, two per row. */
@@ -185,7 +185,7 @@ function drawTrackTemplate(s, act) {
 /** Centered column of three big figures and a small track: the classic overlay sticker. */
 function drawSticker(s, act) {
   const st = stats(act);
-  const rows = [['DISTANCE', `${(act.distance / 1000).toFixed(2)} km`], st.effort, st.time];
+  const rows = [['DISTANCE', `${fmtDist(act.distance)} ${distUnit()}`], st.effort, st.time];
   rows.forEach(([label, value], i) => {
     const y = 560 + i * 250;
     text(s, label, W / 2, y, '600 36px', s.muted, 'center');
@@ -221,8 +221,8 @@ function drawProfile(s, act) {
     g.strokeStyle = ACCENT;
     g.stroke();
     const eles = pts.map((p) => p.ele);
-    text(s, `${Math.round(Math.max(...eles))} m`, W - 90, box.y - 30, '600 34px', s.muted, 'right');
-    text(s, `${Math.round(Math.min(...eles))} m`, W - 90, base + 60, '600 34px', s.muted, 'right');
+    text(s, `${fmtElev(Math.max(...eles))} ${elevUnit()}`, W - 90, box.y - 30, '600 34px', s.muted, 'right');
+    text(s, `${fmtElev(Math.min(...eles))} ${elevUnit()}`, W - 90, base + 60, '600 34px', s.muted, 'right');
   }
   distance(s, act, 84, 1480);
   const st = stats(act);
@@ -234,12 +234,13 @@ function drawSplits(s, act) {
   header(s, act);
   const { g } = s;
   const splits = splitsOf(act).slice(0, MAX_SPLITS);
-  const size = SPORTS[act.sport]?.split ?? 1000;
+  const small = SPORTS[act.sport]?.display === 'pace100';
+  const step = SPORTS[act.sport]?.split ?? 1;
   const speeds = splits.map((sp) => 1 / sp.pace);
   const max = Math.max(...speeds), min = Math.min(...speeds);
   const top = 420, bottom = 1700, row = Math.min(90, (bottom - top) / splits.length);
   const x0 = 220, wMax = W - 90 - x0;
-  const pace = (sp) => (act.sport === 'ride' ? `${(3600 / sp.pace).toFixed(1)} km/h` : fmtPace(act.sport === 'swim' ? sp.pace / 10 : sp.pace));
+  const pace = (sp) => { const e = effort(act.sport, sp.pace); return act.sport === 'ride' ? `${e.value} ${e.unit}` : e.value; };
   splits.forEach((sp, i) => {
     const y = top + i * row;
     const w = wMax * (0.35 + 0.65 * ((speeds[i] - min) / (max - min || 1)));
@@ -248,12 +249,12 @@ function drawSplits(s, act) {
     g.beginPath();
     g.roundRect(x0, y, w, h, h / 2);
     g.fill();
-    const label = size >= 1000 ? `${((i + 1) * size) / 1000}` : `${(i + 1) * size}`;
+    const label = `${(i + 1) * step}`;
     const font = `600 ${Math.round(h * 0.6)}px`;
     text(s, label, x0 - 30, y + h * 0.75, font, s.muted, 'right');
     text(s, pace(sp), x0 + 24, y + h * 0.75, font, TEXT);
   });
-  text(s, size >= 1000 ? 'KM' : 'M', x0 - 30, top - 30, '600 30px', s.muted, 'right');
+  text(s, (small ? shortUnit() : distUnit()).toUpperCase(), x0 - 30, top - 30, '600 30px', s.muted, 'right');
   const st = stats(act);
-  text(s, `${(act.distance / 1000).toFixed(2)} km · ${st.time[1]} · ${st.effort[1]}`, 90, 1800, '700 44px', TEXT);
+  text(s, `${fmtDist(act.distance)} ${distUnit()} · ${st.time[1]} · ${st.effort[1]}`, 90, 1800, '700 44px', TEXT);
 }

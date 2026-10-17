@@ -1,4 +1,4 @@
-import { fmtDuration, fmtPace } from '../lib/format.js';
+import { fmtDuration, fmtPaceUnit, paceUnit } from '../lib/format.js';
 import { personalRecords, RECORD_DISTANCES } from '../lib/records.js';
 
 /** This run's best efforts, flagging the ones that are current personal records. */
@@ -18,7 +18,7 @@ export default function BestEfforts({ meta, activities }) {
               <span>
                 {prs.has(r.id) && <span className="pr" title="Record personnel">PR</span>}
                 <b>{fmtDuration(t)}</b>
-                <span className="muted">{fmtPace(t / (r.m / 1000))} /km</span>
+                <span className="muted">{fmtPaceUnit(t / (r.m / 1000))} {paceUnit()}</span>
               </span>
             </li>
           );

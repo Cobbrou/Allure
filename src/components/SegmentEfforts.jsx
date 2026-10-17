@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fmtDuration } from '../lib/format.js';
+import { distUnit, fmtDist, fmtDuration, fmtLength } from '../lib/format.js';
 import { createSegment, leaderboard } from '../lib/segments.js';
 
 const MIN_LENGTH = 100; // m
@@ -51,13 +51,13 @@ function SegmentForm({ meta, track, range, onDone, onCreate }) {
   useEffect(() => { range.current([from, to]); }, [range, from, to]);
   useEffect(() => () => range.current(null), [range]);
   const length = track[to].dist - track[from].dist;
-  const km = (i) => (track[i].dist / 1000).toFixed(2);
+  const at = (i) => fmtDist(track[i].dist);
 
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true);
     try {
-      await onCreate(createSegment({ name: name.trim() || `Segment ${km(from)}–${km(to)} km`, sport: meta.sport, track, from, to }));
+      await onCreate(createSegment({ name: name.trim() || `Segment ${at(from)}–${at(to)} ${distUnit()}`, sport: meta.sport, track, from, to }));
       onDone();
     } finally {
       setBusy(false);
@@ -69,13 +69,13 @@ function SegmentForm({ meta, track, range, onDone, onCreate }) {
       <label>Nom
         <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder="Montée du col…" />
       </label>
-      <label>Départ · {km(from)} km
+      <label>Départ · {at(from)} {distUnit()}
         <input type="range" min="0" max={last} value={from} onChange={(e) => setFrom(Math.min(Number(e.target.value), to - 1))} />
       </label>
-      <label>Arrivée · {km(to)} km
+      <label>Arrivée · {at(to)} {distUnit()}
         <input type="range" min="0" max={last} value={to} onChange={(e) => setTo(Math.max(Number(e.target.value), from + 1))} />
       </label>
-      <p className="muted">{(length / 1000).toFixed(2)} km{length < MIN_LENGTH && ` · ${MIN_LENGTH} m minimum`}</p>
+      <p className="muted">{fmtDist(length)} {distUnit()}{length < MIN_LENGTH && ` · ${fmtLength(MIN_LENGTH)} minimum`}</p>
       <div className="edit-actions">
         <button type="button" className="ghost" onClick={onDone}>Annuler</button>
         <button type="submit" disabled={busy || length < MIN_LENGTH}>{busy ? 'Recherche des passages…' : 'Créer'}</button>

@@ -8,6 +8,7 @@ import ProfileChart from '../components/ProfileChart.jsx';
 import Segmented from '../components/Segmented.jsx';
 import Terrain3D from '../components/Terrain3D.js';
 import { analyze } from '../lib/analyze.js';
+import { distUnit, elevUnit, fmtDist, fmtElev } from '../lib/format.js';
 import { toGpx } from '../lib/formats/gpxExport.js';
 import { createRoute, fetchLeg, joinLegs, legKey, straightLeg } from '../lib/routes.js';
 import { safeName, shareFile } from '../lib/share.js';
@@ -112,8 +113,8 @@ function Builder({ saved, activities, onSave, onDelete }) {
       {stats && (
         <section className="card">
           <div className="totals seg-totals">
-            <div><span>Distance</span><b>{(stats.distance / 1000).toFixed(2)} <small>km</small></b></div>
-            <div><span>Dénivelé</span><b>{stats.gain != null ? Math.round(stats.gain) : '—'} <small>m</small></b></div>
+            <div><span>Distance</span><b>{fmtDist(stats.distance)} <small>{distUnit()}</small></b></div>
+            <div><span>Dénivelé</span><b>{stats.gain != null ? fmtElev(stats.gain) : '—'} <small>{elevUnit()}</small></b></div>
             <div><span>Points</span><b>{waypoints.length}</b></div>
           </div>
           {stats.gain != null && <ProfileChart track={stats.track} hover={hover} />}

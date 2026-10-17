@@ -1,7 +1,8 @@
 import { progress } from './follow.js';
 import { haversine } from './geo.js';
 import { segmentStep } from './liveSegments.js';
-import { SPORTS } from './sports.js';
+import { distLen, fmtSpeed, isImperial, shortLen } from './format.js';
+import { SPORTS, splitSize } from './sports.js';
 
 // Live recording as a pure state machine: every function takes a recording and returns
 // a new one (or the same object when nothing changed). Times are ms epoch.
@@ -97,12 +98,14 @@ export function currentPace(rec) {
 
 /** Spoken summary when `next` crosses a split boundary (sport split size), else null. */
 export function splitCue(prev, next, now) {
-  const size = SPORTS[next.sport]?.split ?? 1000;
+  const sport = SPORTS[next.sport] ?? SPORTS.run;
+  const size = splitSize(next.sport);
   const n = Math.floor(next.distance / size);
   if (n <= Math.floor(prev.distance / size)) return null;
   const sPerKm = elapsed(next, now) / (next.distance / 1000);
-  const dist = size >= 1000 ? `${(n * size) / 1000} kilomètre${n * size > 1000 ? 's' : ''}` : `${n * size} mètres`;
-  if (SPORTS[next.sport]?.display === 'speed') return `${dist}. Vitesse moyenne ${(3600 / sPerKm).toFixed(1).replace('.', ',')} kilomètres heure.`;
-  const s = Math.round(SPORTS[next.sport]?.display === 'pace100' ? sPerKm / 10 : sPerKm);
+  const count = n * sport.split, long = isImperial() ? 'mile' : 'kilomètre';
+  const dist = sport.display === 'pace100' ? `${count} ${isImperial() ? 'yards' : 'mètres'}` : `${count} ${long}${count > 1 ? 's' : ''}`;
+  if (sport.display === 'speed') return `${dist}. Vitesse moyenne ${fmtSpeed(sPerKm).replace('.', ',')} ${long}s heure.`;
+  const s = Math.round(sport.display === 'pace100' ? (sPerKm / 10) * shortLen() : (sPerKm * distLen()) / 1000);
   return `${dist}. Allure moyenne ${Math.floor(s / 60)} minutes ${s % 60}.`;
 }

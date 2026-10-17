@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { distLen, distUnit } from '../lib/format.js';
 import { GEAR_KINDS, gearUsage, toggleDefault } from '../lib/gear.js';
 import ConfirmButton from './ConfirmButton.jsx';
 import Segmented from './Segmented.jsx';
 
 const KIND_OPTIONS = Object.entries(GEAR_KINDS).map(([id, k]) => ({ id, label: `${k.icon} ${k.label}` }));
-const km = (m) => `${Math.round(m / 1000).toLocaleString('fr-FR')} km`;
+const km = (m) => `${Math.round(m / distLen()).toLocaleString('fr-FR')} ${distUnit()}`;
 
 /** Shoes and bikes with their mileage; shoes show wear against their replacement distance. */
 export default function Gear({ gears, activities, onSave }) {
@@ -81,13 +82,13 @@ function GearForm({ gears, onAdd, onCancel }) {
   const [kind, setKind] = useState('shoes');
   const [name, setName] = useState('');
   const [initial, setInitial] = useState('');
-  const [alert, setAlert] = useState(String(GEAR_KINDS.shoes.alert / 1000));
+  const [alert, setAlert] = useState(String(Math.round(GEAR_KINDS.shoes.alert / distLen())));
   const hasDefault = gears.some((g) => g.kind === kind && g.isDefault && !g.retired);
   const [isDefault, setIsDefault] = useState(true);
-  const pickKind = (k) => { setKind(k); setAlert(GEAR_KINDS[k].alert ? String(GEAR_KINDS[k].alert / 1000) : ''); };
+  const pickKind = (k) => { setKind(k); setAlert(GEAR_KINDS[k].alert ? String(Math.round(GEAR_KINDS[k].alert / distLen())) : ''); };
   const submit = (e) => {
     e.preventDefault();
-    const m = (v) => (Number(v) > 0 ? Math.round(Number(v) * 1000) : null);
+    const m = (v) => (Number(v) > 0 ? Math.round(Number(v) * distLen()) : null);
     onAdd({ id: crypto.randomUUID(), name: name.trim() || GEAR_KINDS[kind].label, kind, initial: m(initial) ?? 0, alert: m(alert), isDefault, retired: false });
   };
   return (
@@ -97,10 +98,10 @@ function GearForm({ gears, onAdd, onCancel }) {
         <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder={kind === 'shoes' ? 'Pegasus 41' : 'Vélo de route'} />
       </label>
       <div className="row">
-        <label>Déjà parcouru (km)
+        <label>Déjà parcouru ({distUnit()})
           <input type="number" inputMode="decimal" min="0" step="any" placeholder="0" value={initial} onChange={(e) => setInitial(e.target.value)} />
         </label>
-        <label>Alerte à (km)
+        <label>Alerte à ({distUnit()})
           <input type="number" inputMode="decimal" min="0" step="any" placeholder="aucune" value={alert} onChange={(e) => setAlert(e.target.value)} />
         </label>
       </div>

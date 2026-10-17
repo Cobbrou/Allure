@@ -200,7 +200,8 @@ Pixel Watch / Google
 ## Cross-cutting
 
 - [ ] i18n (UI currently French only): English + French
-- [ ] Imperial units
+- [x] Imperial units (Profile → Unités: mi, ft, /mi, mi/h, /100 yd, mile splits and
+      spoken cues; named race distances and monthly challenges stay metric)
 - [ ] Accessibility pass (keyboard navigation of chart and map, contrast)
 - [ ] Self-hosted or paid map tiles for production. The free Carto basemap has
       usage limits.

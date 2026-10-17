@@ -4,6 +4,7 @@ import TabBar from './components/TabBar.jsx';
 import { createActivity } from './lib/activity.js';
 import { deleteRoute, deleteSegment, getSetting, listActivities, listRoutes, listSegments, saveActivities, saveRoute, saveSegment, setSetting } from './lib/db.js';
 import { demoHistory } from './lib/demo.js';
+import { setUnits } from './lib/format.js';
 import { newlyCompleted } from './lib/challenges.js';
 import { goalLabel, newlyReached } from './lib/goals.js';
 import { importFiles } from './lib/importer.js';
@@ -86,6 +87,10 @@ export default function App() {
   const [contacts, setContacts] = useState([]); // emergency contacts
   useEffect(() => { getSetting('contacts').then((c) => c && setContacts(c), () => {}); }, []);
   const saveContacts = async (c) => { await setSetting('contacts', c); setContacts(c); };
+  const [units, setUnitsState] = useState('metric'); // 'metric' | 'imperial'
+  useEffect(() => { getSetting('units').then((u) => u && setUnitsState(u), () => {}); }, []);
+  const saveUnits = async (u) => { await setSetting('units', u); setUnitsState(u); };
+  setUnits(units); // read by format.js during render; the page remounts on change (key below)
   const [gears, setGears] = useState([]);
   useEffect(() => { getSetting('gear').then((g) => g && setGears(g), () => {}); }, []);
   const saveGears = async (g) => { await setSetting('gear', g); setGears(g); };
@@ -141,7 +146,7 @@ ${cur.text}` } : summary));
   else if (page === 'groups') content = <GroupsPage activities={activities} />;
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
   else if (page === 'record') content = <RecordPage recording={recording} contacts={contacts} routes={routes} routeId={id} segments={segments ?? []} activities={activities ?? []} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
-  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} onDemo={addDemo} onChange={reload} />;
+  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} units={units} onSaveUnits={saveUnits} onDemo={addDemo} onChange={reload} />;
   else content = <FeedPage activities={activities} zones={zones} onRefresh={reload} onImport={onImport} onDemo={addDemo} />;
 
   return (
@@ -162,7 +167,7 @@ ${cur.text}` } : summary));
           {toast.text}
         </div>
       )}
-      <ErrorBoundary key={`${page}/${id ?? ''}`}>
+      <ErrorBoundary key={`${page}/${id ?? ''}/${units}`}>
         <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
       </ErrorBoundary>
       {!(page === 'record' && recording.rec) && <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'log' ? 'profile' : page === 'route' || page === 'suggest' ? 'maps' : page} />}

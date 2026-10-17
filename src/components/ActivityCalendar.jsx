@@ -1,3 +1,4 @@
+import { distUnit, fmtDist } from '../lib/format.js';
 import { useMemo, useState } from 'react';
 import { byDay, monthGrid, startOfDay } from '../lib/stats.js';
 
@@ -31,7 +32,7 @@ export default function ActivityCalendar({ activities, sport }) {
           const km = acts.reduce((s, a) => s + a.distance, 0) / 1000;
           return (
             <a key={i} href={`#/activity/${acts[0].id}`} className={`cal-day active ${t === today ? 'today' : ''}`}
-              style={{ '--s': Math.min(1, 0.55 + km / 60) }} aria-label={`${n} : ${acts.length} activité(s), ${km.toFixed(1)} km`}>
+              style={{ '--s': Math.min(1, 0.55 + km / 60) }} aria-label={`${n} : ${acts.length} activité(s), ${fmtDist(km * 1000, 1)} ${distUnit()}`}>
               {n}
             </a>
           );
