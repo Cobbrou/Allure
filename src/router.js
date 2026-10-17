@@ -5,8 +5,11 @@ import { flushSync } from 'react-dom';
 // "#/activity/abc" -> ['activity', 'abc']; "" or "#/" -> [''].
 const parse = () => location.hash.replace(/^#\/?/, '').split('/');
 
-// Detail pages sit one level below tabs: going deeper slides forward, coming back slides back.
-const depth = (route) => (['activity', 'log', 'heatmap'].includes(route[0]) ? 1 : 0);
+// Detail pages sit below tabs (a segment below the activity it was opened from): going
+// deeper slides forward, coming back slides back.
+const DEPTH = { activity: 1, log: 1, heatmap: 1, segment: 2 };
+const depth = (route) => DEPTH[route[0]] ?? 0;
+let inApp = false; // a hash change happened in this session, so history.back() stays in the app
 const scrolls = new Map(); // hash -> scrollY, so going back to the feed keeps its position
 
 export function useRoute() {
@@ -15,6 +18,7 @@ export function useRoute() {
     let prevHash = location.hash;
     let prevRoute = parse();
     const onChange = () => {
+      inApp = true;
       scrolls.set(prevHash, window.scrollY);
       const next = parse();
       const d = depth(next) - depth(prevRoute);
@@ -37,4 +41,10 @@ export function useRoute() {
 
 export function go(path) {
   location.hash = path;
+}
+
+/** Back to the previous screen, or to `fallback` when the app was opened on this one (deep link). */
+export function back(fallback) {
+  if (inApp) history.back();
+  else go(fallback);
 }

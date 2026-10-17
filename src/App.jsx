@@ -2,14 +2,14 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import TabBar from './components/TabBar.jsx';
 import { createActivity } from './lib/activity.js';
-import { getSetting, listActivities, saveActivities, setSetting } from './lib/db.js';
+import { deleteSegment, getSetting, listActivities, listSegments, saveActivities, saveSegment, setSetting } from './lib/db.js';
 import { demoHistory } from './lib/demo.js';
 import { goalLabel, newlyReached } from './lib/goals.js';
 import { importFiles } from './lib/importer.js';
 import { DEFAULT_REST_HR, estimateMaxHr } from './lib/training.js';
 import FeedPage from './pages/FeedPage.jsx';
 import { useRecording } from './recording.js';
-import { go, useRoute } from './router.js';
+import { back, go, useRoute } from './router.js';
 
 // The feed is the start screen and ships in the main chunk. The other pages pull in
 // MapLibre and Recharts, so they load as separate chunks, fetched once the app is idle.
@@ -19,12 +19,14 @@ const pages = {
   profile: () => import('./pages/ProfilePage.jsx'),
   log: () => import('./pages/TrainingLogPage.jsx'),
   heatmap: () => import('./pages/HeatmapPage.jsx'),
+  segment: () => import('./pages/SegmentPage.jsx'),
 };
 const ActivityPage = lazy(pages.activity);
 const RecordPage = lazy(pages.record);
 const ProfilePage = lazy(pages.profile);
 const TrainingLogPage = lazy(pages.log);
 const HeatmapPage = lazy(pages.heatmap);
+const SegmentPage = lazy(pages.segment);
 
 export default function App() {
   const [page, id] = useRoute();
@@ -46,6 +48,16 @@ export default function App() {
   const saveHr = async (v) => { await setSetting('hr', v); setHrSaved(v); };
   const [goals, setGoals] = useState([]);
   useEffect(() => { getSetting('goals').then((g) => g && setGoals(g), () => {}); }, []);
+  const [segments, setSegments] = useState(null);
+  const loadSegments = () => listSegments().then(setSegments, () => setSegments([]));
+  useEffect(() => { loadSegments(); }, []);
+  // A new segment adds efforts to existing metas: reload both.
+  const addSegment = async (seg) => { await saveSegment(seg); await Promise.all([loadSegments(), reload()]); };
+  const removeSegment = async (sid) => {
+    await deleteSegment(sid);
+    await loadSegments();
+    back('/profile');
+  };
   const saveGoals = async (g) => { await setSetting('goals', g); setGoals(g); };
 
   // Reloading after a save, import or demo is when a goal can be crossed: celebrate it.
@@ -89,11 +101,12 @@ ${cur.text}` } : summary));
   };
 
   let content;
-  if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} onChange={reload} />;
+  if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} segments={segments ?? []} onSegment={addSegment} onChange={reload} />;
   else if (page === 'log') content = <TrainingLogPage activities={activities} hr={hr} />;
   else if (page === 'heatmap') content = <HeatmapPage activities={activities} />;
+  else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
   else if (page === 'record') content = <RecordPage recording={recording} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
-  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} onDemo={addDemo} onChange={reload} />;
+  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} onDemo={addDemo} onChange={reload} />;
   else content = <FeedPage activities={activities} onImport={onImport} onDemo={addDemo} />;
 
   return (
@@ -117,7 +130,7 @@ ${cur.text}` } : summary));
       <ErrorBoundary key={`${page}/${id ?? ''}`}>
         <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
       </ErrorBoundary>
-      <TabBar active={page === 'activity' ? '' : page === 'log' || page === 'heatmap' ? 'profile' : page} />
+      <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'log' || page === 'heatmap' ? 'profile' : page} />
     </div>
   );
 }

@@ -27,7 +27,7 @@ parity": every line must be covered before the app can claim it.
 | 7 | *Consultez votre historique d'entraînement à un seul et même endroit* (all your training history in one place) | Feed, profile totals, calendar, training log | 1 / 5 | Done |
 | 8 | *Analysez vos entraînements grâce à des statistiques avancées* (advanced stats) | HR zones, GAP, intervals, matched activities, predictions, power | 5 | Partly done (splits, best efforts, HR zones, GAP, race predictions, matched activities) |
 | 9 | *Définissez des objectifs personnalisés et suivez vos progrès* (custom goals and progress) | Weekly / monthly / yearly goals per sport, progress rings | 5 | Done (in-app toast when reached; push notifications in phase 6) |
-| 10 | *Mesurez-vous aux autres dans les classements sur les segments* (segment leaderboards) | Segments, auto-matching, leaderboards, live segments | 5 | Planned |
+| 10 | *Mesurez-vous aux autres dans les classements sur les segments* (segment leaderboards) | Segments, auto-matching, leaderboards, live segments | 5 | Partly done (segments and personal efforts ranking; shared leaderboards need accounts) |
 | 11 | *Rejoignez et créez des challenges avec des amis* (join and create challenges with friends) | Platform challenges + user-created group challenges | 4 / 5 | Planned |
 | 12 | *Mesurez vos efforts dans différentes activités* (measure effort across sports) | Relative Effort: HR-based load comparable across sports | 5 | Done (Banister TRIMP) |
 | 13 | *Découvrez votre score de condition physique au fil du temps* (fitness score over time) | Fitness & Freshness (CTL / ATL / TSB) chart | 5 | Done |
@@ -137,7 +137,8 @@ Goals (feature 9)
       (in-app toast; push in phase 6)
 
 Segments (feature 10)
-- [ ] Segments: create, auto-match on upload, segment efforts
+- [x] Segments: create from an activity, auto-match on save, segment efforts ranked
+      against your own (local; shared segments wait for phase 3)
 - [ ] Segment leaderboards (filters: age, weight, friends, clubs) **(premium)**
 - [ ] Live segments during recording **(premium)**
 - [ ] Local Legends (most efforts in 90 days)

@@ -5,6 +5,7 @@ import ConfirmButton from '../components/ConfirmButton.jsx';
 import HrZones from '../components/HrZones.jsx';
 import MatchedActivities from '../components/MatchedActivities.jsx';
 import ProfileChart from '../components/ProfileChart.jsx';
+import SegmentEfforts from '../components/SegmentEfforts.jsx';
 import SplitsTable from '../components/SplitsTable.jsx';
 import StatsGrid from '../components/StatsGrid.jsx';
 import TrackMap from '../components/TrackMap.jsx';
@@ -16,11 +17,12 @@ import { safeName, shareFile } from '../lib/share.js';
 import { exportStory } from '../lib/story.js';
 import { go } from '../router.js';
 
-export default function ActivityPage({ id, activities, hr, onChange }) {
+export default function ActivityPage({ id, activities, hr, segments, onSegment, onChange }) {
   const [data, setData] = useState(); // undefined: loading, null: not found
   const [editing, setEditing] = useState(false);
   const [exporting, setExporting] = useState(false);
   const hover = useRef(() => {});
+  const range = useRef(() => {});
 
   useEffect(() => {
     getActivity(id).then((d) => setData(d ?? null), () => setData(null));
@@ -74,8 +76,10 @@ export default function ActivityPage({ id, activities, hr, onChange }) {
         )}
         <StatsGrid act={act} />
         <section className="card map-card">
-          <TrackMap track={act.track} hover={hover} />
+          <TrackMap track={act.track} hover={hover} range={range} />
         </section>
+        <SegmentEfforts meta={activities?.find((a) => a.id === id) ?? data.meta} track={act.track} segments={segments}
+          activities={activities} range={range} onCreate={onSegment} />
         <section className="card">
           <h3>Profil <span className="legend ele">Altitude</span> <span className="legend hr">Cardio</span></h3>
           <ProfileChart track={act.track} hover={hover} />

@@ -7,8 +7,11 @@ import { ACCENT, MAP_STYLE } from '../theme.js';
 
 setWorkerUrl(workerUrl);
 
-/** Route map. Sets `hover.current(index | null)` to move a cursor imperatively (no re-render). */
-export default function TrackMap({ track, hover }) {
+/**
+ * Route map. Sets `hover.current(index | null)` to move a cursor imperatively (no re-render),
+ * and `range.current([from, to] | null)` to highlight a stretch (segment creation).
+ */
+export default function TrackMap({ track, hover, range }) {
   const el = useRef();
   useEffect(() => {
     const coords = track.map((p) => [p.lon, p.lat]);
@@ -23,7 +26,12 @@ export default function TrackMap({ track, hover }) {
         paint: { 'line-color': ACCENT, 'line-width': 14, 'line-blur': 10, 'line-opacity': 0.55 } });
       map.addLayer({ id: 'route', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: { 'line-color': ACCENT, 'line-width': 4 } });
+      map.addSource('range', { type: 'geojson', data: rangeData() });
+      map.addLayer({ id: 'range', type: 'line', source: 'range', layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: { 'line-color': '#fff', 'line-width': 6 } });
     });
+    let selected = null;
+    const rangeData = () => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: selected ? coords.slice(selected[0], selected[1] + 1) : [] } });
 
     const pin = (cls, title) => Object.assign(document.createElement('div'), { className: `pin ${cls}`, title });
     new Marker({ element: pin('finish', 'Arrivée') }).setLngLat(coords.at(-1)).addTo(map);
@@ -31,7 +39,8 @@ export default function TrackMap({ track, hover }) {
     const cursor = new Marker({ element: pin('cursor', '') });
 
     hover.current = (i) => (i == null ? cursor.remove() : cursor.setLngLat(coords[i]).addTo(map));
-    return () => { hover.current = () => {}; map.remove(); };
-  }, [track, hover]);
+    if (range) range.current = (r) => { selected = r; map.getSource('range')?.setData(rangeData()); };
+    return () => { hover.current = () => {}; if (range) range.current = () => {}; map.remove(); };
+  }, [track, hover, range]);
   return <div ref={el} className="map" />;
 }

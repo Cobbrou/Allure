@@ -243,6 +243,19 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 .log-n { position: absolute; top: 0; right: 2px; font-size: 10px; font-weight: 700; background: var(--text); color: var(--bg); border-radius: 8px; padding: 0 4px; }
 @keyframes pop { from { transform: scale(0); } }
 
+/* Segments */
+.records .seg-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; line-height: 44px; }
+.records li > a { min-height: 44px; align-items: center; }
+.card h3.seg-head { margin-bottom: 0; }
+.seg-head .ghost { margin-left: auto; }
+.seg-head + * { margin-top: 12px; }
+.segment-form { gap: 12px; }
+.segment-form input[type='range'] { width: 100%; min-height: 44px; padding: 0; accent-color: var(--accent); }
+.totals.seg-totals { grid-template-columns: repeat(3, 1fr); margin-top: 0; }
+.leaderboard li > a:first-child { display: flex; align-items: center; gap: 12px; }
+.rank { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; background: var(--border); flex: none; }
+.rank.first { background: #f5b301; color: #1a1300; }
+
 /* Heatmap: as much map as the screen allows, under the top bar and above the tab bar */
 .map.heatmap, .skeleton.heatmap { height: calc(100vh - 56px - var(--safe-top) - var(--tabbar-h) - var(--safe-bottom) - 120px); min-height: 320px; }
 

@@ -10,7 +10,8 @@ import WeeklyChart from '../components/WeeklyChart.jsx';
 import { deleteActivities } from '../lib/db.js';
 import { fmtDuration } from '../lib/format.js';
 import { personalRecords, predictRaces } from '../lib/records.js';
-import { sportOptions as sportOptionsOf } from '../lib/sports.js';
+import { leaderboard } from '../lib/segments.js';
+import { SPORTS, sportOptions as sportOptionsOf } from '../lib/sports.js';
 import { periodStart, totals, weeklyDistance } from '../lib/stats.js';
 
 const PERIODS = [
@@ -20,7 +21,7 @@ const PERIODS = [
   { id: 'all', label: 'Total' },
 ];
 
-export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, goals, onSaveGoals, onDemo, onChange }) {
+export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, goals, onSaveGoals, segments, onDemo, onChange }) {
   const list = activities ?? [];
   const [sport, setSport] = useState('');
   const [period, setPeriod] = useState('week');
@@ -82,6 +83,7 @@ export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, goals, 
             <FitnessChart activities={list} hr={hr} />
             <ActivityCalendar activities={list} sport={sport || undefined} />
             <RecordsList records={records} />
+            <SegmentsList segments={segments} activities={list} />
             <RacePredictions predictions={predictions} />
           </>
         )}
@@ -131,5 +133,29 @@ function HrSettings({ hr, saved, onSave }) {
       </div>
       <div className="row"><button type="submit">{done ? 'Enregistré ✓' : 'Enregistrer'}</button></div>
     </form>
+  );
+}
+
+/** The athlete's segments with their best time. Segments are created from an activity. */
+function SegmentsList({ segments, activities }) {
+  if (!segments.length) return null;
+  return (
+    <section className="card">
+      <h3>Mes segments <span className="muted small-label">{segments.length}</span></h3>
+      <ul className="records">
+        {[...segments].sort((a, b) => a.name.localeCompare(b.name, 'fr')).map((seg) => {
+          const board = leaderboard(seg, activities);
+          return (
+            <li key={seg.id}>
+              <a className="rec-label seg-name" href={`#/segment/${seg.id}`}>{SPORTS[seg.sport]?.icon} {seg.name}</a>
+              <a href={`#/segment/${seg.id}`}>
+                <b>{board.length ? fmtDuration(board[0].time) : '—'}</b>
+                <span className="muted">{(seg.distance / 1000).toFixed(2)} km · {board.length}×</span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }

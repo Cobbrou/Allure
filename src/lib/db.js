@@ -1,13 +1,15 @@
 // Local store (IndexedDB): `activities` holds light meta records for lists, `tracks` the
-// raw points by activity id (loaded only on the detail screen), plus `drafts` and `settings`.
+// raw points by activity id (loaded only on the detail screen), plus `drafts`, `settings`
+// and `segments`.
 // Platform module: a native storage plugin can replace it without touching components.
 
 import { analyze } from './analyze.js';
 import { bestEfforts } from './records.js';
+import { segmentEfforts } from './segments.js';
 import { hrTime } from './training.js';
 
 const DB_NAME = 'allure';
-const VERSION = 4;
+const VERSION = 5;
 let dbPromise;
 
 // Schema migrations, keyed by the version they upgrade to. They run inside the upgrade
@@ -26,18 +28,21 @@ const MIGRATIONS = {
     db.createObjectStore('settings');
     backfill(tx, (points) => ({ hrTime: points ? hrTime(points) : {} }));
   },
+  // v5: `segments`; metas gain `efforts` when a segment matches (none exist before v5).
+  5: (db) => db.createObjectStore('segments', { keyPath: 'id' }),
 };
 
-// Patch every meta with fields computed from its track.
+// Patch every meta accepted by `want` with fields computed from its track and the meta.
 // ponytail: each migration runs its own cursor, so a v1 -> v4 upgrade could interleave two
 // backfills on one record; only pre-v2 dev databases could hit it. Merge them if that matters.
-function backfill(tx, patch) {
+function backfill(tx, patch, want = () => true) {
   const tracks = tx.objectStore('tracks');
   tx.objectStore('activities').openCursor().onsuccess = (e) => {
     const cursor = e.target.result;
     if (!cursor) return;
+    if (!want(cursor.value)) return cursor.continue();
     tracks.get(cursor.key).onsuccess = (t) => {
-      cursor.update({ ...cursor.value, ...patch(t.target.result) });
+      cursor.update({ ...cursor.value, ...patch(t.target.result, cursor.value) });
       cursor.continue();
     };
   };
@@ -88,13 +93,15 @@ export async function getActivity(id) {
   return meta && { meta, points };
 }
 
-/** Save many { meta, points } in a single transaction. */
+/** Save many { meta, points } in a single transaction, matching them against every segment. */
 export function saveActivities(items) {
-  return tx(['activities', 'tracks'], 'readwrite', (acts, tracks) => {
-    for (const { meta, points } of items) {
-      acts.put(meta);
-      tracks.put(points, meta.id);
-    }
+  return tx(['activities', 'tracks', 'segments'], 'readwrite', (acts, tracks, segs) => {
+    segs.getAll().onsuccess = (e) => {
+      for (const { meta, points } of items) {
+        acts.put({ ...meta, efforts: segmentEfforts(e.target.result, meta.sport, points) });
+        tracks.put(points, meta.id);
+      }
+    };
   });
 }
 
@@ -128,3 +135,18 @@ export const forEachTrack = (fn) =>
       if (c) { fn(c.key, c.value); c.continue(); }
     };
   });
+
+export const listSegments = () => tx(['segments'], 'readonly', (s) => s.getAll());
+
+/** Store a segment and record its efforts on every activity of the same sport. */
+export const saveSegment = (seg) =>
+  tx(['activities', 'tracks', 'segments'], 'readwrite', (acts, tracks, segs) => {
+    segs.put(seg);
+    backfill(acts.transaction, (points, meta) => ({
+      efforts: [...(meta.efforts ?? []).filter((e) => e.seg !== seg.id), ...(points ? segmentEfforts([seg], meta.sport, points) : [])],
+    }), (meta) => meta.sport === seg.sport);
+  });
+
+// ponytail: efforts of a deleted segment stay on metas; every reader goes through the
+// segment list, so they are dead weight only. Strip them with backfill if that grows.
+export const deleteSegment = (id) => tx(['segments'], 'readwrite', (s) => s.delete(id));

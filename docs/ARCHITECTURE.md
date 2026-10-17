@@ -38,18 +38,20 @@ Route changes run inside `document.startViewTransition` (slide or fade, see
 | `#/activity/:id` | `ActivityPage` |
 | `#/record`       | `RecordPage`: setup (sport, auto-pause, voice cues, GPS status), then live recording |
 | `#/log`          | `TrainingLogPage`: week-by-week bubbles, opened from the profile |
+| `#/segment/:id`  | `SegmentPage`: segment map, distance / grade, your efforts fastest first |
 | `#/heatmap`      | `HeatmapPage`: every track faintly drawn on one map, opened from the profile |
 | `#/profile`      | `ProfilePage`  |
 
 ## Storage (`lib/db.js`)
 
-IndexedDB database `allure`, version 4:
+IndexedDB database `allure`, version 5:
 
 - `activities` (keyPath `id`): **meta** records, small enough to list everything at once
 - `tracks` (key = activity id): raw **points** arrays, read only on the detail page
 - `drafts` (key `current`): the in-progress live recording, autosaved every 5 s
 - `settings` (key = setting name): user preferences, e.g. `hr` → `{ max, rest }`,
   `goals` → `[{ id, sport, metric, period, target }]` (see `lib/goals.js`)
+- `segments` (keyPath `id`): user-created segments (see `lib/segments.js`)
 
 Schema changes bump `VERSION` and add an entry to `MIGRATIONS`, which run in order
 inside the upgrade transaction:
@@ -60,6 +62,7 @@ inside the upgrade transaction:
 | 2 | backfill `bestEfforts` on every meta from its track |
 | 3 | create `drafts` |
 | 4 | create `settings`, backfill `hrTime` on every meta from its track |
+| 5 | create `segments` |
 
 Open connections close on `versionchange`, so a newer tab can upgrade. If an older tab
 still blocks the upgrade, `open()` rejects with a "close the other tab" message.
@@ -79,7 +82,11 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
   preview,               // ≤ 81 [lon, lat] pairs for feed thumbnails
   bestEfforts,           // { '1k': s, '5k': s, … } fastest elapsed time per distance
   hrTime,                // { [bpm]: s } moving seconds per heart rate (lib/training.js)
+  efforts,               // [{ seg, time, from, to }] segment efforts: segment id, elapsed s, point indices
 }
+
+// Segment: stored in `segments`
+{ id, name, sport, points /* [lon, lat] every ~10 m */, distance, gain, grade /* avg % */, created }
 
 // analyze(points): computed on demand, never stored
 {
@@ -108,6 +115,16 @@ and `lib/sports.js` (`effort()` picks km/h, min/km or min/100 m by sport).
   marathon, scaled to the exact distance. Personal records = the best of all runs.
 - **Duplicates on import**: same start second and distance within 10 m (`dupKey`).
 - **Profile stats** (`lib/stats.js`): local time, weeks start on Monday.
+- **Segment efforts** (`lib/segments.js`): a pass starts at the fix closest to the
+  segment start (within 30 m), must reach every segment point in order within 30 m, and
+  ends at the fix closest to the end. A track longer than 1.5× the segment between the
+  two is rejected. Going back through the start before any real progress (a spur, a
+  U-turn) restarts the pass there. Time is elapsed, start to end. `saveActivities`
+  matches new activities against every segment; `saveSegment` scans every track of the
+  segment's sport.
+- **Heatmap** (`lib/heatmap.js`): tracks are streamed with `forEachTrack`, thinned to a
+  point every 15 m, and drawn as one faint line per activity so overlaps add up. The map
+  opens on the ~50 km cell holding the most starts.
 
 ## Import (`lib/importer.js`, `lib/formats/`)
 
@@ -129,8 +146,10 @@ src/
   pages/         one component per route
   components/    reusable UI (TabBar, ActivityCard, RoutePreview, StatsGrid, TrackMap,
                  ProfileChart, SplitsTable, BestEfforts, ImportButton, ConfirmButton,
-                 Segmented, WeeklyChart, ActivityCalendar, RecordsList, LiveMap, HrZones, FitnessChart, RacePredictions)
-  lib/           pure logic (analyze, gap, records, stats, sports, format, activity, demo, recorder, training)
+                 Segmented, WeeklyChart, ActivityCalendar, RecordsList, LiveMap, HrZones, FitnessChart, RacePredictions,
+                 SegmentEfforts, ErrorBoundary)
+  lib/           pure logic (analyze, gap, records, stats, sports, format, activity, demo, recorder, training,
+                 segments, heatmap)
                  + platform modules (db, share, story, location, formats/)
 ```
 

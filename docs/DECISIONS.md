@@ -3,6 +3,20 @@
 Lightweight decision log. Newest first. Each entry: context, decision, consequences.
 Open questions sit at the bottom until decided.
 
+## 2026-10-17: Segments are local, efforts live on the activity meta
+
+**Context**: segments are the core of Strava's competitive side, but Allure has no
+backend or accounts yet.
+**Decision**: segments are created from one of your activities and stored on the
+device (`segments` store, DB v5). Efforts are stored on each activity meta
+(`efforts`), so leaderboards come from the metas already in memory with no track
+loading. Matching runs on save (new activities) and on segment creation (all tracks of
+that sport). Effort time is elapsed time from start to end, as on Strava.
+**Consequences**: leaderboards are personal ("Mes passages") until accounts and sync
+(phase 3) make segments shared. Deleting a segment leaves its efforts on metas as dead
+data; readers ignore efforts whose segment no longer exists. Changing an activity's
+sport does not re-match it.
+
 ## 2026-10-17: Native shell is Capacitor
 
 **Context**: Allure ships as an iOS + Android app. The UI and all domain logic are web
