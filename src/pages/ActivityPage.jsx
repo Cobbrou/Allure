@@ -9,6 +9,7 @@ import MatchedActivities from '../components/MatchedActivities.jsx';
 import PowerCurve from '../components/PowerCurve.jsx';
 import ProfileChart from '../components/ProfileChart.jsx';
 import SegmentEfforts from '../components/SegmentEfforts.jsx';
+import ShareSheet from '../components/ShareSheet.jsx';
 import SplitsTable from '../components/SplitsTable.jsx';
 import StatsGrid from '../components/StatsGrid.jsx';
 import TrackMap from '../components/TrackMap.jsx';
@@ -18,13 +19,11 @@ import { defaultGear, GEAR_KINDS, gearFor } from '../lib/gear.js';
 import { SPORTS } from '../lib/sports.js';
 import { toGpx } from '../lib/formats/gpxExport.js';
 import { safeName, shareFile } from '../lib/share.js';
-import { exportStory } from '../lib/story.js';
 import { go } from '../router.js';
 
 export default function ActivityPage({ id, activities, hr, ftp, zones, segments, onSegment, gears, onChange }) {
   const [data, setData] = useState(); // undefined: loading, null: not found
   const [sheet, setSheet] = useState(null); // null | 'edit' | 'share'
-  const [exporting, setExporting] = useState(false);
   const hover = useRef(() => {});
   const range = useRef(() => {});
 
@@ -58,10 +57,6 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
     await shareFile(new Blob([toGpx(data.meta, data.points)], { type: 'application/gpx+xml' }), `${safeName(act.name)}.gpx`);
     setSheet(null);
   };
-  const story = async () => {
-    setExporting(true);
-    try { await exportStory(act, zones); setSheet(null); } finally { setExporting(false); }
-  };
 
   return (
     <>
@@ -72,12 +67,9 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
       <BottomSheet open={sheet === 'edit'} onClose={() => setSheet(null)} title="Modifier l'activité">
         <EditForm meta={data.meta} gears={gears} onSave={save} onDelete={remove} />
       </BottomSheet>
-      <BottomSheet open={sheet === 'share'} onClose={() => setSheet(null)} title="Partager">
-        <div className="sheet-actions">
-          <button type="button" onClick={story} disabled={exporting}>{exporting ? 'Préparation…' : 'Story (image)'}</button>
-          <button type="button" className="ghost" onClick={exportGpx}>Fichier GPX</button>
-        </div>
-      </BottomSheet>
+      <ShareSheet act={act} zones={zones} open={sheet === 'share'} onClose={() => setSheet(null)}>
+        <button type="button" className="ghost" onClick={exportGpx}>Fichier GPX</button>
+      </ShareSheet>
       <main className="detail">
         <div className="title">
           <span className="sport-icon">{SPORTS[act.sport]?.icon}</span>

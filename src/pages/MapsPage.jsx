@@ -8,7 +8,8 @@ import Segmented from '../components/Segmented.jsx';
 import { forEachTrack } from '../lib/db.js';
 import { homeLines, thin } from '../lib/heatmap.js';
 import { sportOptions, SPORTS } from '../lib/sports.js';
-import { ACCENT, MAP_STYLE } from '../theme.js';
+import { MAP_STYLE } from '../lib/offline.js';
+import { ACCENT } from '../theme.js';
 
 setWorkerUrl(workerUrl);
 

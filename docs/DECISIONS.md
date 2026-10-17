@@ -147,6 +147,23 @@ Suggested loops (`lib/suggest.js`) don't use BRouter's round-trip mode: on the p
 server it times out (70 s watchdog). They route waypoints placed on a circle through the
 start, in 6 directions, resized once when the first try misses the target distance.
 
+## 2026-10-17: Offline maps through a MapLibre protocol + Cache Storage
+
+**Context**: following a saved route must work without a network (subscription feature 5),
+and the app runs in a Capacitor WebView where service workers are unreliable (iOS
+WKWebView only allows them on app-bound domains).
+**Decision**: every map loads its style as `cached://…` (`lib/offline.js`). A MapLibre
+`addProtocol` handler answers from Cache Storage first, then the network, and rewrites the
+style and TileJSON so sources, sprite, glyphs and tiles go through it too (one tile
+subdomain, so cache keys are stable). Downloading a route stores the style, sprite, the
+Latin glyph ranges and the vector tiles of an 800 m corridor from z5 to z14, in one cache
+per route (`allure-route-<id>`), with a marker entry written last so a cut-off download
+doesn't count.
+**Consequences**: no service worker, no dependency, and only `lib/offline.js` knows about
+caching. Downloaded tiles never refresh until the route is downloaded again. Carto's free
+tier forbids bulk caching at scale: moving to self-hosted or paid tiles (open question
+below) is required before the store release.
+
 ## Open questions
 
 - **Backend stack** (phase 3). Candidates: Supabase (Postgres + PostGIS + auth, fastest

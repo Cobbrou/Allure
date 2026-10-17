@@ -3,7 +3,8 @@ import { Map as MapLibre, Marker, setWorkerUrl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 // Same Vite worker fix as TrackMap.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
-import { ACCENT, MAP_STYLE } from '../theme.js';
+import { MAP_STYLE } from '../lib/offline.js';
+import { ACCENT } from '../theme.js';
 
 setWorkerUrl(workerUrl);
 

@@ -12,7 +12,8 @@ import { createRoute, fetchLeg, joinLegs, legKey, straightLeg } from '../lib/rou
 import { safeName, shareFile } from '../lib/share.js';
 import { SPORTS } from '../lib/sports.js';
 import { back } from '../router.js';
-import { ACCENT, MAP_STYLE } from '../theme.js';
+import { downloadRoute, MAP_STYLE, offlineInfo, removeOffline } from '../lib/offline.js';
+import { ACCENT } from '../theme.js';
 
 setWorkerUrl(workerUrl);
 
@@ -71,6 +72,8 @@ function Builder({ saved, activities, onSave, onDelete }) {
   const save = async () => {
     setBusy(true);
     try {
+      // A new path makes the downloaded map corridor stale.
+      if (saved && keys.join() !== saved.waypoints.slice(1).map((b, i) => legKey(saved.waypoints[i], b, saved.sport, saved.snap)).join()) await removeOffline(saved.id);
       await onSave(createRoute({ id: saved?.id, created: saved?.created, name: name.trim() || 'Itinéraire', sport, snap, waypoints, legs }));
     } finally { setBusy(false); }
   };
@@ -116,6 +119,8 @@ function Builder({ saved, activities, onSave, onDelete }) {
         </section>
       )}
 
+      {saved && <OfflineCard route={saved} />}
+
       <section className="card edit">
         <label>Nom<input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} /></label>
         <div className="row">
@@ -124,10 +129,52 @@ function Builder({ saved, activities, onSave, onDelete }) {
           </button>
           {saved && <a className="button ghost" href={`#/record/${saved.id}`}>Suivre</a>}
           {points.length > 1 && <button type="button" className="ghost" onClick={exportGpx}>Exporter .gpx</button>}
-          {saved && <ConfirmButton onConfirm={() => onDelete(saved.id)}>Supprimer</ConfirmButton>}
+          {saved && <ConfirmButton onConfirm={() => { removeOffline(saved.id); onDelete(saved.id); }}>Supprimer</ConfirmButton>}
         </div>
       </section>
     </main>
+  );
+}
+
+
+/** Download a saved route's map (corridor tiles) so it can be followed without a network. */
+function OfflineCard({ route }) {
+  const [info, setInfo] = useState();
+  const [progress, setProgress] = useState(null);
+  const [error, setError] = useState(false);
+  useEffect(() => { offlineInfo(route.id).then(setInfo, () => setInfo(null)); }, [route.id]);
+
+  const download = async () => {
+    setError(false);
+    setProgress(0);
+    try {
+      setInfo(await downloadRoute(route, joinLegs(route.legs), (done, total) => setProgress(done / total)));
+    } catch {
+      setError(true);
+    } finally { setProgress(null); }
+  };
+  const remove = async () => { await removeOffline(route.id); setInfo(null); };
+
+  return (
+    <section className="card edit offline">
+      <h3>Hors ligne</h3>
+      {progress != null ? (
+        <>
+          <p className="muted">Téléchargement de la carte… {Math.round(progress * 100)} %</p>
+          <div className="progress"><div style={{ width: `${progress * 100}%` }} /></div>
+        </>
+      ) : info ? (
+        <>
+          <p className="muted">✓ Carte disponible sans réseau · {(info.bytes / 1e6).toFixed(1).replace('.', ',')} Mo</p>
+          <ConfirmButton onConfirm={remove}>Retirer la carte</ConfirmButton>
+        </>
+      ) : (
+        <>
+          <p className="muted">{error ? 'Téléchargement impossible, vérifie ta connexion.' : 'Enregistre la carte autour du parcours pour le suivre sans réseau.'}</p>
+          <button type="button" className="ghost" onClick={download} disabled={info === undefined}>Télécharger la carte</button>
+        </>
+      )}
+    </section>
   );
 }
 

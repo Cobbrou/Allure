@@ -22,7 +22,7 @@ parity": every line must be covered before the app can claim it.
 | 2 | *Rejoignez une communauté d'un grand soutien* (join a supportive community) | Follow, feed, kudos, comments, clubs | 4 | Planned |
 | 3 | *Ayez l'esprit tranquille grâce à des fonctionnalités de sécurité* (peace of mind with safety features) | Live location sharing (Beacon-like), privacy zones, emergency contacts | 3 / 5 | Partly done (privacy zones on shared stories) |
 | 4 | *Essayez des itinéraires créés rien que pour vous* (routes made for you) | Suggested routes from popular segments and personal preferences | 5 | Partly done (loops ranked on distance, terrain, surface, novelty vs your heatmap; global popularity needs accounts) |
-| 5 | *Enregistrez des itinéraires pour les utiliser hors ligne* (save routes for offline use) | Offline routes + offline map tiles | 5 | Planned |
+| 5 | *Enregistrez des itinéraires pour les utiliser hors ligne* (save routes for offline use) | Offline routes + offline map tiles | 5 | Done (corridor of vector tiles + style, sprite, glyphs in Cache Storage, per route) |
 | 6 | *Tracez vos propres itinéraires* (draw your own routes) | Route builder with road/trail snapping and elevation profile | 5 | Done (public BRouter server) |
 | 7 | *Consultez votre historique d'entraînement à un seul et même endroit* (all your training history in one place) | Feed, profile totals, calendar, training log | 1 / 5 | Done |
 | 8 | *Analysez vos entraînements grâce à des statistiques avancées* (advanced stats) | HR zones, GAP, intervals, matched activities, predictions, power | 5 | Done (splits, best efforts, HR zones, GAP, race predictions, matched activities, intervals, power) |
@@ -112,10 +112,11 @@ Motion & polish
 *Covers subscription features 2 and 11.*
 
 Sharing
-- [ ] Story redesign: several templates to pick from after an activity (route only,
+- [x] Story redesign: several templates to pick from after an activity (route only,
       stats card, splits, elevation profile…), live preview, swipe between them
-- [ ] Story over a photo background: route and stats drawn on top of a photo from
+- [x] Story over a photo background: route and stats drawn on top of a photo from
       the activity or the camera roll, Strava-style
+- [x] Transparent story background (PNG sticker to lay over a photo in another app)
 
 - [ ] Follow athletes, home feed
 - [ ] Kudos, comments, photos on activities
@@ -162,7 +163,8 @@ Maps & routes (features 4, 5, 6)
 - [x] Suggested routes made for you (distance, elevation, surface, popularity) **(premium)**
       (loops from your position; "popularity" is your own heatmap until accounts bring
       a global one)
-- [ ] Save routes for offline use: route + map tiles downloaded on the device **(premium)**
+- [x] Save routes for offline use: route + map tiles downloaded on the device **(premium)**
+      (800 m corridor, z5 to z14, served by a `cached://` MapLibre protocol)
 - [x] Personal heatmap **(premium)**
 - [ ] Global heatmap (aggregated, anonymized)
 - [ ] 3D terrain view

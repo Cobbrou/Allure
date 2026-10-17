@@ -1,19 +1,18 @@
 import { useState } from 'react';
 import ActivityCard from '../components/ActivityCard.jsx';
 import ImportButton from '../components/ImportButton.jsx';
+import ShareSheet from '../components/ShareSheet.jsx';
 import { usePullToRefresh } from '../gestures.js';
 import { analyze } from '../lib/analyze.js';
 import { getActivity } from '../lib/db.js';
-import { exportStory } from '../lib/story.js';
-
-/** Share an activity as a story image, from its stored track, minus its privacy zones. */
-async function share(id, zones) {
-  const d = await getActivity(id);
-  if (d) await exportStory({ ...analyze(d.points), ...d.meta }, zones);
-}
 
 export default function FeedPage({ activities, zones, onRefresh, onImport, onDemo }) {
   const [busy, setBusy] = useState(false);
+  const [shared, setShared] = useState(null); // analyzed activity in the share sheet
+  const share = async (id) => {
+    const d = await getActivity(id);
+    if (d) setShared({ ...analyze(d.points), ...d.meta });
+  };
   const ptr = usePullToRefresh(onRefresh);
   const demo = async () => {
     setBusy(true);
@@ -42,9 +41,10 @@ export default function FeedPage({ activities, zones, onRefresh, onImport, onDem
       </div>
       {activities?.length > 0 && (
         <main className="feed">
-          {activities.map((a, i) => <ActivityCard key={a.id} a={a} i={i} onShare={(aid) => share(aid, zones)} />)}
+          {activities.map((a, i) => <ActivityCard key={a.id} a={a} i={i} onShare={share} />)}
         </main>
       )}
+      <ShareSheet act={shared} zones={zones} open={!!shared} onClose={() => setShared(null)} />
     </>
   );
 }

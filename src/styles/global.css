@@ -397,6 +397,18 @@ dialog.sheet[open] .sheet-body { animation: sheet-up 0.3s var(--ease-out) backwa
 dialog.sheet[open]::backdrop { animation: fade-in 0.2s ease backwards; }
 @keyframes sheet-up { from { transform: translateY(100%); } }
 
+/* Share sheet: story previews, swiped horizontally, one centered at a time */
+.share { display: grid; gap: 12px; }
+.story-strip {
+  --slide: min(60%, 28vh); /* 9:16 slides stay under half the screen height */
+  display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  padding: 4px calc(50% - var(--slide) / 2);
+}
+.story-strip::-webkit-scrollbar { display: none; }
+.story-slide { flex: 0 0 var(--slide); width: var(--slide); aspect-ratio: 9 / 16; height: auto; scroll-snap-align: center; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); }
+/* Checkerboard behind transparent stories, like image editors */
+.story-strip.clear .story-slide { background: repeating-conic-gradient(var(--border) 0 25%, var(--card) 0 50%) 0 0 / 20px 20px; }
+
 /* Pull to refresh */
 .ptr { display: grid; place-items: center; overflow: hidden; }
 .ptr-icon { font-size: 22px; color: var(--muted); transform: rotate(var(--r)); }

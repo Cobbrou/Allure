@@ -63,7 +63,7 @@ src/
   pages/            one component per route (Feed, Maps, Record, Groups, Profile, Activity, Route, TrainingLog, Segment)
   components/       reusable React components, one per file, default export
   lib/              pure logic (analyze, records, stats, sports, format…)
-                    + platform modules (db, share, story, importer, formats/, location,
+                    + platform modules (db, offline, share, story, importer, formats/, location,
                       sensors, lockscreen, haptics, shell: native-only, loaded in the app)
   styles/global.css design tokens (CSS vars) + all styles
 tests/              node:test files for src/lib
@@ -79,7 +79,8 @@ Details and data model: `docs/ARCHITECTURE.md`.
 - Keep domain logic in `src/lib/` as pure functions (no React). Browser APIs
   (`DOMParser`, canvas, IndexedDB, Web Share, geolocation, Web Bluetooth, Media Session,
   Vibration) are allowed only in platform modules (`formats/`, `story.js`, `db.js`,
-  `share.js`, `location.js`, `sensors.js`, `lockscreen.js`, `haptics.js`, `shell.js`).
+  `share.js`, `location.js`, `sensors.js`, `lockscreen.js`, `haptics.js`, `shell.js`,
+  `offline.js`).
   Capacitor plugins are imported dynamically behind `Capacitor.isNativePlatform()`, so
   the browser build never loads them.
 - Storage goes through `lib/db.js` only. Changing the IndexedDB schema means bumping

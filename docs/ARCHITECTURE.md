@@ -58,6 +58,8 @@ IndexedDB database `allure`, version 6:
   `privacy` → `[{ id, name, lat, lon, radius }]` privacy zones (see `lib/privacy.js`)
 - `segments` (keyPath `id`): user-created segments (see `lib/segments.js`)
 - `routes` (keyPath `id`): planned routes with waypoints, points and stats (see `lib/routes.js`)
+- Cache Storage (not IndexedDB): offline map downloads, one cache per route
+  (`allure-route-<id>`, see `lib/offline.js`)
 
 Schema changes bump `VERSION` and add an entry to `MIGRATIONS`, which run in order
 inside the upgrade transaction:
