@@ -4,6 +4,7 @@
 // Platform module: a native storage plugin can replace it without touching components.
 
 import { analyze } from './analyze.js';
+import { defaultGear } from './gear.js';
 import { bestEfforts } from './records.js';
 import { segmentEfforts } from './segments.js';
 import { hrTime } from './training.js';
@@ -93,14 +94,21 @@ export async function getActivity(id) {
   return meta && { meta, points };
 }
 
-/** Save many { meta, points } in a single transaction, matching them against every segment. */
+/**
+ * Save many { meta, points } in a single transaction, matching them against every segment
+ * and giving them the default gear of their sport.
+ */
 export function saveActivities(items) {
-  return tx(['activities', 'tracks', 'segments'], 'readwrite', (acts, tracks, segs) => {
+  return tx(['activities', 'tracks', 'segments', 'settings'], 'readwrite', (acts, tracks, segs, settings) => {
     segs.getAll().onsuccess = (e) => {
-      for (const { meta, points } of items) {
-        acts.put({ ...meta, efforts: segmentEfforts(e.target.result, meta.sport, points) });
-        tracks.put(points, meta.id);
-      }
+      settings.get('gear').onsuccess = (g) => {
+        const gears = g.target.result ?? [];
+        for (const { meta, points } of items) {
+          const gear = meta.gear ?? defaultGear(gears, meta.sport);
+          acts.put({ ...meta, efforts: segmentEfforts(e.target.result, meta.sport, points), ...(gear && { gear }) });
+          tracks.put(points, meta.id);
+        }
+      };
     };
   });
 }

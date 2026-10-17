@@ -59,6 +59,9 @@ export default function App() {
     back('/profile');
   };
   const saveGoals = async (g) => { await setSetting('goals', g); setGoals(g); };
+  const [gears, setGears] = useState([]);
+  useEffect(() => { getSetting('gear').then((g) => g && setGears(g), () => {}); }, []);
+  const saveGears = async (g) => { await setSetting('gear', g); setGears(g); };
 
   // Reloading after a save, import or demo is when a goal can be crossed: celebrate it.
   const goalsRef = useRef(goals);
@@ -101,12 +104,12 @@ ${cur.text}` } : summary));
   };
 
   let content;
-  if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} segments={segments ?? []} onSegment={addSegment} onChange={reload} />;
+  if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} />;
   else if (page === 'log') content = <TrainingLogPage activities={activities} hr={hr} />;
   else if (page === 'heatmap') content = <HeatmapPage activities={activities} />;
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
   else if (page === 'record') content = <RecordPage recording={recording} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
-  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} onDemo={addDemo} onChange={reload} />;
+  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} onDemo={addDemo} onChange={reload} />;
   else content = <FeedPage activities={activities} onImport={onImport} onDemo={addDemo} />;
 
   return (

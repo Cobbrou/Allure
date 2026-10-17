@@ -272,6 +272,29 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 .intervals td { height: 44px; }
 .intervals td:first-child { width: 64px; font-weight: 600; }
 
+/* Gear */
+.gear { list-style: none; margin: 0; padding: 0; display: grid; }
+.gear li { border-bottom: 1px solid rgba(30, 41, 59, 0.6); padding-bottom: 8px; }
+.gear li:last-child { border-bottom: 0; }
+.gear-row {
+  width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px 0 4px; min-height: 56px; text-align: left;
+  background: transparent; border: 0; border-radius: 0; color: var(--text); font-weight: 400;
+}
+.gear-row:hover { filter: none; }
+.gear-name { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.gear-name b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gear-name .muted { font-size: 13px; }
+.gear-km { display: grid; justify-items: end; gap: 2px; font-variant-numeric: tabular-nums; }
+.gear-alert { font-size: 11px; font-weight: 800; color: #fca5a5; }
+.gear-wear { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; margin-left: 52px; }
+.gear-wear span { display: block; height: 100%; border-radius: 3px; background: #22c55e; transform-origin: left; animation: grow-x 0.6s var(--ease-out) backwards; }
+.gear-wear .warn { background: #f5b301; }
+.gear-wear .over { background: var(--danger); }
+.gear-actions { margin: 10px 0 2px 52px; }
+.gear .retired { opacity: 0.7; }
+.gear-retired { margin-top: 8px; }
+.gear-retired summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-size: 14px; }
+
 /* Heatmap: as much map as the screen allows, under the top bar and above the tab bar */
 .map.heatmap, .skeleton.heatmap { height: calc(100vh - 56px - var(--safe-top) - var(--tabbar-h) - var(--safe-bottom) - 120px); min-height: 320px; }
 

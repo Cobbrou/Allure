@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import ActivityCalendar from '../components/ActivityCalendar.jsx';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import FitnessChart from '../components/FitnessChart.jsx';
+import Gear from '../components/Gear.jsx';
 import Goals from '../components/Goals.jsx';
 import RacePredictions from '../components/RacePredictions.jsx';
 import RecordsList from '../components/RecordsList.jsx';
@@ -21,7 +22,7 @@ const PERIODS = [
   { id: 'all', label: 'Total' },
 ];
 
-export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, goals, onSaveGoals, segments, onDemo, onChange }) {
+export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, goals, onSaveGoals, segments, gears, onSaveGears, onDemo, onChange }) {
   const list = activities ?? [];
   const [sport, setSport] = useState('');
   const [period, setPeriod] = useState('week');
@@ -88,6 +89,7 @@ export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, goals, 
           </>
         )}
 
+        <Gear gears={gears} activities={list} onSave={onSaveGears} />
         <HrSettings hr={hr} saved={hrSaved} onSave={onSaveHr} />
 
         <section className="card">

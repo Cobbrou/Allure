@@ -95,7 +95,8 @@ Motion & polish
 - [ ] Sync local activities to the server, multi-device
 - [ ] Privacy controls: activity visibility, privacy zones hiding start/end near home
       (subscription feature 3)
-- [ ] Gear tracking (shoe / bike mileage)
+- [x] Gear tracking (shoe / bike mileage, default gear per sport, wear alert; local
+      until accounts land)
 - [ ] Data export & account deletion
 
 ## Phase 4: Social

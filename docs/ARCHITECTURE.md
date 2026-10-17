@@ -50,7 +50,8 @@ IndexedDB database `allure`, version 5:
 - `tracks` (key = activity id): raw **points** arrays, read only on the detail page
 - `drafts` (key `current`): the in-progress live recording, autosaved every 5 s
 - `settings` (key = setting name): user preferences, e.g. `hr` → `{ max, rest }`,
-  `goals` → `[{ id, sport, metric, period, target }]` (see `lib/goals.js`)
+  `goals` → `[{ id, sport, metric, period, target }]` (see `lib/goals.js`),
+  `gear` → `[{ id, name, kind, initial, alert, isDefault, retired }]` (see `lib/gear.js`)
 - `segments` (keyPath `id`): user-created segments (see `lib/segments.js`)
 
 Schema changes bump `VERSION` and add an entry to `MIGRATIONS`, which run in order
@@ -84,6 +85,7 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
   hrTime,                // { [bpm]: s } moving seconds per heart rate (lib/training.js)
   efforts,               // [{ seg, time, from, to }] segment efforts: segment id, elapsed s, point indices
   laps,                  // device lap start times (ms), from FIT / TCX; only when 2+ laps
+  gear,                  // gear id (settings `gear`); `saveActivities` sets the sport's default
 }
 
 // Segment: stored in `segments`
@@ -155,9 +157,9 @@ src/
   components/    reusable UI (TabBar, ActivityCard, RoutePreview, StatsGrid, TrackMap,
                  ProfileChart, SplitsTable, BestEfforts, ImportButton, ConfirmButton,
                  Segmented, WeeklyChart, ActivityCalendar, RecordsList, LiveMap, HrZones, FitnessChart, RacePredictions,
-                 SegmentEfforts, ErrorBoundary, Intervals)
+                 SegmentEfforts, ErrorBoundary, Intervals, Gear)
   lib/           pure logic (analyze, gap, records, stats, sports, format, activity, demo, recorder, training,
-                 segments, heatmap, intervals)
+                 segments, heatmap, intervals, gear)
                  + platform modules (db, share, story, location, formats/)
 ```
 

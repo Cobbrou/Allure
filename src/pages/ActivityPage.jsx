@@ -12,13 +12,14 @@ import StatsGrid from '../components/StatsGrid.jsx';
 import TrackMap from '../components/TrackMap.jsx';
 import { analyze, computeSplits } from '../lib/analyze.js';
 import { deleteActivities, getActivity, updateActivity } from '../lib/db.js';
+import { defaultGear, GEAR_KINDS, gearFor } from '../lib/gear.js';
 import { SPORTS } from '../lib/sports.js';
 import { toGpx } from '../lib/formats/gpxExport.js';
 import { safeName, shareFile } from '../lib/share.js';
 import { exportStory } from '../lib/story.js';
 import { go } from '../router.js';
 
-export default function ActivityPage({ id, activities, hr, segments, onSegment, onChange }) {
+export default function ActivityPage({ id, activities, hr, segments, onSegment, gears, onChange }) {
   const [data, setData] = useState(); // undefined: loading, null: not found
   const [editing, setEditing] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -37,6 +38,7 @@ export default function ActivityPage({ id, activities, hr, segments, onSegment, 
   if (data === null) return (<><TopBar /><p className="empty">Activité introuvable.</p></>);
 
   const act = { ...analysis, ...data.meta };
+  const gear = gears.find((g) => g.id === data.meta.gear);
 
   const save = async (patch) => {
     const meta = { ...data.meta, ...patch };
@@ -65,13 +67,13 @@ export default function ActivityPage({ id, activities, hr, segments, onSegment, 
       </TopBar>
       <main className="detail">
         {editing ? (
-          <EditForm meta={data.meta} onSave={save} onDelete={remove} onExport={exportGpx} />
+          <EditForm meta={data.meta} gears={gears} onSave={save} onDelete={remove} onExport={exportGpx} />
         ) : (
           <div className="title">
             <span className="sport-icon">{SPORTS[act.sport]?.icon}</span>
             <div>
               <h1>{act.name}</h1>
-              <p>{SPORTS[act.sport]?.label} · {fmtDate(act.date)}</p>
+              <p>{SPORTS[act.sport]?.label} · {fmtDate(act.date)}{gear && ` · ${GEAR_KINDS[gear.kind].icon} ${gear.name}`}</p>
             </div>
           </div>
         )}
@@ -104,11 +106,18 @@ function TopBar({ children }) {
   );
 }
 
-function EditForm({ meta, onSave, onDelete, onExport }) {
+function EditForm({ meta, gears, onSave, onDelete, onExport }) {
   const [name, setName] = useState(meta.name);
   const [sport, setSport] = useState(meta.sport);
+  const [gear, setGear] = useState(meta.gear ?? '');
+  // Active gear for the chosen sport, plus the current one even if retired.
+  const options = gearFor(gears, sport);
+  const current = gears.find((g) => g.id === meta.gear);
+  if (current && !options.includes(current) && GEAR_KINDS[current.kind].sports.includes(sport)) options.push(current);
+  // Gear that doesn't fit a newly picked sport gives way to that sport's default.
+  const gearId = !gear || options.some((g) => g.id === gear) ? gear : (defaultGear(gears, sport) ?? '');
   return (
-    <form className="card edit" onSubmit={(e) => { e.preventDefault(); onSave({ name: name.trim() || meta.name, sport }); }}>
+    <form className="card edit" onSubmit={(e) => { e.preventDefault(); onSave({ name: name.trim() || meta.name, sport, gear: gearId || undefined }); }}>
       <label>
         Titre
         <input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
@@ -124,6 +133,14 @@ function EditForm({ meta, onSave, onDelete, onExport }) {
           ))}
         </div>
       </fieldset>
+      {options.length > 0 && (
+        <label>Matériel
+          <select value={gearId} onChange={(e) => setGear(e.target.value)}>
+            <option value="">Aucun</option>
+            {options.map((g) => <option key={g.id} value={g.id}>{GEAR_KINDS[g.kind].icon} {g.name}{g.retired ? ' (retiré)' : ''}</option>)}
+          </select>
+        </label>
+      )}
       <div className="edit-actions">
         <ConfirmButton onConfirm={onDelete} confirmLabel="Confirmer">Supprimer</ConfirmButton>
         <button type="button" className="ghost" onClick={onExport}>Exporter .gpx</button>
