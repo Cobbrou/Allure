@@ -4,6 +4,7 @@ import ConfirmButton from '../components/ConfirmButton.jsx';
 import FitnessChart from '../components/FitnessChart.jsx';
 import Gear from '../components/Gear.jsx';
 import Goals from '../components/Goals.jsx';
+import PrivacyZones from '../components/PrivacyZones.jsx';
 import PowerCurve from '../components/PowerCurve.jsx';
 import RacePredictions from '../components/RacePredictions.jsx';
 import RecordsList from '../components/RecordsList.jsx';
@@ -23,7 +24,7 @@ const PERIODS = [
   { id: 'all', label: 'Total' },
 ];
 
-export default function ProfilePage({ activities, hr, ftp, hrSaved, onSaveHr, goals, onSaveGoals, segments, gears, onSaveGears, onDemo, onChange }) {
+export default function ProfilePage({ activities, hr, ftp, zones, onSaveZones, hrSaved, onSaveHr, goals, onSaveGoals, segments, gears, onSaveGears, onDemo, onChange }) {
   const list = activities ?? [];
   const [sport, setSport] = useState('');
   const [period, setPeriod] = useState('week');
@@ -89,6 +90,7 @@ export default function ProfilePage({ activities, hr, ftp, hrSaved, onSaveHr, go
 
         <Gear gears={gears} activities={list} onSave={onSaveGears} />
         <HrSettings hr={hr} saved={hrSaved} onSave={onSaveHr} />
+        <PrivacyZones zones={zones} activities={list} onSave={onSaveZones} />
 
         <section className="card">
           <h3>Données de démo</h3>

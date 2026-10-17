@@ -73,6 +73,9 @@ export default function App() {
   const pickRoute = async (r) => { await saveRoute(r); await loadRoutes(); go(`/route/${r.id}`); };
   const removeRoute = async (rid) => { await deleteRoute(rid); await loadRoutes(); back('/maps'); };
   const saveGoals = async (g) => { await setSetting('goals', g); setGoals(g); };
+  const [zones, setZones] = useState([]); // privacy zones
+  useEffect(() => { getSetting('privacy').then((z) => z && setZones(z), () => {}); }, []);
+  const saveZones = async (z) => { await setSetting('privacy', z); setZones(z); };
   const [gears, setGears] = useState([]);
   useEffect(() => { getSetting('gear').then((g) => g && setGears(g), () => {}); }, []);
   const saveGears = async (g) => { await setSetting('gear', g); setGears(g); };
@@ -118,7 +121,7 @@ ${cur.text}` } : summary));
   };
 
   let content;
-  if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} ftp={ftp} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} />;
+  if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} ftp={ftp} zones={zones} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} />;
   else if (page === 'log') content = <TrainingLogPage activities={activities} hr={hr} />;
   else if (page === 'maps') content = <MapsPage activities={activities} routes={routes} />;
   else if (page === 'suggest') content = <SuggestPage activities={activities} onPick={pickRoute} />;
@@ -126,8 +129,8 @@ ${cur.text}` } : summary));
   else if (page === 'groups') content = <GroupsPage />;
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
   else if (page === 'record') content = <RecordPage recording={recording} routes={routes} routeId={id} segments={segments ?? []} activities={activities ?? []} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
-  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} onDemo={addDemo} onChange={reload} />;
-  else content = <FeedPage activities={activities} onImport={onImport} onDemo={addDemo} />;
+  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} zones={zones} onSaveZones={saveZones} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} onDemo={addDemo} onChange={reload} />;
+  else content = <FeedPage activities={activities} zones={zones} onImport={onImport} onDemo={addDemo} />;
 
   return (
     <div

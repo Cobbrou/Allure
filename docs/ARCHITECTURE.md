@@ -54,7 +54,8 @@ IndexedDB database `allure`, version 6:
 - `drafts` (key `current`): the in-progress live recording, autosaved every 5 s
 - `settings` (key = setting name): user preferences, e.g. `hr` → `{ max, rest }`,
   `goals` → `[{ id, sport, metric, period, target }]` (see `lib/goals.js`),
-  `gear` → `[{ id, name, kind, initial, alert, isDefault, retired }]` (see `lib/gear.js`)
+  `gear` → `[{ id, name, kind, initial, alert, isDefault, retired }]` (see `lib/gear.js`),
+  `privacy` → `[{ id, name, lat, lon, radius }]` privacy zones (see `lib/privacy.js`)
 - `segments` (keyPath `id`): user-created segments (see `lib/segments.js`)
 - `routes` (keyPath `id`): planned routes with waypoints, points and stats (see `lib/routes.js`)
 

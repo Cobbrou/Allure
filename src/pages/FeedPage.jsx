@@ -5,13 +5,13 @@ import { analyze } from '../lib/analyze.js';
 import { getActivity } from '../lib/db.js';
 import { exportStory } from '../lib/story.js';
 
-/** Share an activity as a story image, from its stored track. */
-async function share(id) {
+/** Share an activity as a story image, from its stored track, minus its privacy zones. */
+async function share(id, zones) {
   const d = await getActivity(id);
-  if (d) await exportStory({ ...analyze(d.points), ...d.meta });
+  if (d) await exportStory({ ...analyze(d.points), ...d.meta }, zones);
 }
 
-export default function FeedPage({ activities, onImport, onDemo }) {
+export default function FeedPage({ activities, zones, onImport, onDemo }) {
   const [busy, setBusy] = useState(false);
   const demo = async () => {
     setBusy(true);
@@ -37,7 +37,7 @@ export default function FeedPage({ activities, onImport, onDemo }) {
       )}
       {activities?.length > 0 && (
         <main className="feed">
-          {activities.map((a, i) => <ActivityCard key={a.id} a={a} i={i} onShare={share} />)}
+          {activities.map((a, i) => <ActivityCard key={a.id} a={a} i={i} onShare={(aid) => share(aid, zones)} />)}
         </main>
       )}
     </>

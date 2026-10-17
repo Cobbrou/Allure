@@ -155,7 +155,8 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .edit fieldset { border: 0; padding: 0; margin: 0; }
 .hr-settings { gap: 8px; }
 .hr-settings h3 { margin: 0; }
-.hr-settings .row label { flex: 1 1 120px; }
+.hr-settings .row label, .privacy .row label { flex: 1 1 120px; }
+.privacy .records li > span:last-child { align-items: center; }
 
 /* Heart rate & training load */
 .effort-score { margin-left: auto; font-size: 22px; font-weight: 800; color: var(--accent); }

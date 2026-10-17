@@ -1,12 +1,13 @@
 import { ACCENT, BG, TICK } from '../theme.js';
 import { fmtDuration } from './format.js';
+import { hidePrivate } from './privacy.js';
 import { effort } from './sports.js';
 import { safeName, shareFile } from './share.js';
 
 const FONT = 'Inter, system-ui, sans-serif';
 
-/** Render a 1080x1920 social story PNG (glowing track + key stats) and share or download it. */
-export async function exportStory(act) {
+/** Render a 1080x1920 social story PNG (glowing track + key stats) and share or download it. zones: privacy zones. */
+export async function exportStory(act, zones = []) {
   await document.fonts.ready;
   const W = 1080, H = 1920;
   const c = document.createElement('canvas');
@@ -38,37 +39,9 @@ export async function exportStory(act) {
     g.fillText(new Date(act.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }), 90, 310);
   }
 
-  // Track, equirectangular projection fitted into a box
-  const box = { x: 110, y: 380, w: W - 220, h: 820 };
-  const lat0 = act.track[0].lat * (Math.PI / 180);
-  const pts = act.track.map((p) => [p.lon * Math.cos(lat0), -p.lat]);
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  for (const [x, y] of pts) {
-    minX = Math.min(minX, x); maxX = Math.max(maxX, x);
-    minY = Math.min(minY, y); maxY = Math.max(maxY, y);
-  }
-  const k = Math.min(box.w / (maxX - minX || 1), box.h / (maxY - minY || 1));
-  const ox = box.x + (box.w - (maxX - minX) * k) / 2, oy = box.y + (box.h - (maxY - minY) * k) / 2;
-  const proj = ([x, y]) => [ox + (x - minX) * k, oy + (y - minY) * k];
-
-  g.lineJoin = g.lineCap = 'round';
-  const path = () => {
-    g.beginPath();
-    pts.forEach((p, i) => (i ? g.lineTo(...proj(p)) : g.moveTo(...proj(p))));
-  };
-  g.shadowColor = ACCENT;
-  g.shadowBlur = 45;
-  g.strokeStyle = ACCENT;
-  g.lineWidth = 14;
-  path();
-  g.stroke();
-  g.shadowBlur = 0;
-  g.strokeStyle = '#ffd5c2';
-  g.lineWidth = 4;
-  path();
-  g.stroke();
-  dot(g, proj(pts[0]), '#22c55e');
-  dot(g, proj(pts.at(-1)), '#f8fafc');
+  // Track inside the privacy zones is left out: a story is meant to be posted publicly.
+  const track = hidePrivate(act.track, zones);
+  if (track.length > 1) drawTrack(g, track, W);
 
   // Stats
   g.fillStyle = TICK;
@@ -118,4 +91,38 @@ function truncate(g, text, max) {
   if (g.measureText(text).width <= max) return text;
   while (text.length && g.measureText(text + '…').width > max) text = text.slice(0, -1);
   return text + '…';
+}
+
+/** Glowing track, equirectangular projection fitted into a box, with start and end dots. */
+function drawTrack(g, track, W) {
+  const box = { x: 110, y: 380, w: W - 220, h: 820 };
+  const lat0 = track[0].lat * (Math.PI / 180);
+  const pts = track.map((p) => [p.lon * Math.cos(lat0), -p.lat]);
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const [x, y] of pts) {
+    minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+    minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+  }
+  const k = Math.min(box.w / (maxX - minX || 1), box.h / (maxY - minY || 1));
+  const ox = box.x + (box.w - (maxX - minX) * k) / 2, oy = box.y + (box.h - (maxY - minY) * k) / 2;
+  const proj = ([x, y]) => [ox + (x - minX) * k, oy + (y - minY) * k];
+
+  g.lineJoin = g.lineCap = 'round';
+  const path = () => {
+    g.beginPath();
+    pts.forEach((p, i) => (i ? g.lineTo(...proj(p)) : g.moveTo(...proj(p))));
+  };
+  g.shadowColor = ACCENT;
+  g.shadowBlur = 45;
+  g.strokeStyle = ACCENT;
+  g.lineWidth = 14;
+  path();
+  g.stroke();
+  g.shadowBlur = 0;
+  g.strokeStyle = '#ffd5c2';
+  g.lineWidth = 4;
+  path();
+  g.stroke();
+  dot(g, proj(pts[0]), '#22c55e');
+  dot(g, proj(pts.at(-1)), '#f8fafc');
 }

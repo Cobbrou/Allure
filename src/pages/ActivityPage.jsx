@@ -20,7 +20,7 @@ import { safeName, shareFile } from '../lib/share.js';
 import { exportStory } from '../lib/story.js';
 import { go } from '../router.js';
 
-export default function ActivityPage({ id, activities, hr, ftp, segments, onSegment, gears, onChange }) {
+export default function ActivityPage({ id, activities, hr, ftp, zones, segments, onSegment, gears, onChange }) {
   const [data, setData] = useState(); // undefined: loading, null: not found
   const [editing, setEditing] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -57,7 +57,7 @@ export default function ActivityPage({ id, activities, hr, ftp, segments, onSegm
     shareFile(new Blob([toGpx(data.meta, data.points)], { type: 'application/gpx+xml' }), `${safeName(act.name)}.gpx`);
   const story = async () => {
     setExporting(true);
-    try { await exportStory(act); } finally { setExporting(false); }
+    try { await exportStory(act, zones); } finally { setExporting(false); }
   };
 
   return (
