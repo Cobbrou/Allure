@@ -1,18 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import ActivityCalendar from '../components/ActivityCalendar.jsx';
-import ConfirmButton from '../components/ConfirmButton.jsx';
 import FitnessChart from '../components/FitnessChart.jsx';
 import Gear from '../components/Gear.jsx';
 import Goals from '../components/Goals.jsx';
-import EmergencyContacts from '../components/EmergencyContacts.jsx';
-import MyData from '../components/MyData.jsx';
-import PrivacyZones from '../components/PrivacyZones.jsx';
 import PowerCurve from '../components/PowerCurve.jsx';
 import RacePredictions from '../components/RacePredictions.jsx';
 import RecordsList from '../components/RecordsList.jsx';
 import Segmented from '../components/Segmented.jsx';
 import WeeklyChart from '../components/WeeklyChart.jsx';
-import { deleteActivities } from '../lib/db.js';
 import { distUnit, elevUnit, fmtDist, fmtDuration, fmtElev } from '../lib/format.js';
 import { personalRecords, predictRaces } from '../lib/records.js';
 import { leaderboard } from '../lib/segments.js';
@@ -26,16 +21,10 @@ const PERIODS = [
   { id: 'all', label: 'Total' },
 ];
 
-const UNITS = [
-  { id: 'metric', label: 'Métrique (km, m)' },
-  { id: 'imperial', label: 'Impérial (mi, ft)' },
-];
-
-export default function ProfilePage({ activities, hr, ftp, zones, onSaveZones, contacts, onSaveContacts, hrSaved, onSaveHr, goals, onSaveGoals, segments, gears, onSaveGears, units, onSaveUnits, onDemo, onChange }) {
+export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGoals, segments, gears, onSaveGears }) {
   const list = activities ?? [];
   const [sport, setSport] = useState('');
   const [period, setPeriod] = useState('week');
-  const [busy, setBusy] = useState(false);
 
   // Only offer sports the athlete actually has.
   const sportOptions = useMemo(() => sportOptionsOf(list), [list]);
@@ -43,26 +32,21 @@ export default function ProfilePage({ activities, hr, ftp, zones, onSaveZones, c
   const weeks = useMemo(() => weeklyDistance(list, Date.now(), 12, sport || undefined), [list, sport]);
   const records = useMemo(() => personalRecords(list), [list]);
   const predictions = useMemo(() => predictRaces(list), [list]);
-  const demoIds = list.filter((a) => a.source === 'demo').map((a) => a.id);
   const allDist = list.reduce((s, a) => s + a.distance, 0);
-
-  const generate = async () => {
-    setBusy(true);
-    try { await onDemo(); } finally { setBusy(false); }
-  };
-  const clearDemo = async () => {
-    await deleteActivities(demoIds);
-    onChange();
-  };
 
   return (
     <>
-      <header className="topbar"><h1>Profil</h1></header>
+      <header className="topbar">
+        <h1>Profil</h1>
+        <a className="back" href="#/settings" aria-label="Paramètres">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
+        </a>
+      </header>
       <main className="detail">
         <section className="card profile-head">
-          <div className="avatar">A</div>
+          <div className="avatar">{(name || 'A')[0].toUpperCase()}</div>
           <div>
-            <h2>Athlète Allure</h2>
+            <h2>{name || 'Athlète Allure'}</h2>
             <p className="muted">{list.length} activités · {fmtDist(allDist, 0)} {distUnit()} au total</p>
           </div>
         </section>
@@ -96,58 +80,8 @@ export default function ProfilePage({ activities, hr, ftp, zones, onSaveZones, c
         )}
 
         <Gear gears={gears} activities={list} onSave={onSaveGears} />
-        <section className="card">
-          <h3>Unités</h3>
-          <Segmented label="Unités" options={UNITS} value={units} onChange={onSaveUnits} />
-        </section>
-        <HrSettings hr={hr} saved={hrSaved} onSave={onSaveHr} />
-        <PrivacyZones zones={zones} activities={list} onSave={onSaveZones} />
-        <EmergencyContacts contacts={contacts} onSave={onSaveContacts} />
-        <MyData count={list.length} />
-
-        <section className="card">
-          <h3>Données de démo</h3>
-          <p className="muted">Ajoute 20 sorties variées (course, vélo, rando) sur les 60 derniers jours pour tester l'app.</p>
-          <div className="row">
-            <button onClick={generate} disabled={busy}>{busy ? 'Génération…' : 'Générer 20 activités'}</button>
-            {demoIds.length > 0 && (
-              <ConfirmButton onConfirm={clearDemo}>Supprimer la démo ({demoIds.length})</ConfirmButton>
-            )}
-          </div>
-        </section>
       </main>
     </>
-  );
-}
-
-/** Max and resting heart rate. Empty fields fall back to the estimate from history. */
-function HrSettings({ hr, saved, onSave }) {
-  const [max, setMax] = useState(saved?.max ?? '');
-  const [rest, setRest] = useState(saved?.rest ?? '');
-  const [done, setDone] = useState(false);
-  useEffect(() => { setMax(saved?.max ?? ''); setRest(saved?.rest ?? ''); }, [saved]);
-  const num = (v, lo, hi) => (v === '' ? undefined : Math.min(hi, Math.max(lo, Math.round(Number(v)))));
-  const submit = async (e) => {
-    e.preventDefault();
-    await onSave({ max: num(max, 120, 230), rest: num(rest, 30, 100) });
-    setDone(true);
-  };
-  return (
-    <form className="card edit hr-settings" onSubmit={submit}>
-      <h3>Fréquence cardiaque</h3>
-      <p className="muted">Sert aux zones cardio, à l'effort relatif et à la courbe de forme.</p>
-      <div className="row">
-        <label>FC max
-          <input type="number" inputMode="numeric" min="120" max="230" placeholder={`${hr.max} (estimée)`} value={max}
-            onChange={(e) => { setMax(e.target.value); setDone(false); }} />
-        </label>
-        <label>FC repos
-          <input type="number" inputMode="numeric" min="30" max="100" placeholder={String(hr.rest)} value={rest}
-            onChange={(e) => { setRest(e.target.value); setDone(false); }} />
-        </label>
-      </div>
-      <div className="row"><button type="submit">{done ? 'Enregistré ✓' : 'Enregistrer'}</button></div>
-    </form>
   );
 }
 

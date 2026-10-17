@@ -58,6 +58,7 @@ IndexedDB database `allure`, version 6:
   `privacy` → `[{ id, name, lat, lon, radius }]` privacy zones (see `lib/privacy.js`)
   `contacts` → `[{ id, name, phone }]` emergency contacts (see `lib/safety.js`)
   `units` → `'metric' | 'imperial'` display unit system (see `lib/format.js`)
+  `prefs` → `{ name, autoPause, audio }` display name and recording defaults (Settings page)
 - `segments` (keyPath `id`): user-created segments (see `lib/segments.js`)
 - `routes` (keyPath `id`): planned routes with waypoints, points and stats (see `lib/routes.js`)
 - Cache Storage (not IndexedDB): offline map downloads, one cache per route

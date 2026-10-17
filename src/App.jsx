@@ -27,6 +27,8 @@ const pages = {
   route: () => import('./pages/RoutePage.jsx'),
   suggest: () => import('./pages/SuggestPage.jsx'),
   segment: () => import('./pages/SegmentPage.jsx'),
+  settings: () => import('./pages/SettingsPage.jsx'),
+  legal: () => import('./pages/LegalPage.jsx'),
 };
 const ActivityPage = lazy(pages.activity);
 const RecordPage = lazy(pages.record);
@@ -37,6 +39,8 @@ const GroupsPage = lazy(pages.groups);
 const RoutePage = lazy(pages.route);
 const SuggestPage = lazy(pages.suggest);
 const SegmentPage = lazy(pages.segment);
+const SettingsPage = lazy(pages.settings);
+const LegalPage = lazy(pages.legal);
 
 // Detail pages and where "back" lands when the app was opened on them (deep link).
 const BACK_TO = { activity: '/', log: '/profile', segment: '/profile', route: '/maps', suggest: '/maps' };
@@ -91,6 +95,9 @@ export default function App() {
   useEffect(() => { getSetting('units').then((u) => u && setUnitsState(u), () => {}); }, []);
   const saveUnits = async (u) => { await setSetting('units', u); setUnitsState(u); };
   setUnits(units); // read by format.js during render; the page remounts on change (key below)
+  const [prefs, setPrefs] = useState({}); // { name?, autoPause?, audio? }
+  useEffect(() => { getSetting('prefs').then((p) => p && setPrefs(p), () => {}); }, []);
+  const savePrefs = async (p) => { await setSetting('prefs', p); setPrefs(p); };
   const [gears, setGears] = useState([]);
   useEffect(() => { getSetting('gear').then((g) => g && setGears(g), () => {}); }, []);
   const saveGears = async (g) => { await setSetting('gear', g); setGears(g); };
@@ -145,8 +152,10 @@ ${cur.text}` } : summary));
   else if (page === 'route') content = <RoutePage id={id} routes={routes} activities={activities} onSave={addRoute} onDelete={removeRoute} />;
   else if (page === 'groups') content = <GroupsPage activities={activities} />;
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
-  else if (page === 'record') content = <RecordPage recording={recording} contacts={contacts} routes={routes} routeId={id} segments={segments ?? []} activities={activities ?? []} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
-  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} units={units} onSaveUnits={saveUnits} onDemo={addDemo} onChange={reload} />;
+  else if (page === 'record') content = <RecordPage recording={recording} contacts={contacts} routes={routes} routeId={id} segments={segments ?? []} activities={activities ?? []} prefs={prefs} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
+  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} name={prefs.name} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} />;
+  else if (page === 'settings') content = <SettingsPage activities={activities} hr={hr} hrSaved={hrSaved} onSaveHr={saveHr} units={units} onSaveUnits={saveUnits} prefs={prefs} onSavePrefs={savePrefs} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} onDemo={addDemo} onChange={reload} />;
+  else if (page === 'legal') content = <LegalPage id={id} />;
   else content = <FeedPage activities={activities} zones={zones} onRefresh={reload} onImport={onImport} onDemo={addDemo} />;
 
   return (
@@ -170,7 +179,7 @@ ${cur.text}` } : summary));
       <ErrorBoundary key={`${page}/${id ?? ''}/${units}`}>
         <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
       </ErrorBoundary>
-      {!(page === 'record' && recording.rec) && <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'log' ? 'profile' : page === 'route' || page === 'suggest' ? 'maps' : page} />}
+      {!(page === 'record' && recording.rec) && <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'log' || page === 'settings' || page === 'legal' ? 'profile' : page === 'route' || page === 'suggest' ? 'maps' : page} />}
     </div>
   );
 }

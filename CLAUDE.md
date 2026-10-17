@@ -60,7 +60,8 @@ src/
   App.jsx           route switch, activity list, GPX import, demo seeding
   router.js         hash routing: useRoute() / go()
   theme.js          shared JS constants (accent color, map style URL)
-  pages/            one component per route (Feed, Maps, Record, Groups, Profile, Activity, Route, TrainingLog, Segment)
+  pages/            one component per route (Feed, Maps, Record, Groups, Profile, Settings, Legal,
+                    Activity, Route, TrainingLog, Segment)
   components/       reusable React components, one per file, default export
   lib/              pure logic (analyze, records, stats, sports, format…)
                     + platform modules (db, offline, share, story, importer, formats/, location,

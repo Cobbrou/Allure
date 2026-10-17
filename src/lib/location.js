@@ -93,3 +93,12 @@ export function currentPosition(timeout = 10000) {
     stop = watchPosition((f) => done({ lat: f.lat, lon: f.lon }), () => done(null));
   });
 }
+
+/** Location permission: 'granted' | 'denied' | 'prompt', or null when the platform can't tell. */
+export async function locationPermission() {
+  try {
+    return (await navigator.permissions.query({ name: 'geolocation' })).state;
+  } catch {
+    return null;
+  }
+}

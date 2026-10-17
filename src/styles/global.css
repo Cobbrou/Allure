@@ -228,6 +228,18 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .link-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; font-size: 22px; color: var(--muted); }
 .link-card > span:first-child { display: grid; gap: 2px; font-size: 15px; color: var(--text); }
 .link-card .muted { font-size: 13px; }
+.settings-group { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 12px 4px -4px; }
+.settings-links { padding-block: 4px; }
+.settings-links a { display: flex; justify-content: space-between; align-items: center; min-height: 48px; color: var(--text); }
+.settings-links a + a { border-top: 1px solid var(--border); }
+.settings-links a > span:last-child { color: var(--muted); font-size: 18px; }
+.settings-version { text-align: center; font-size: 13px; padding-bottom: 8px; }
+.legal { line-height: 1.55; }
+.legal h2 { font-size: 20px; }
+.legal h3 { margin-top: 18px; }
+.legal ul { padding-left: 20px; display: grid; gap: 6px; }
+.legal p, .legal ul { margin-top: 8px; }
+.legal a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
 .section-title { font-size: 17px; margin-top: 8px; }
 .pill { flex: none; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: var(--border); color: var(--muted); }
 .challenges { display: grid; gap: 10px; }

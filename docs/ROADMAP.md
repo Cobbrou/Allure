@@ -184,6 +184,8 @@ Safety (feature 3)
 ## Phase 6: Store release & integrations
 
 - [ ] App Store + Google Play release (signing, store listings, privacy labels)
+      (in-app privacy policy, terms and licenses done in Settings; the stores also want
+      the privacy policy at a public URL)
 - [ ] Push notifications (kudos, comments, challenges)
 - [ ] Apple Watch / Wear OS companion
 - [ ] Apple Health sync
@@ -205,5 +207,7 @@ Pixel Watch / Google
 - [ ] Accessibility pass (keyboard navigation of chart and map, contrast)
 - [ ] Self-hosted or paid map tiles for production. The free Carto basemap has
       usage limits.
+- [x] Settings screen (account name, units, recording defaults, HR, permissions, privacy
+      zones, emergency contacts, data, about with privacy policy, terms and licenses)
 - [x] Error boundary with a friendly fallback screen (a render crash used to blank
       the app)

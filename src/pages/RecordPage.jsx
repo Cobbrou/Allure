@@ -14,21 +14,21 @@ import { hasBluetooth } from '../lib/sensors.js';
 import { effort, SPORTS } from '../lib/sports.js';
 
 /** routeId: route to preselect (from "#/record/<id>"). */
-export default function RecordPage({ recording, contacts, routes, routeId, segments, activities, onSaved }) {
+export default function RecordPage({ recording, contacts, routes, routeId, segments, activities, prefs, onSaved }) {
   return (
     <>
       <header className="topbar"><h1>Enregistrer</h1></header>
-      {recording.rec ? <Live recording={recording} contacts={contacts} onSaved={onSaved} /> : <Setup recording={recording} contacts={contacts} routes={routes} routeId={routeId} segments={segments} activities={activities} />}
+      {recording.rec ? <Live recording={recording} contacts={contacts} onSaved={onSaved} /> : <Setup recording={recording} contacts={contacts} routes={routes} routeId={routeId} segments={segments} activities={activities} prefs={prefs} />}
     </>
   );
 }
 
-function Setup({ recording, contacts, routes, routeId, segments, activities }) {
+function Setup({ recording, contacts, routes, routeId, segments, activities, prefs }) {
   const [routeSel, setRouteSel] = useState(routeId ?? '');
   const route = routes?.find((r) => r.id === routeSel);
   const [sport, setSport] = useState(route?.sport ?? 'run');
-  const [autoPause, setAutoPause] = useState(true);
-  const [audio, setAudio] = useState(true);
+  const [autoPause, setAutoPause] = useState(prefs?.autoPause ?? true);
+  const [audio, setAudio] = useState(prefs?.audio ?? true);
   const [safety, setSafety] = useState(true);
   const [gps, setGps] = useState(null); // { accuracy } | { error }
 
