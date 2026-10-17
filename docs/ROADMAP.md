@@ -177,5 +177,5 @@ Pixel Watch / Google
 - [ ] Accessibility pass (keyboard navigation of chart and map, contrast)
 - [ ] Self-hosted or paid map tiles for production. The free Carto basemap has
       usage limits.
-- [ ] Error boundary with a friendly fallback screen (a render crash currently blanks
+- [x] Error boundary with a friendly fallback screen (a render crash used to blank
       the app)

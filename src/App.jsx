@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 import TabBar from './components/TabBar.jsx';
 import { createActivity } from './lib/activity.js';
 import { getSetting, listActivities, saveActivities, setSetting } from './lib/db.js';
@@ -110,7 +111,9 @@ ${cur.text}` } : summary));
           {toast.text}
         </div>
       )}
-      <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
+      <ErrorBoundary key={`${page}/${id ?? ''}`}>
+        <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
+      </ErrorBoundary>
       <TabBar active={page === 'activity' ? '' : page === 'log' ? 'profile' : page} />
     </div>
   );
