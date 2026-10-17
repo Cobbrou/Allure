@@ -91,7 +91,7 @@ Details and data model: `docs/ARCHITECTURE.md`.
   `node:assert`: no test framework.
 - Don't add a dependency when a few lines or a platform API do the job.
 - Colors: CSS vars in `styles/global.css`, JS-side constants in `theme.js` (charts, map
-  layers, canvas). Accent is `#ff5500` (CTAs, active states, records, main GPS track only),
+  layers, canvas). Accent is `#ff5500` (CTAs, active states, records, main GPS track only; text on it uses `--on-accent`),
   background `#0f1115`, cards `#181b22`, borders `#262a34`. No hard-coded colours in
   components: use a token.
 - Metrics go through `StatMetric` (label, big value, unit). Digits are tabular app-wide
