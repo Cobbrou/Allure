@@ -28,7 +28,7 @@ parity": every line must be covered before the app can claim it.
 | 8 | *Analysez vos entraînements grâce à des statistiques avancées* (advanced stats) | HR zones, GAP, intervals, matched activities, predictions, power | 5 | Done (splits, best efforts, HR zones, GAP, race predictions, matched activities, intervals, power) |
 | 9 | *Définissez des objectifs personnalisés et suivez vos progrès* (custom goals and progress) | Weekly / monthly / yearly goals per sport, progress rings | 5 | Done (in-app toast when reached; push notifications in phase 6) |
 | 10 | *Mesurez-vous aux autres dans les classements sur les segments* (segment leaderboards) | Segments, auto-matching, leaderboards, live segments | 5 | Partly done (segments and personal efforts ranking; shared leaderboards need accounts) |
-| 11 | *Rejoignez et créez des challenges avec des amis* (join and create challenges with friends) | Platform challenges + user-created group challenges | 4 / 5 | Planned |
+| 11 | *Rejoignez et créez des challenges avec des amis* (join and create challenges with friends) | Platform challenges + user-created group challenges | 4 / 5 | Partly done (monthly challenges and badges, local; challenges with friends need accounts) |
 | 12 | *Mesurez vos efforts dans différentes activités* (measure effort across sports) | Relative Effort: HR-based load comparable across sports | 5 | Done (Banister TRIMP) |
 | 13 | *Découvrez votre score de condition physique au fil du temps* (fitness score over time) | Fitness & Freshness (CTL / ATL / TSB) chart | 5 | Done |
 
@@ -121,7 +121,8 @@ Sharing
 - [ ] Follow athletes, home feed
 - [ ] Kudos, comments, photos on activities
 - [ ] Clubs, club feed and leaderboards
-- [ ] Monthly platform challenges and badges
+- [x] Monthly platform challenges and badges (8 challenges a month derived from your
+      activities, trophy case on the Groups tab, toast on completion; local until accounts)
 - [ ] Group challenges created by users, with friends (distance, time, elevation) **(premium)**
 - [ ] Group activities (detect athletes who ran together)
 

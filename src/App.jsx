@@ -4,6 +4,7 @@ import TabBar from './components/TabBar.jsx';
 import { createActivity } from './lib/activity.js';
 import { deleteRoute, deleteSegment, getSetting, listActivities, listRoutes, listSegments, saveActivities, saveRoute, saveSegment, setSetting } from './lib/db.js';
 import { demoHistory } from './lib/demo.js';
+import { newlyCompleted } from './lib/challenges.js';
 import { goalLabel, newlyReached } from './lib/goals.js';
 import { importFiles } from './lib/importer.js';
 import { estimateFtp } from './lib/power.js';
@@ -97,9 +98,11 @@ export default function App() {
     try {
       const list = await listActivities();
       const won = prevList.current ? newlyReached(goalsRef.current, prevList.current, list) : [];
+      const done = prevList.current ? newlyCompleted(prevList.current, list) : [];
       prevList.current = list;
       setActivities(list);
-      if (won.length) setToast({ kind: 'notice', goal: true, text: `🎉 Objectif atteint : ${won.map(goalLabel).join(' · ')}` });
+      const news = [...won.map((g) => `🎉 Objectif atteint : ${goalLabel(g)}`), ...done.map((c) => `🏆 Défi terminé : ${c.title}`)];
+      if (news.length) setToast({ kind: 'notice', goal: true, text: news.join(' · ') });
     } catch (e) {
       setToast({ kind: 'error', text: `Stockage indisponible : ${e.message}` });
     }
@@ -135,7 +138,7 @@ ${cur.text}` } : summary));
   else if (page === 'maps') content = <MapsPage activities={activities} routes={routes} />;
   else if (page === 'suggest') content = <SuggestPage activities={activities} onPick={pickRoute} />;
   else if (page === 'route') content = <RoutePage id={id} routes={routes} activities={activities} onSave={addRoute} onDelete={removeRoute} />;
-  else if (page === 'groups') content = <GroupsPage />;
+  else if (page === 'groups') content = <GroupsPage activities={activities} />;
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
   else if (page === 'record') content = <RecordPage recording={recording} contacts={contacts} routes={routes} routeId={id} segments={segments ?? []} activities={activities ?? []} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
   else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} onDemo={addDemo} onChange={reload} />;
