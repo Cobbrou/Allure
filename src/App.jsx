@@ -8,6 +8,7 @@ import ActivityPage from './pages/ActivityPage.jsx';
 import FeedPage from './pages/FeedPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import RecordPage from './pages/RecordPage.jsx';
+import { useRecording } from './recording.js';
 import { go, useRoute } from './router.js';
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
   const [toast, setToast] = useState(null); // { kind: 'error' | 'notice', text }
   const [progress, setProgress] = useState(null); // { done, total }
   const [dragging, setDragging] = useState(false);
+  const recording = useRecording();
 
   const reload = useCallback(
     () => listActivities().then(setActivities, (e) => setToast({ kind: 'error', text: `Stockage indisponible : ${e.message}` })),
@@ -46,7 +48,7 @@ export default function App() {
 
   let content;
   if (page === 'activity') content = <ActivityPage id={id} activities={activities} onChange={reload} />;
-  else if (page === 'record') content = <RecordPage />;
+  else if (page === 'record') content = <RecordPage recording={recording} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
   else if (page === 'profile') content = <ProfilePage activities={activities} onDemo={addDemo} onChange={reload} />;
   else content = <FeedPage activities={activities} onImport={onImport} onDemo={addDemo} />;
 

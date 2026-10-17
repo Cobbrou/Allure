@@ -1,0 +1,73 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { addFix, currentPace, elapsed, pause, recover, resume, splitCue, startRecording, tick } from '../src/lib/recorder.js';
+
+const M = 1 / 111195; // degrees of latitude per meter
+/** Fix `m` meters north of the origin at second `s`. */
+const fix = (m, s, extra) => ({ lat: 45 + m * M, lon: 6, time: s * 1000, accuracy: 5, ...extra });
+/** Feed fixes at constant `speed` m/s, one per second, from second `from` to `to`. */
+const run = (rec, from, to, speed = 4, at = 0) => {
+  for (let s = from; s <= to; s++) rec = addFix(rec, fix(at + (s - from) * speed, s));
+  return rec;
+};
+
+test('steady run: distance, clock and current pace', () => {
+  const rec = run(startRecording({}, 0), 0, 100, 4);
+  assert.ok(Math.abs(rec.distance - 400) < 1, rec.distance);
+  assert.equal(elapsed(rec, 100_000), 100);
+  assert.ok(Math.abs(currentPace(rec) - 250) < 1, currentPace(rec));
+});
+
+test('inaccurate fixes and jitter are ignored', () => {
+  let rec = addFix(startRecording({}, 0), fix(0, 0));
+  rec = addFix(rec, fix(500, 1, { accuracy: 80 }));
+  rec = addFix(rec, fix(1, 2));
+  assert.equal(rec.points.length, 1);
+  assert.equal(rec.distance, 0);
+});
+
+test('auto-pause stops the clock while stopped, resumes on movement', () => {
+  let rec = run(startRecording({}, 0), 0, 60); // 240 m in 60 s
+  rec = tick(rec, 64_000);
+  assert.equal(rec.autoPaused, false);
+  rec = tick(rec, 66_000);
+  assert.equal(rec.autoPaused, true);
+  assert.equal(elapsed(rec, 200_000), 60); // clock held at the last move
+  assert.equal(currentPace(rec), null);
+  rec = run(rec, 200, 210, 4, 240); // first fix is a 0 m step, the clock restarts on the second (201 s)
+  assert.equal(rec.autoPaused, false);
+  assert.equal(elapsed(rec, 210_000), 60 + 9);
+});
+
+test('auto-pause off keeps the clock running', () => {
+  const rec = tick(run(startRecording({ autoPause: false }, 0), 0, 10), 100_000);
+  assert.equal(rec.autoPaused, false);
+  assert.equal(elapsed(rec, 100_000), 100);
+});
+
+test('manual pause ignores fixes and banks time', () => {
+  let rec = run(startRecording({}, 0), 0, 30);
+  rec = pause(rec, 30_000);
+  const n = rec.points.length;
+  rec = addFix(rec, fix(5000, 40));
+  assert.equal(rec.points.length, n);
+  assert.equal(elapsed(rec, 90_000), 30);
+  rec = resume(rec, 90_000);
+  assert.equal(elapsed(rec, 100_000), 40);
+});
+
+test('recover pauses with the clock at the last point', () => {
+  const rec = recover(run(startRecording({}, 0), 0, 20));
+  assert.equal(rec.paused, true);
+  assert.equal(elapsed(rec, 999_000), 20);
+});
+
+test('splitCue speaks once per split, per sport', () => {
+  const r = startRecording({}, 0);
+  assert.equal(splitCue({ ...r, distance: 900 }, { ...r, distance: 950 }, 0), null);
+  assert.equal(splitCue({ ...r, distance: 990 }, { ...r, distance: 1001, active: 330_000, runningSince: null }, 0),
+    '1 kilomètre. Allure moyenne 5 minutes 30.');
+  const ride = startRecording({ sport: 'ride' }, 0);
+  assert.equal(splitCue({ ...ride, distance: 4990 }, { ...ride, distance: 5000, active: 600_000, runningSince: null }, 0),
+    '5 kilomètres. Vitesse moyenne 30,0 kilomètres heure.');
+});

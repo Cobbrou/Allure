@@ -18,7 +18,7 @@ parity": every line must be covered before the app can claim it.
 
 | # | Strava subscription feature | Allure equivalent | Phase | Status |
 |---|---|---|---|---|
-| 1 | *Enregistrez vos activités* (record your activities) | Live GPS recording, auto-pause, audio cues, sensors | 2 | Planned (import works today) |
+| 1 | *Enregistrez vos activités* (record your activities) | Live GPS recording, auto-pause, audio cues, sensors | 2 | Partly done (web recording; background GPS and sensors need the native shell) |
 | 2 | *Rejoignez une communauté d'un grand soutien* (join a supportive community) | Follow, feed, kudos, comments, clubs | 4 | Planned |
 | 3 | *Ayez l'esprit tranquille grâce à des fonctionnalités de sécurité* (peace of mind with safety features) | Live location sharing (Beacon-like), privacy zones, emergency contacts | 3 / 5 | Planned |
 | 4 | *Essayez des itinéraires créés rien que pour vous* (routes made for you) | Suggested routes from popular segments and personal preferences | 5 | Planned |
@@ -80,12 +80,12 @@ Motion & polish
 - [ ] Native shell (Capacitor, pending `DECISIONS.md`): iOS + Android builds
       running the web code
 - [ ] Background location plugin: records with the screen off
-- [ ] Record screen: start / pause / resume / finish (web `watchPosition` in dev,
+- [x] Record screen: start / pause / resume / finish (web `watchPosition` in dev,
       native plugin on device)
-- [ ] Live stats: time, distance, current & average pace, live map
-- [ ] Auto-pause
-- [ ] Audio cues per km (`speechSynthesis`)
-- [ ] Screen Wake Lock while recording, crash-safe autosave of the in-progress track
+- [x] Live stats: time, distance, current & average pace, live map
+- [x] Auto-pause
+- [x] Audio cues per km (`speechSynthesis`)
+- [x] Screen Wake Lock while recording, crash-safe autosave of the in-progress track
 - [ ] Bluetooth HR strap (native BLE plugin)
 - [ ] Lock-screen / notification controls while recording
 

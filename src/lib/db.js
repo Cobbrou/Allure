@@ -6,7 +6,7 @@ import { analyze } from './analyze.js';
 import { bestEfforts } from './records.js';
 
 const DB_NAME = 'allure';
-const VERSION = 2;
+const VERSION = 3;
 let dbPromise;
 
 // Schema migrations, keyed by the version they upgrade to. They run inside the upgrade
@@ -29,6 +29,8 @@ const MIGRATIONS = {
       };
     };
   },
+  // v3: `drafts` holds the in-progress live recording, so a crash or reload loses nothing.
+  3: (db) => db.createObjectStore('drafts'),
 };
 
 function open() {
@@ -98,3 +100,8 @@ export function deleteActivities(ids) {
     }
   });
 }
+
+/** The in-progress live recording (one at a time). */
+export const saveDraft = (rec) => tx(['drafts'], 'readwrite', (s) => s.put(rec, 'current'));
+export const loadDraft = () => tx(['drafts'], 'readonly', (s) => s.get('current'));
+export const clearDraft = () => tx(['drafts'], 'readwrite', (s) => s.delete('current'));

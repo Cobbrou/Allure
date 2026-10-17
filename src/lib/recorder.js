@@ -1,0 +1,85 @@
+import { haversine } from './geo.js';
+import { SPORTS } from './sports.js';
+
+// Live recording as a pure state machine: every function takes a recording and returns
+// a new one (or the same object when nothing changed). Times are ms epoch.
+//
+// The clock counts only running time: `active` holds the time banked before the last
+// pause, `runningSince` is when the clock last started (null while paused).
+
+const MAX_ACCURACY = 30; // m: fixes less precise than this are dropped
+const MIN_STEP = 3; // m: smaller moves are GPS jitter, not progress
+const STOP_SPEED = { ride: 1.5 }; // m/s under which the athlete counts as stopped (default 0.6)
+const STOP_DELAY = 5000; // ms of being stopped before auto-pause kicks in
+const PACE_WINDOW = 30000; // ms of track used for the current pace
+
+export function startRecording({ sport = 'run', autoPause = true, audio = true }, now) {
+  return { sport, autoPause, audio, start: now, points: [], distance: 0, active: 0, runningSince: now, paused: false, autoPaused: false, lastMove: now, pos: null };
+}
+
+/** Running time in seconds. */
+export const elapsed = (rec, now) => (rec.active + (rec.runningSince != null ? now - rec.runningSince : 0)) / 1000;
+
+const stopClock = (rec, at) =>
+  rec.runningSince == null ? rec : { ...rec, active: rec.active + Math.max(0, at - rec.runningSince), runningSince: null };
+
+export const pause = (rec, now) => (rec.paused ? rec : { ...stopClock(rec, now), paused: true });
+
+export const resume = (rec, now) =>
+  rec.paused ? { ...rec, paused: false, autoPaused: false, runningSince: now, lastMove: now } : rec;
+
+/** After a crash or reload: paused, with the clock stopped at the last saved point. */
+export const recover = (rec) => ({ ...stopClock(rec, rec.points.at(-1)?.time ?? rec.start), paused: true, autoPaused: false });
+
+/** Feed one GPS fix: { lat, lon, ele?, time, accuracy?, speed? }. */
+export function addFix(rec, fix) {
+  if ((fix.accuracy ?? 0) > MAX_ACCURACY) return rec;
+  if (rec.paused) return { ...rec, pos: fix };
+  const prev = rec.points.at(-1);
+  const d = prev ? haversine(prev, fix) : 0;
+  if (prev && d < MIN_STEP) return tick({ ...rec, pos: fix }, fix.time);
+
+  // Speed against the previous fix, not the last stored point, which can be minutes old after a stop.
+  const last = rec.pos ?? prev;
+  const dt = last ? (fix.time - last.time) / 1000 : 0;
+  const speed = fix.speed ?? (dt > 0 ? haversine(last, fix) / dt : 0);
+  const moving = !prev || speed >= (STOP_SPEED[rec.sport] ?? 0.6);
+  let next = { ...rec, pos: fix, points: [...rec.points, point(fix)], distance: rec.distance + d };
+  if (moving) {
+    next.lastMove = fix.time;
+    // Moving again after an auto-pause: the clock restarts now.
+    if (next.autoPaused) next = { ...next, autoPaused: false, runningSince: fix.time };
+  }
+  return tick(next, fix.time);
+}
+
+/** Auto-pause once stopped for STOP_DELAY. Also called on a timer, as fixes can stop coming in. */
+export function tick(rec, now) {
+  if (!rec.autoPause || rec.paused || rec.autoPaused || now - rec.lastMove < STOP_DELAY) return rec;
+  return { ...stopClock(rec, rec.lastMove), autoPaused: true };
+}
+
+const point = ({ lat, lon, ele, time, hr }) => ({ lat, lon, ele: ele ?? null, time, ...(hr != null && { hr }) });
+
+/** Seconds per km over the last PACE_WINDOW, null when stopped or not enough track. */
+export function currentPace(rec) {
+  if (rec.paused || rec.autoPaused) return null;
+  const pts = rec.points, last = pts.at(-1);
+  if (!last) return null;
+  let i = pts.length - 1, d = 0;
+  for (; i > 0 && last.time - pts[i - 1].time <= PACE_WINDOW; i--) d += haversine(pts[i - 1], pts[i]);
+  const t = (last.time - pts[i].time) / 1000;
+  return d > 10 && t > 0 ? t / (d / 1000) : null;
+}
+
+/** Spoken summary when `next` crosses a split boundary (sport split size), else null. */
+export function splitCue(prev, next, now) {
+  const size = SPORTS[next.sport]?.split ?? 1000;
+  const n = Math.floor(next.distance / size);
+  if (n <= Math.floor(prev.distance / size)) return null;
+  const sPerKm = elapsed(next, now) / (next.distance / 1000);
+  const dist = size >= 1000 ? `${(n * size) / 1000} kilomètre${n * size > 1000 ? 's' : ''}` : `${n * size} mètres`;
+  if (SPORTS[next.sport]?.display === 'speed') return `${dist}. Vitesse moyenne ${(3600 / sPerKm).toFixed(1).replace('.', ',')} kilomètres heure.`;
+  const s = Math.round(SPORTS[next.sport]?.display === 'pace100' ? sPerKm / 10 : sPerKm);
+  return `${dist}. Allure moyenne ${Math.floor(s / 60)} minutes ${s % 60}.`;
+}
