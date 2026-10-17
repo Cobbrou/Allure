@@ -102,6 +102,12 @@ Motion & polish
 
 *Covers subscription features 2 and 11.*
 
+Sharing
+- [ ] Story redesign: several templates to pick from after an activity (route only,
+      stats card, splits, elevation profile…), live preview, swipe between them
+- [ ] Story over a photo background: route and stats drawn on top of a photo from
+      the activity or the camera roll, Strava-style
+
 - [ ] Follow athletes, home feed
 - [ ] Kudos, comments, photos on activities
 - [ ] Clubs, club feed and leaderboards
@@ -153,7 +159,14 @@ Safety (feature 3)
 - [ ] App Store + Google Play release (signing, store listings, privacy labels)
 - [ ] Push notifications (kudos, comments, challenges)
 - [ ] Apple Watch / Wear OS companion
-- [ ] Apple Health / Health Connect sync
+- [ ] Apple Health sync
+
+Pixel Watch / Google
+- [ ] Health Connect (Android, native plugin): import exercise sessions recorded by
+      the Pixel Watch (route, heart rate, calories); write Allure activities back
+- [ ] Google Health API (cloud REST, OAuth): pull Pixel Watch / Fitbit workouts and
+      daily metrics (resting HR, sleep) without the native shell
+- [ ] Use resting HR and max HR from the watch for HR zones and Relative Effort
 - [ ] Garmin / Coros / Suunto / Polar device sync (partner APIs)
 - [ ] Open API + webhooks for third parties
 
