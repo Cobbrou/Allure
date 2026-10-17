@@ -4,11 +4,13 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // MapLibre resolves its worker relative to its own module URL, which Vite's dep bundling breaks.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import { MAP_STYLE } from '../lib/offline.js';
-import { ACCENT } from '../theme.js';
+import { ACCENT, DEM_TILES, HILLSHADE_HIGHLIGHT, HILLSHADE_SHADOW } from '../theme.js';
 
 setWorkerUrl(workerUrl);
 
 const DRAW_MS = 1200; // route drawing animation
+const EXAGGERATION = 1.5; // relief reads better a bit taller than life
+const PITCH_3D = 60;
 
 /**
  * Route map. Sets `hover.current(index | null)` to move a cursor imperatively (no re-render),
@@ -27,6 +29,13 @@ export default function TrackMap({ track, hover, range }) {
     map.on('load', () => {
       el.current?.classList.add('ready');
       const animate = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      // Relief for the 3D view: hillshade and terrain from one DEM source, off until toggled.
+      map.addSource('dem', { type: 'raster-dem', tiles: [DEM_TILES], encoding: 'terrarium', tileSize: 256, maxzoom: 15,
+        attribution: 'Relief : Mapzen, AWS Terrain Tiles' });
+      map.addLayer({ id: 'hillshade', type: 'hillshade', source: 'dem', layout: { visibility: 'none' },
+        paint: { 'hillshade-shadow-color': HILLSHADE_SHADOW, 'hillshade-highlight-color': HILLSHADE_HIGHLIGHT, 'hillshade-exaggeration': 0.6 } },
+        map.getStyle().layers.find((l) => l.type === 'symbol')?.id); // under the place names
+      map.addControl(new Toggle3D(), 'top-right');
       map.addSource('route', { type: 'geojson', data: line(animate ? coords.slice(0, 2) : coords) });
       // The route draws itself from start to finish once the map is in.
       if (animate) {
@@ -60,4 +69,24 @@ export default function TrackMap({ track, hover, range }) {
     return () => { cancelAnimationFrame(frame); hover.current = () => {}; if (range) range.current = () => {}; map.remove(); };
   }, [track, hover, range]);
   return <div ref={el} className="map" />;
+}
+
+/** Map control: a "3D" button that drapes the map on the relief and tilts the camera. */
+class Toggle3D {
+  onAdd(map) {
+    const btn = Object.assign(document.createElement('button'), { type: 'button', textContent: '3D', className: 'ctrl-3d', title: 'Relief 3D' });
+    btn.setAttribute('aria-pressed', 'false');
+    btn.onclick = () => {
+      const on = !map.getTerrain();
+      map.setTerrain(on ? { source: 'dem', exaggeration: EXAGGERATION } : null);
+      map.setLayoutProperty('hillshade', 'visibility', on ? 'visible' : 'none');
+      map.easeTo({ pitch: on ? PITCH_3D : 0, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1000 });
+      btn.setAttribute('aria-pressed', String(on));
+    };
+    this.el = Object.assign(document.createElement('div'), { className: 'maplibregl-ctrl maplibregl-ctrl-group' });
+    this.el.append(btn);
+    return this.el;
+  }
+
+  onRemove() { this.el.remove(); }
 }

@@ -167,7 +167,8 @@ Maps & routes (features 4, 5, 6)
       (800 m corridor, z5 to z14, served by a `cached://` MapLibre protocol)
 - [x] Personal heatmap **(premium)**
 - [ ] Global heatmap (aggregated, anonymized)
-- [ ] 3D terrain view
+- [x] 3D terrain view (activity map: "3D" button, AWS Terrain Tiles DEM,
+      hillshade, 1.5x exaggeration, camera tilted to 60°)
 
 Safety (feature 3)
 - [ ] Live location sharing with chosen contacts (Strava calls it "Beacon") **(premium)**

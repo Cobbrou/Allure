@@ -182,7 +182,8 @@ the phase 3 backend sending them, which also unlocks live location sharing (Beac
   start) vs. a custom Node API + Postgres/PostGIS (full control). PostGIS is needed
   either way for segments, heatmaps and route matching.
 - **Map tiles in production**: Carto free tier vs. MapTiler / Stadia (paid) vs.
-  self-hosted Protomaps (PMTiles).
+  self-hosted Protomaps (PMTiles). Same question for the relief (DEM) tiles of the 3D view,
+  read from the public AWS Terrain Tiles bucket for now.
 - **Routing engine in production**: self-hosted BRouter vs. GraphHopper / Valhalla
   (see the 2026-10-17 entry).
 - **Monetization**: whether "premium" features stay free or sit behind a subscription.
