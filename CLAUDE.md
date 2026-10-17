@@ -39,13 +39,18 @@ npm install
 npm run dev     # Vite dev server on http://localhost:5173
 npm run build   # production build to dist/
 npm test        # node:test, runs tests/**/*.test.js
+npm run android       # build the web app and copy it into the Android project (cap sync)
+npm run android:open  # open android/ in Android Studio to run it on a phone or emulator
 ```
 
 ## Stack
 
 React 18 + Vite, MapLibre GL JS (Carto dark-matter style), Recharts 2.
 Plain JavaScript (no TypeScript), plain CSS (no framework). No backend yet.
-No native shell yet: the app runs in the browser during development.
+Native shell: Capacitor 8, Android only so far (`android/`, app id `app.allure`). Day to
+day development stays in the browser; `npm run android` after web changes to test on a
+phone. Don't edit `android/app/src/main/assets/public` (generated). Ask the owner before
+adding any npm package or Capacitor plugin.
 
 ## Layout
 

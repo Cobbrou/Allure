@@ -81,7 +81,8 @@ Motion & polish
 *Covers subscription feature 1.*
 
 - [ ] Native shell (Capacitor, see `DECISIONS.md`): iOS + Android builds
-      running the web code
+      running the web code. Android project set up (Capacitor 8, `app.allure`); first
+      device build and the iOS project to do
 - [ ] Background location plugin: records with the screen off
 - [x] Record screen: start / pause / resume / finish (web `watchPosition` in dev,
       native plugin on device)

@@ -1,0 +1,11 @@
+{
+  "appId": "app.allure",
+  "appName": "Allure",
+  "webDir": "dist",
+  "backgroundColor": "#0f1115",
+  "plugins": {
+    "SystemBars": {
+      "style": "DARK"
+    }
+  }
+}

@@ -26,7 +26,8 @@ code (React + plain JS in `src/lib/`), already split from platform APIs (`locati
 **Decision**: Capacitor. The hard part of a sports app is reliable recording, and that
 needs native plugins with either option. Capacitor keeps the whole UI and the fast
 browser dev loop, and MapLibre GL JS, the View Transitions and hash routing all work in
-the iOS and Android WebViews. Shell setup itself is deferred while web features land.
+the iOS and Android WebViews. Android project added on 2026-10-17 (Capacitor 8.5,
+`app.allure`, `capacitor.config.json`); iOS later.
 **Consequences**: before a store release, these platform modules must get native
 backends:
 - **Background GPS** (blocking): `navigator.geolocation` stops when the app is
@@ -40,7 +41,13 @@ backends:
   activities only live on the device until sync ships. Move `db.js` to
   `@capacitor-community/sqlite`, or ship server sync (phase 3) first.
 - **Android back button**: listen to `@capacitor/app` `backButton` and call
-  `history.back()`.
+  `history.back()`. Without it the back button closes the app.
+- **Web APIs the Android WebView lacks**: Web Share (story / GPX sharing falls back to a
+  download link that does nothing in the shell: needs `@capacitor/share` +
+  `@capacitor/filesystem`), Web Bluetooth (the strap button hides itself), Media Session
+  notifications, and likely `speechSynthesis`. Each sits behind its platform module.
+- **Safe areas**: Capacitor 8's SystemBars plugin exposes `--safe-area-inset-*` CSS
+  variables on Android; `--safe-top` / `--safe-bottom` read them before `env()`.
 - **BLE heart-rate straps**: `@capacitor-community/bluetooth-le`.
 - **Startup cost**: on-device JS is parsed at launch, so pages using MapLibre or Recharts
   and the FIT SDK load as lazy chunks (main chunk ~230 kB instead of 2.1 MB).
