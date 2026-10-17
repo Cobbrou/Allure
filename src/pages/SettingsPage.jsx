@@ -23,7 +23,7 @@ const PERMISSION = {
   prompt: 'Demandée au premier enregistrement.',
 };
 
-export default function SettingsPage({ activities, hr, hrSaved, onSaveHr, units, onSaveUnits, prefs, onSavePrefs, zones, onSaveZones, contacts, onSaveContacts, onDemo, onChange }) {
+export default function SettingsPage({ activities, hr, hrSaved, ftpEstimate, onSaveHr, units, onSaveUnits, prefs, onSavePrefs, zones, onSaveZones, contacts, onSaveContacts, onDemo, onChange }) {
   const list = activities ?? [];
   const [name, setName] = useState(prefs.name ?? '');
   const [location, setLocation] = useState(null);
@@ -70,7 +70,7 @@ export default function SettingsPage({ activities, hr, hrSaved, onSaveHr, units,
           <label className="switch"><input type="checkbox" checked={prefs.autoPause ?? true} onChange={(e) => savePref({ autoPause: e.target.checked })} />Pause automatique</label>
           <label className="switch"><input type="checkbox" checked={prefs.audio ?? true} onChange={(e) => savePref({ audio: e.target.checked })} />Annonces vocales</label>
         </section>
-        <HrSettings hr={hr} saved={hrSaved} onSave={onSaveHr} />
+        <HrSettings hr={hr} ftpEstimate={ftpEstimate} saved={hrSaved} onSave={onSaveHr} />
 
         <h2 className="settings-group">Confidentialité et sécurité</h2>
         <section className="card">

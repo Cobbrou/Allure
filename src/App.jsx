@@ -64,7 +64,11 @@ export default function App() {
     () => ({ max: hrSaved?.max || estimateMaxHr(activities ?? []), rest: hrSaved?.rest || DEFAULT_REST_HR }),
     [hrSaved, activities],
   );
-  const ftp = useMemo(() => estimateFtp(activities ?? []), [activities]);
+  const ftpEstimate = useMemo(() => estimateFtp(activities ?? []), [activities]);
+  const ftp = useMemo(
+    () => (hrSaved?.ftp ? { watts: hrSaved.ftp, manual: true } : ftpEstimate && { watts: ftpEstimate, manual: false }),
+    [hrSaved, ftpEstimate],
+  );
   const saveHr = async (v) => { await setSetting('hr', v); setHrSaved(v); };
   const [goals, setGoals] = useState([]);
   useEffect(() => { getSetting('goals').then((g) => g && setGoals(g), () => {}); }, []);
@@ -154,7 +158,7 @@ ${cur.text}` } : summary));
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
   else if (page === 'record') content = <RecordPage recording={recording} contacts={contacts} routes={routes} routeId={id} segments={segments ?? []} activities={activities ?? []} prefs={prefs} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
   else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} name={prefs.name} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} />;
-  else if (page === 'settings') content = <SettingsPage activities={activities} hr={hr} hrSaved={hrSaved} onSaveHr={saveHr} units={units} onSaveUnits={saveUnits} prefs={prefs} onSavePrefs={savePrefs} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} onDemo={addDemo} onChange={reload} />;
+  else if (page === 'settings') content = <SettingsPage activities={activities} hr={hr} hrSaved={hrSaved} ftpEstimate={ftpEstimate} onSaveHr={saveHr} units={units} onSaveUnits={saveUnits} prefs={prefs} onSavePrefs={savePrefs} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} onDemo={addDemo} onChange={reload} />;
   else if (page === 'legal') content = <LegalPage id={id} />;
   else content = <FeedPage activities={activities} zones={zones} onRefresh={reload} onImport={onImport} onDemo={addDemo} />;
 

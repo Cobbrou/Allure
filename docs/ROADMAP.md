@@ -143,7 +143,7 @@ Analysis & training (features 7, 8, 12, 13)
 - [x] Race time predictions **(premium)**
 - [x] Workout / interval analysis (laps, auto-detected efforts) **(premium)**
 - [x] Power curve, FTP, cycling power analysis **(premium)** (power read from FIT / TCX /
-      GPX; FTP estimated from the best 20 min, no manual override yet)
+      GPX; FTP estimated from the best 20 min, or set by hand in Settings)
 
 Goals (feature 9)
 - [x] Custom goals per sport: distance, time, elevation, activity count, per

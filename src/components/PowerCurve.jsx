@@ -8,14 +8,15 @@ const RECENT = 90 * 86400e3;
 
 /**
  * Power analysis. With `meta`: one ride's power numbers and curve against the 90-day best.
- * Without: the athlete's 90-day best curve and FTP estimate (profile). Hidden without power.
+ * Without: the athlete's 90-day best curve and FTP (profile). Hidden without power.
+ * `ftp` is { watts, manual } (manual = set in Settings) or null.
  */
 export default function PowerCurve({ meta, activities, ftp }) {
   const best = useMemo(() => bestCurve((activities ?? []).filter((a) => a.date > Date.now() - RECENT)), [activities]);
   const curve = meta ? meta.powerCurve : best;
   if (!curve || !Object.keys(curve).length) return null;
   const data = CURVE.filter((d) => curve[d] || best[d]).map((d) => ({ d: LABEL[d], w: curve[d], best: meta ? best[d] : undefined }));
-  const stress = meta && trainingStress(meta.np, meta.movingTime, ftp);
+  const stress = meta && trainingStress(meta.np, meta.movingTime, ftp?.watts);
 
   return (
     <section className="card">
@@ -32,7 +33,7 @@ export default function PowerCurve({ meta, activities, ftp }) {
           </>
         ) : (
           <>
-            <div><span>FTP estimée</span><b>{ftp ?? '—'} <small>W</small></b></div>
+            <div><span>{ftp?.manual ? 'FTP' : 'FTP estimée'}</span><b>{ftp?.watts ?? '—'} <small>W</small></b></div>
             <div><span>Meilleur 5 min</span><b>{best[300] ?? '—'} <small>W</small></b></div>
           </>
         )}
@@ -49,8 +50,8 @@ export default function PowerCurve({ meta, activities, ftp }) {
         </LineChart>
       </ResponsiveContainer>
       <p className="muted small-label">
-        {meta ? (ftp ? `Intensité et charge calculées sur une FTP estimée à ${ftp} W.` : 'Une sortie de 20 min avec capteur permet d\'estimer ta FTP.')
-          : 'FTP : 95 % de ta meilleure puissance sur 20 min ces 90 derniers jours.'}
+        {meta ? (ftp ? `Intensité et charge calculées sur une FTP ${ftp.manual ? 'de' : 'estimée à'} ${ftp.watts} W.` : 'Une sortie de 20 min avec capteur permet d\'estimer ta FTP.')
+          : ftp?.manual ? 'FTP saisie dans les réglages.' : 'FTP : 95 % de ta meilleure puissance sur 20 min ces 90 derniers jours.'}
       </p>
     </section>
   );
