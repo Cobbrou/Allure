@@ -1,4 +1,4 @@
-/** Parse Garmin TCX text into { type, points }. Browser only (DOMParser). */
+/** Parse Garmin TCX text into { type, points, laps }. laps: start times, ms. Browser only (DOMParser). */
 export function parseTcx(text) {
   // Strava's TCX exports start with whitespace before <?xml, which is a parse error.
   const doc = new DOMParser().parseFromString(text.trim(), 'application/xml');
@@ -18,5 +18,6 @@ export function parseTcx(text) {
     })
     .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon));
   if (points.length < 2) throw new Error('Aucun point GPS exploitable dans ce fichier.');
-  return { type: doc.getElementsByTagNameNS('*', 'Activity')[0]?.getAttribute('Sport'), points };
+  const laps = [...doc.getElementsByTagNameNS('*', 'Lap')].map((n) => Date.parse(n.getAttribute('StartTime'))).filter(Number.isFinite);
+  return { type: doc.getElementsByTagNameNS('*', 'Activity')[0]?.getAttribute('Sport'), points, laps };
 }

@@ -10,7 +10,7 @@ export const ACCEPT = '.gpx,.tcx,.fit,.gz,.zip';
 const ACTIVITY_FILE = /\.(gpx|tcx|fit)(\.gz)?$/i;
 const utf8 = (bytes) => new TextDecoder().decode(bytes);
 
-/** Parse one activity file (optionally gzipped) into { name?, type?, points }. */
+/** Parse one activity file (optionally gzipped) into { name?, type?, points, laps? }. */
 export async function parseActivityFile(name, bytes) {
   let lower = name.toLowerCase();
   if (lower.endsWith('.gz')) {
@@ -68,8 +68,8 @@ export async function importFiles(files, existing, onProgress = () => {}) {
     onProgress(i, tasks.length);
     await new Promise((r) => setTimeout(r)); // let the progress paint between files
     try {
-      const { name, type, points } = await task.read();
-      const item = createActivity({ name, sport: sportFromGpxType(type), points });
+      const { name, type, points, laps } = await task.read();
+      const item = createActivity({ name, sport: sportFromGpxType(type), points, laps });
       const key = dupKey(item.meta);
       if (seen.has(key)) { result.duplicates++; continue; }
       seen.add(key);

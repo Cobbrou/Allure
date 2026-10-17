@@ -8,7 +8,7 @@ import { SPORTS } from './sports.js';
  * `meta` is the lightweight record used by lists. `points` is stored separately and only
  * loaded on the detail screen.
  */
-export function createActivity({ name, sport = 'run', points, source = 'gpx' }) {
+export function createActivity({ name, sport = 'run', points, source = 'gpx', laps }) {
   const a = analyze(points);
   const date = a.date ?? Date.now();
   const meta = {
@@ -26,6 +26,8 @@ export function createActivity({ name, sport = 'run', points, source = 'gpx' }) 
     bestEfforts: bestEfforts(a.track),
     hrTime: hrTime(points),
   };
+  // Device laps (start times, ms); a single lap is the whole activity.
+  if (laps?.length > 1) meta.laps = laps;
   return { meta, points };
 }
 

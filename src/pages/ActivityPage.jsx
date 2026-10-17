@@ -3,6 +3,7 @@ import { fmtDate } from '../components/ActivityCard.jsx';
 import BestEfforts from '../components/BestEfforts.jsx';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import HrZones from '../components/HrZones.jsx';
+import Intervals from '../components/Intervals.jsx';
 import MatchedActivities from '../components/MatchedActivities.jsx';
 import ProfileChart from '../components/ProfileChart.jsx';
 import SegmentEfforts from '../components/SegmentEfforts.jsx';
@@ -78,6 +79,7 @@ export default function ActivityPage({ id, activities, hr, segments, onSegment, 
         <section className="card map-card">
           <TrackMap track={act.track} hover={hover} range={range} />
         </section>
+        <Intervals meta={data.meta} track={act.track} range={range} />
         <SegmentEfforts meta={activities?.find((a) => a.id === id) ?? data.meta} track={act.track} segments={segments}
           activities={activities} range={range} onCreate={onSegment} />
         <section className="card">

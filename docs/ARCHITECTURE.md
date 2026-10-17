@@ -83,6 +83,7 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
   bestEfforts,           // { '1k': s, '5k': s, … } fastest elapsed time per distance
   hrTime,                // { [bpm]: s } moving seconds per heart rate (lib/training.js)
   efforts,               // [{ seg, time, from, to }] segment efforts: segment id, elapsed s, point indices
+  laps,                  // device lap start times (ms), from FIT / TCX; only when 2+ laps
 }
 
 // Segment: stored in `segments`
@@ -122,6 +123,12 @@ and `lib/sports.js` (`effort()` picks km/h, min/km or min/100 m by sport).
   U-turn) restarts the pass there. Time is elapsed, start to end. `saveActivities`
   matches new activities against every segment; `saveSegment` scans every track of the
   segment's sport.
+- **Intervals** (`lib/intervals.js`): device laps when the file has them. On runs,
+  efforts are also auto-detected: speed (grade adjusted when possible) is smoothed over
+  ±15 s, split into two clusters, and the run is a workout only if fast is ≥ 1.3× slow,
+  each pace fills ≥ 10 % of moving samples, and there are 2+ fast bouts. Bouts under
+  20 s fold into their neighbours. Fixes under half the median speed (stops) keep the
+  current label, so red lights don't make a workout.
 - **Heatmap** (`lib/heatmap.js`): tracks are streamed with `forEachTrack`, thinned to a
   point every 15 m, and drawn as one faint line per activity so overlaps add up. The map
   opens on the ~50 km cell holding the most starts.
@@ -130,7 +137,8 @@ and `lib/sports.js` (`effort()` picks km/h, min/km or min/100 m by sport).
 
 - `gpx.js`, `tcx.js`: DOMParser based. TCX input is trimmed, because Strava exports
   start with whitespace before `<?xml`.
-- `fit.js`: official `@garmin/fitsdk`. Semicircles are converted to degrees.
+- `fit.js`: official `@garmin/fitsdk`. Semicircles are converted to degrees. Lap start
+  times are kept (`lapMesgs`), as in `tcx.js` (`<Lap StartTime>`).
 - `zip.js`: reads only the central directory and the requested entries via
   `Blob.slice`, so multi-GB Strava archives never load fully into memory. No ZIP64.
 - `.gz`: platform `DecompressionStream`.
@@ -147,9 +155,9 @@ src/
   components/    reusable UI (TabBar, ActivityCard, RoutePreview, StatsGrid, TrackMap,
                  ProfileChart, SplitsTable, BestEfforts, ImportButton, ConfirmButton,
                  Segmented, WeeklyChart, ActivityCalendar, RecordsList, LiveMap, HrZones, FitnessChart, RacePredictions,
-                 SegmentEfforts, ErrorBoundary)
+                 SegmentEfforts, ErrorBoundary, Intervals)
   lib/           pure logic (analyze, gap, records, stats, sports, format, activity, demo, recorder, training,
-                 segments, heatmap)
+                 segments, heatmap, intervals)
                  + platform modules (db, share, story, location, formats/)
 ```
 

@@ -8,7 +8,7 @@ import { parseFit } from '../src/lib/formats/fit.js';
 import { readZip } from '../src/lib/formats/zip.js';
 import { collectTasks } from '../src/lib/importer.js';
 
-/** Small FIT activity: `n` records 1 s apart heading north from Chamonix. */
+/** Small FIT activity: `n` records 1 s apart heading north from Chamonix, two laps. */
 function fitFile(n = 30, sport = 'cycling') {
   const e = new Encoder();
   const t0 = new Date('2026-10-01T08:00:00Z');
@@ -20,6 +20,7 @@ function fitFile(n = 30, sport = 'cycling') {
       altitude: 1040 + i, heartRate: 130 + (i % 5),
     });
   }
+  for (const k of [0, Math.floor(n / 2)]) e.writeMesg({ mesgNum: Profile.MesgNum.LAP, timestamp: t0, startTime: new Date(+t0 + k * 1000) });
   e.writeMesg({ mesgNum: Profile.MesgNum.SESSION, timestamp: t0, startTime: t0, sport, totalElapsedTime: n, totalTimerTime: n });
   return e.close();
 }
@@ -46,8 +47,9 @@ function zip(files) {
   return Buffer.concat([...locals, cd, eocd]);
 }
 
-test('parseFit converts semicircles, altitude, HR and sport', () => {
-  const { type, points } = parseFit(fitFile(10));
+test('parseFit converts semicircles, altitude, HR, sport and laps', () => {
+  const { type, points, laps } = parseFit(fitFile(10));
+  assert.deepEqual(laps.map((t) => t - points[0].time), [0, 5000]);
   assert.equal(type, 'cycling');
   assert.equal(points.length, 10);
   assert.ok(Math.abs(points[0].lat - 45.9) < 1e-6 && Math.abs(points[0].lon - 6.87) < 1e-6);

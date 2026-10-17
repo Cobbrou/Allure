@@ -256,6 +256,22 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 .rank { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; background: var(--border); flex: none; }
 .rank.first { background: #f5b301; color: #1a1300; }
 
+/* Intervals */
+.intervals-sum { margin: 10px 0; }
+.iv-bars { display: flex; align-items: flex-end; gap: 2px; height: 96px; margin: 10px 0 12px; }
+.iv-bar {
+  flex: 1 1 0; min-width: 3px; min-height: 0; height: var(--h); padding: 0; border: 0; border-radius: 3px 3px 1px 1px;
+  background: var(--accent); transform-origin: bottom; animation: grow-y 0.5s var(--ease-out) backwards; animation-delay: calc(var(--i) * 25ms);
+}
+.iv-bar.rest { background: #33415a; }
+.iv-bar.on { box-shadow: 0 0 0 2px #fff; }
+.iv-bar:active:not(:disabled) { transform: none; }
+.intervals tr { cursor: pointer; }
+.intervals tr.rest td { color: var(--muted); }
+.intervals tr.on td { background: rgba(252, 76, 2, 0.15); }
+.intervals td { height: 44px; }
+.intervals td:first-child { width: 64px; font-weight: 600; }
+
 /* Heatmap: as much map as the screen allows, under the top bar and above the tab bar */
 .map.heatmap, .skeleton.heatmap { height: calc(100vh - 56px - var(--safe-top) - var(--tabbar-h) - var(--safe-bottom) - 120px); min-height: 320px; }
 

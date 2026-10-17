@@ -15,11 +15,24 @@ const PROFILES = {
   hike: { speed: 1.25, k: 5, hr: 118, km: [8, 16], relief: 3 },
 };
 
+// Interval session: [seconds, speed factor]. 12 min warm-up, 8 × (3 min fast, 90 s jog), then cool-down.
+const WORKOUT = [[720, 0.95], ...Array.from({ length: 8 }, () => [[180, 1.3], [90, 0.7]]).flat()];
+const COOLDOWN = 0.9;
+// Lap start offsets (s) a watch would record with auto-lap on each block.
+const WORKOUT_LAPS = WORKOUT.reduce((acc, [secs]) => [...acc, acc.at(-1) + secs], [0]);
+
+/** Speed factor at `s` seconds into the workout. */
+function workoutFactor(s) {
+  for (const [secs, f] of WORKOUT) if ((s -= secs) < 0) return f;
+  return COOLDOWN;
+}
+
 /**
  * `km` along the place's real loop (laps repeat, random start and direction), with
  * synthetic slope-driven speed and lagging heart rate. Defaults: 10 km run in Chamonix.
+ * `workout`: speed follows the WORKOUT interval blocks.
  */
-export function demoTrack({ place = PLACES[0], sport = 'run', km = 10, start = Date.parse('2026-10-12T07:30:00Z'), rand = Math.random } = {}) {
+export function demoTrack({ place = PLACES[0], sport = 'run', km = 10, start = Date.parse('2026-10-12T07:30:00Z'), rand = Math.random, workout = false } = {}) {
   const prof = PROFILES[sport];
   const loop = DEMO_ROUTES[place.name][sport === 'ride' ? 'bike' : 'foot'].map(([lon, lat]) => ({ lat, lon }));
   if (rand() < 0.5) loop.reverse();
@@ -56,9 +69,10 @@ export function demoTrack({ place = PLACES[0], sport = 'run', km = 10, start = D
     if (i > 0) {
       const d = dist[i] - dist[i - 1];
       const slope = (base[i] - base[i - 1]) / d; // noise-free: vertex gaps can be under 1 m
-      const v = Math.min(1.4 * prof.speed, Math.max(0.45 * prof.speed, prof.speed * Math.exp(-prof.k * slope)));
+      const f = workout ? workoutFactor((t - start) / 1000) : 1;
+      const v = Math.min(1.4 * prof.speed, Math.max(0.45 * prof.speed, f * prof.speed * Math.exp(-prof.k * slope)));
       t += (d / (v * (0.97 + rand() * 0.06))) * 1000;
-      const target = Math.min(prof.hr + 45, prof.hr + 260 * slope + 18 * (i / dist.length));
+      const target = Math.min(prof.hr + 45, prof.hr + 260 * slope + 18 * (i / dist.length) + (f - 1) * 120);
       hr += (target - hr) * 0.04 + (rand() - 0.5) * 1.5;
     }
     return {
@@ -70,9 +84,15 @@ export function demoTrack({ place = PLACES[0], sport = 'run', km = 10, start = D
     };
   });
 }
-/** `count` varied activities spread over the last 60 days, newest first. */
+/** `count` varied activities spread over the last 60 days, newest first. The second is an interval session. */
 export function demoHistory(now = Date.now(), count = 20, rand = Math.random) {
   return Array.from({ length: count }, (_, i) => {
+    if (i === 1) {
+      const place = PLACES[1 + Math.floor(rand() * 2)]; // flat places: the intervals show in the pace
+      const start = now - (3 + rand()) * 86400e3;
+      return { sport: 'run', name: `Fractionné à ${place.name}`, laps: WORKOUT_LAPS.map((s) => start + s * 1000),
+        points: demoTrack({ place, sport: 'run', km: 11, start, rand, workout: true }) };
+    }
     const sport = rand() < 0.6 ? 'run' : rand() < 0.6 ? 'ride' : 'hike';
     const place = PLACES[Math.floor(rand() * PLACES.length)];
     const [min, max] = PROFILES[sport].km;
