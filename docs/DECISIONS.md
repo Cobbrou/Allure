@@ -3,6 +3,34 @@
 Lightweight decision log. Newest first. Each entry: context, decision, consequences.
 Open questions sit at the bottom until decided.
 
+## 2026-10-17: Native shell is Capacitor
+
+**Context**: Allure ships as an iOS + Android app. The UI and all domain logic are web
+code (React + plain JS in `src/lib/`), already split from platform APIs (`location.js`,
+`db.js`, `share.js`). The candidates were Capacitor (wrap this code) and React Native
+(rewrite the UI layer).
+**Decision**: Capacitor. The hard part of a sports app is reliable recording, and that
+needs native plugins with either option. Capacitor keeps the whole UI and the fast
+browser dev loop, and MapLibre GL JS, the View Transitions and hash routing all work in
+the iOS and Android WebViews. Shell setup itself is deferred while web features land.
+**Consequences**: before a store release, these platform modules must get native
+backends:
+- **Background GPS** (blocking): `navigator.geolocation` stops when the app is
+  backgrounded or the screen is off. Back `watchPosition` in `location.js` with
+  `@capacitor-community/background-geolocation` (free) or Transistorsoft (paid, more
+  robust against Android OEM battery savers). Validate on a real phone first.
+- **Voice cues**: `speechSynthesis` may be suspended in a backgrounded iOS WebView. Back
+  `speak()` with `@capacitor-community/text-to-speech`. The screen Wake Lock becomes
+  unnecessary.
+- **Storage durability**: WebView IndexedDB can be evicted under storage pressure, and
+  activities only live on the device until sync ships. Move `db.js` to
+  `@capacitor-community/sqlite`, or ship server sync (phase 3) first.
+- **Android back button**: listen to `@capacitor/app` `backButton` and call
+  `history.back()`.
+- **BLE heart-rate straps**: `@capacitor-community/bluetooth-le`.
+- **Startup cost**: on-device JS is parsed at launch, so pages using MapLibre or Recharts
+  and the FIT SDK load as lazy chunks (main chunk ~230 kB instead of 2.1 MB).
+
 ## 2026-10-16: FIT parsing with `@garmin/fitsdk`; hand-written ZIP, CSV and TCX
 
 **Context**: phase 1 imports FIT, TCX, gzip and Strava bulk archives.
@@ -65,10 +93,6 @@ Vite's pre-bundled deps folder where the worker file does not exist. Result: a b
 - **Backend stack** (phase 3). Candidates: Supabase (Postgres + PostGIS + auth, fastest
   start) vs. a custom Node API + Postgres/PostGIS (full control). PostGIS is needed
   either way for segments, heatmaps and route matching.
-- **Native shell** (phase 2). Candidates: Capacitor (wraps this exact web code; leading
-  option) vs. React Native (rewrite of the UI layer, more native feel). Must support
-  background location, BLE heart-rate straps and MapLibre (MapLibre Native or the
-  WebView map).
 - **Map tiles in production**: Carto free tier vs. MapTiler / Stadia (paid) vs.
   self-hosted Protomaps (PMTiles).
 - **Routing engine** for the route builder: GraphHopper, Valhalla or OSRM (self-hosted

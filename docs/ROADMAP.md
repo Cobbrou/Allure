@@ -77,7 +77,7 @@ Motion & polish
 
 *Covers subscription feature 1.*
 
-- [ ] Native shell (Capacitor, pending `DECISIONS.md`): iOS + Android builds
+- [ ] Native shell (Capacitor, see `DECISIONS.md`): iOS + Android builds
       running the web code
 - [ ] Background location plugin: records with the screen off
 - [x] Record screen: start / pause / resume / finish (web `watchPosition` in dev,

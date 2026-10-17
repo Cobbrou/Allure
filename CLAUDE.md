@@ -11,7 +11,7 @@ Long-term goal: feature parity with Strava, including its paid subscription feat
 
 **Allure is a phone app (iOS + Android).** The web build in this repo is the
 development surface: it's fast to iterate in a desktop browser, and the same code will
-ship inside a native shell (Capacitor is the leading option, see `docs/DECISIONS.md`).
+ship inside a Capacitor native shell (see `docs/DECISIONS.md`).
 So:
 
 - Design **mobile-first**: lay out for a ~390 px wide portrait screen first, then let
