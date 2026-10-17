@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 import { useState } from 'react';
 import ActivityCard from '../components/ActivityCard.jsx';
 import ImportButton from '../components/ImportButton.jsx';
@@ -23,16 +24,16 @@ export default function FeedPage({ activities, zones, onRefresh, onImport, onDem
     <>
       <header className="topbar">
         <div className="logo"><span>▲</span> Allure</div>
-        <ImportButton onImport={onImport} className="button ghost small">+ Importer</ImportButton>
+        <ImportButton onImport={onImport} className="button ghost small">{t('+ Importer')}</ImportButton>
       </header>
       {activities && !activities.length && (
         <div className="empty">
           <div className="drop-icon">⤓</div>
-          <h2>Aucune activité pour l'instant</h2>
-          <p>Importe tes sorties (.gpx, .tcx, .fit) ou ton archive Strava complète (.zip), ou génère un historique pour essayer l'app.</p>
+          <h2>{t("Aucune activité pour l'instant")}</h2>
+          <p>{t("Importe tes sorties (.gpx, .tcx, .fit) ou ton archive Strava complète (.zip), ou génère un historique pour essayer l'app.")}</p>
           <ImportButton onImport={onImport} />
           <button type="button" className="ghost" onClick={demo} disabled={busy}>
-            {busy ? 'Génération…' : 'Générer un historique de démo'}
+            {t(busy ? 'Génération…' : 'Générer un historique de démo')}
           </button>
         </div>
       )}

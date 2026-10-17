@@ -2,6 +2,7 @@
 // Platform module for the network part: legs come from BRouter (OpenStreetMap routing,
 // free, CORS-enabled), which also returns the elevation of every point.
 
+import { t } from './i18n.js';
 import { analyze } from './analyze.js';
 import { preview } from './activity.js';
 
@@ -23,13 +24,13 @@ export const legUrl = (a, b, sport) => routeUrl([a, b], sport);
 /** Points { lon, lat, ele } of a BRouter GeoJSON answer. */
 export function parseLeg(geojson) {
   const coords = geojson?.features?.[0]?.geometry?.coordinates;
-  if (!(coords?.length > 1)) throw new Error('Itinéraire introuvable');
+  if (!(coords?.length > 1)) throw new Error(t('Itinéraire introuvable'));
   return coords.map(([lon, lat, ele]) => ({ lon, lat, ele: Number.isFinite(ele) ? ele : null }));
 }
 
 async function fetchGeojson(url) {
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`Routage indisponible (${res.status})`);
+  if (!res.ok) throw new Error(t('Routage indisponible ({status})', { status: res.status }));
   return res.json();
 }
 

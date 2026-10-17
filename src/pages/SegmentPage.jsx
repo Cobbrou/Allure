@@ -1,3 +1,4 @@
+import { locale, t, tn } from '../lib/i18n.js';
 import { useMemo, useRef } from 'react';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import TrackMap from '../components/TrackMap.jsx';
@@ -15,13 +16,13 @@ export default function SegmentPage({ id, segments, activities, onDelete }) {
 
   const top = (
     <header className="topbar">
-      <a className="back" href="#/profile" aria-label="Retour" onClick={(e) => { e.preventDefault(); back('/profile'); }}>‹</a>
-      <h1>Segment</h1>
+      <a className="back" href="#/profile" aria-label={t('Retour')} onClick={(e) => { e.preventDefault(); back('/profile'); }}>‹</a>
+      <h1>{t('Segment')}</h1>
       <span className="back" aria-hidden="true" />
     </header>
   );
   if (!segments) return top;
-  if (!seg) return (<>{top}<p className="empty">Segment introuvable.</p></>);
+  if (!seg) return (<>{top}<p className="empty">{t('Segment introuvable.')}</p></>);
 
   return (
     <>
@@ -31,19 +32,19 @@ export default function SegmentPage({ id, segments, activities, onDelete }) {
           <span className="sport-icon">{SPORTS[seg.sport]?.icon}</span>
           <div>
             <h1>{seg.name}</h1>
-            <p>{SPORTS[seg.sport]?.label} · {board.length} passage{board.length > 1 ? 's' : ''}</p>
+            <p>{SPORTS[seg.sport]?.label} · {tn(board.length, '{n} passage', '{n} passages')}</p>
           </div>
         </div>
         <section className="card">
           <div className="totals seg-totals">
-            <div><span>Distance</span><b>{fmtDist(seg.distance)} <small>{distUnit()}</small></b></div>
-            <div><span>Pente moy.</span><b>{seg.grade != null ? seg.grade.toFixed(1) : '—'} <small>%</small></b></div>
-            <div><span>Dénivelé</span><b>{seg.gain != null ? fmtElev(seg.gain) : '—'} <small>{elevUnit()}</small></b></div>
+            <div><span>{t('Distance')}</span><b>{fmtDist(seg.distance)} <small>{distUnit()}</small></b></div>
+            <div><span>{t('Pente moy.')}</span><b>{seg.grade != null ? seg.grade.toFixed(1) : '—'} <small>%</small></b></div>
+            <div><span>{t('Dénivelé')}</span><b>{seg.gain != null ? fmtElev(seg.gain) : '—'} <small>{elevUnit()}</small></b></div>
           </div>
         </section>
         <section className="card map-card"><TrackMap track={track} hover={hover} /></section>
         <section className="card">
-          <h3>Mes passages</h3>
+          <h3>{t('Mes passages')}</h3>
           {board.length ? (
             <ol className="records leaderboard">
               {board.map((b, i) => {
@@ -52,7 +53,7 @@ export default function SegmentPage({ id, segments, activities, onDelete }) {
                   <li key={`${b.meta.id}/${b.from}`}>
                     <a href={`#/activity/${b.meta.id}`}>
                       <span className={`rank ${i === 0 ? 'first' : ''}`}>{i + 1}</span>
-                      <span className="muted">{new Date(b.meta.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: '2-digit' })}</span>
+                      <span className="muted">{new Date(b.meta.date).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: '2-digit' })}</span>
                     </a>
                     <a href={`#/activity/${b.meta.id}`}>
                       <b>{fmtDuration(b.time)}</b>
@@ -62,9 +63,9 @@ export default function SegmentPage({ id, segments, activities, onDelete }) {
                 );
               })}
             </ol>
-          ) : <p className="muted">Aucun passage pour l'instant.</p>}
+          ) : <p className="muted">{t("Aucun passage pour l'instant.")}</p>}
         </section>
-        <ConfirmButton onConfirm={onDelete} confirmLabel="Confirmer la suppression">Supprimer le segment</ConfirmButton>
+        <ConfirmButton onConfirm={onDelete} confirmLabel={t('Confirmer la suppression')}>{t('Supprimer le segment')}</ConfirmButton>
       </main>
     </>
   );

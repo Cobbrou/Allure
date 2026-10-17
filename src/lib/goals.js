@@ -2,19 +2,24 @@
 // Goal: { id, sport ('' = all sports), metric, period: 'week' | 'month' | 'year', target (SI) }.
 
 import { distLen, distUnit, elevLen, elevUnit } from './format.js';
+import { t, tn } from './i18n.js';
 import { SPORTS } from './sports.js';
 import { periodStart, totals } from './stats.js';
 
 // unit: what the athlete types; scale converts it to SI (km or mi -> m, h -> s); dec: decimals
 // shown. Distance and elevation follow the display unit system (getters).
 export const METRICS = {
-  distance: { label: 'Distance', get unit() { return distUnit(); }, get scale() { return distLen(); }, dec: 1 },
-  movingTime: { label: 'Temps', unit: 'h', scale: 3600, dec: 1 },
-  gain: { label: 'Dénivelé', get unit() { return elevUnit(); }, get scale() { return elevLen(); }, dec: 0 },
-  count: { label: 'Activités', unit: '', scale: 1, dec: 0 },
+  distance: { get label() { return t('Distance'); }, get unit() { return distUnit(); }, get scale() { return distLen(); }, dec: 1 },
+  movingTime: { get label() { return t('Temps'); }, unit: 'h', scale: 3600, dec: 1 },
+  gain: { get label() { return t('Dénivelé'); }, get unit() { return elevUnit(); }, get scale() { return elevLen(); }, dec: 0 },
+  count: { get label() { return t('Activités'); }, unit: '', scale: 1, dec: 0 },
 };
 
-export const GOAL_PERIODS = { week: 'Cette semaine', month: 'Ce mois', year: 'Cette année' };
+export const GOAL_PERIODS = {
+  get week() { return t('Cette semaine'); },
+  get month() { return t('Ce mois'); },
+  get year() { return t('Cette année'); },
+};
 
 /** SI value in the athlete's unit, e.g. ('distance', 12345) -> "12.3", ('distance', 30000) -> "30". */
 export function fmtGoalValue(metric, v) {
@@ -26,8 +31,9 @@ export function fmtGoalValue(metric, v) {
 /** "30 km · Course · Cette semaine" */
 export function goalLabel(g) {
   const { unit } = METRICS[g.metric];
-  const target = `${fmtGoalValue(g.metric, g.target)} ${unit || (g.target > 1 ? 'activités' : 'activité')}`;
-  return [target, g.sport ? SPORTS[g.sport].label : 'Tous sports', GOAL_PERIODS[g.period]].join(' · ');
+  const v = fmtGoalValue(g.metric, g.target);
+  const target = unit ? `${v} ${unit}` : tn(g.target, '{n} activité', '{n} activités', { n: v });
+  return [target, g.sport ? SPORTS[g.sport].label : t('Tous sports'), GOAL_PERIODS[g.period]].join(' · ');
 }
 
 /** Progress of one goal in the current period: { value, target, ratio (0..1), done }. */

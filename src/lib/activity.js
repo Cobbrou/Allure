@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { analyze } from './analyze.js';
 import { powerStats } from './power.js';
 import { bestEfforts } from './records.js';
@@ -39,8 +40,8 @@ export const dupKey = (meta) => `${Math.round(meta.date / 1000)}|${Math.round(me
 /** "Course du matin", "Vélo du soir"… */
 export function defaultName(sport, date) {
   const h = new Date(date).getHours();
-  const period = h < 12 ? 'du matin' : h < 18 ? "de l'après-midi" : 'du soir';
-  return `${SPORTS[sport]?.label ?? 'Activité'} ${period}`;
+  const label = SPORTS[sport]?.label ?? t('Activité');
+  return t(h < 12 ? '{sport} du matin' : h < 18 ? "{sport} de l'après-midi" : '{sport} du soir', { sport: label });
 }
 
 /** ~n [lon, lat] pairs for feed thumbnails. */

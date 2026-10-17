@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 import { DEM_TILES, HILLSHADE_HIGHLIGHT, HILLSHADE_SHADOW } from '../theme.js';
 
 const EXAGGERATION = 1.5; // relief reads better a bit taller than life
@@ -11,12 +12,12 @@ export default class Terrain3D {
   onAdd(map) {
     // Hillshade and terrain from one DEM source, off until toggled.
     map.addSource('dem', { type: 'raster-dem', tiles: [DEM_TILES], encoding: 'terrarium', tileSize: 256, maxzoom: 15,
-      attribution: 'Relief : Mapzen, AWS Terrain Tiles' });
+      attribution: t('Relief : Mapzen, AWS Terrain Tiles') });
     map.addLayer({ id: 'hillshade', type: 'hillshade', source: 'dem', layout: { visibility: 'none' },
       paint: { 'hillshade-shadow-color': HILLSHADE_SHADOW, 'hillshade-highlight-color': HILLSHADE_HIGHLIGHT, 'hillshade-exaggeration': 0.6 } },
     map.getStyle().layers.find((l) => l.type === 'symbol')?.id); // under the place names
 
-    const btn = Object.assign(document.createElement('button'), { type: 'button', textContent: '3D', className: 'ctrl-3d', title: 'Relief 3D' });
+    const btn = Object.assign(document.createElement('button'), { type: 'button', textContent: '3D', className: 'ctrl-3d', title: t('Relief 3D') });
     btn.setAttribute('aria-pressed', 'false');
     btn.onclick = () => {
       const on = !map.getTerrain();

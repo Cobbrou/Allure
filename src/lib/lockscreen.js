@@ -3,6 +3,8 @@
 // looping track plays for the whole recording. A native foreground-service notification
 // can replace it.
 
+import { t } from './i18n.js';
+
 /** 1 s of 8 kHz 8-bit mono silence as a WAV blob URL. */
 function silence() {
   const n = 8000, b = new DataView(new ArrayBuffer(44 + n));
@@ -33,7 +35,7 @@ export function lockScreenControls({ onPause, onResume }) {
       ms.playbackState = paused ? 'paused' : 'playing';
       if (title === last) return;
       last = title;
-      ms.metadata = new MediaMetadata({ title, artist: 'Allure', album: paused ? 'En pause' : 'Enregistrement' });
+      ms.metadata = new MediaMetadata({ title, artist: 'Allure', album: t(paused ? 'En pause' : 'Enregistrement') });
     },
     stop() {
       audio.pause();

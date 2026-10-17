@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 import { useEffect, useMemo, useState } from 'react';
 import { shrinkPhoto } from '../lib/story.js';
 import BottomSheet from './BottomSheet.jsx';
@@ -27,23 +28,23 @@ export default function Photos({ photos, onChange }) {
 
   return (
     <section className="card">
-      <h3>Photos</h3>
+      <h3>{t('Photos')}</h3>
       <div className="photo-grid">
         {urls.map((u, i) => (
-          <button key={u} type="button" className="photo" onClick={() => setOpen(i)} aria-label={`Photo ${i + 1}`}>
+          <button key={u} type="button" className="photo" onClick={() => setOpen(i)} aria-label={t('Photo {n}', { n: i + 1 })}>
             <img src={u} alt="" loading="lazy" />
           </button>
         ))}
         <label className={`photo add ${busy ? 'busy' : ''}`}>
-          <span aria-hidden="true">+</span>{busy ? 'Ajout…' : 'Ajouter'}
+          <span aria-hidden="true">+</span>{t(busy ? 'Ajout…' : 'Ajouter')}
           <input type="file" accept="image/*" multiple hidden disabled={busy} onChange={add} />
         </label>
       </div>
-      <BottomSheet open={open !== null} onClose={() => setOpen(null)} title="Photo">
+      <BottomSheet open={open !== null} onClose={() => setOpen(null)} title={t('Photo')}>
         {open !== null && urls[open] && (
           <div className="sheet-actions">
-            <img className="photo-full" src={urls[open]} alt={`Photo ${open + 1}`} />
-            <ConfirmButton onConfirm={remove} confirmLabel="Supprimer la photo ?">Supprimer</ConfirmButton>
+            <img className="photo-full" src={urls[open]} alt={t('Photo {n}', { n: open + 1 })} />
+            <ConfirmButton onConfirm={remove} confirmLabel={t('Supprimer la photo ?')}>{t('Supprimer')}</ConfirmButton>
           </div>
         )}
       </BottomSheet>

@@ -1,14 +1,15 @@
 import { distLen, fmtPace, fmtPaceUnit, fmtSpeed, paceUnit, shortLen, shortUnit, speedUnit } from './format.js';
+import { t } from './i18n.js';
 
 // display: how average effort is shown. 'speed' = km/h, 'pace' = min/km, 'pace100' = min/100 m
 // (mi/h, min/mi and min/100 yd in imperial units).
 // split: split length in display units (km or mi; m or yd for swims), see splitSize.
 export const SPORTS = {
-  run: { label: 'Course', icon: '🏃', display: 'pace', split: 1 },
-  ride: { label: 'Vélo', icon: '🚴', display: 'speed', split: 5 },
-  hike: { label: 'Randonnée', icon: '🥾', display: 'pace', split: 1 },
-  walk: { label: 'Marche', icon: '🚶', display: 'pace', split: 1 },
-  swim: { label: 'Natation', icon: '🏊', display: 'pace100', split: 100 },
+  run: { get label() { return t('Course'); }, icon: '🏃', display: 'pace', split: 1 },
+  ride: { get label() { return t('Vélo'); }, icon: '🚴', display: 'speed', split: 5 },
+  hike: { get label() { return t('Randonnée'); }, icon: '🥾', display: 'pace', split: 1 },
+  walk: { get label() { return t('Marche'); }, icon: '🚶', display: 'pace', split: 1 },
+  swim: { get label() { return t('Natation'); }, icon: '🏊', display: 'pace100', split: 100 },
 };
 
 /** Map a GPX/TCX/FIT sport value (Strava, Garmin, numeric codes…) to a sport id. */
@@ -24,11 +25,11 @@ export function sportFromGpxType(type = '') {
 export function effort(sport, sPerKm) {
   switch (SPORTS[sport]?.display) {
     case 'speed':
-      return { label: 'Vitesse moyenne', short: 'Vitesse', value: fmtSpeed(sPerKm), unit: speedUnit() };
+      return { label: t('Vitesse moyenne'), short: t('Vitesse'), value: fmtSpeed(sPerKm), unit: speedUnit() };
     case 'pace100':
-      return { label: 'Allure moyenne', short: 'Allure', value: fmtPace((sPerKm / 10) * shortLen()), unit: `/100${shortUnit()}` };
+      return { label: t('Allure moyenne'), short: t('Allure'), value: fmtPace((sPerKm / 10) * shortLen()), unit: `/100${shortUnit()}` };
     default:
-      return { label: 'Allure moyenne', short: 'Allure', value: fmtPaceUnit(sPerKm), unit: paceUnit() };
+      return { label: t('Allure moyenne'), short: t('Allure'), value: fmtPaceUnit(sPerKm), unit: paceUnit() };
   }
 }
 
@@ -44,5 +45,5 @@ export const usesGap = (sport) => SPORTS[sport]?.display === 'pace';
 /** Segmented options for a sport filter: "Tous" plus the sports present in `metas`. */
 export function sportOptions(metas) {
   const present = new Set(metas.map((a) => a.sport));
-  return [{ id: '', label: 'Tous' }, ...Object.entries(SPORTS).filter(([id]) => present.has(id)).map(([id, s]) => ({ id, label: `${s.icon} ${s.label}` }))];
+  return [{ id: '', label: t('Tous') }, ...Object.entries(SPORTS).filter(([id]) => present.has(id)).map(([id, s]) => ({ id, label: `${s.icon} ${s.label}` }))];
 }

@@ -1,3 +1,4 @@
+import { locale, t, weekdayInitials } from '../lib/i18n.js';
 import { useMemo, useState } from 'react';
 import Segmented from '../components/Segmented.jsx';
 import { distUnit, fmtDist, fmtDuration } from '../lib/format.js';
@@ -5,14 +6,13 @@ import { SPORTS, sportOptions } from '../lib/sports.js';
 import { trainingWeeks } from '../lib/stats.js';
 import { relativeEffort } from '../lib/training.js';
 
-const WEEKDAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 const PAGE = 12; // weeks shown per "load more"
 
 /** What sizes the bubbles. Activities without heart rate weigh 0 in effort mode. */
 const SIZES = [
-  { id: 'movingTime', label: 'Temps', of: (a) => a.movingTime ?? 0 },
-  { id: 'distance', label: 'Distance', of: (a) => a.distance },
-  { id: 'effort', label: 'Effort', of: (a, hr) => relativeEffort(a.hrTime, hr) ?? 0 },
+  { id: 'movingTime', get label() { return t('Temps'); }, of: (a) => a.movingTime ?? 0 },
+  { id: 'distance', get label() { return t('Distance'); }, of: (a) => a.distance },
+  { id: 'effort', get label() { return t('Effort'); }, of: (a, hr) => relativeEffort(a.hrTime, hr) ?? 0 },
 ];
 
 /** Week-by-week log: one bubble per active day, sized by time, distance or effort. */
@@ -33,15 +33,15 @@ export default function TrainingLogPage({ activities, hr }) {
   return (
     <>
       <header className="topbar">
-        <a className="back" href="#/profile" aria-label="Retour au profil">‹</a>
-        <h1>Journal</h1>
+        <a className="back" href="#/profile" aria-label={t('Retour au profil')}>‹</a>
+        <h1>{t('Journal')}</h1>
         <span className="back" aria-hidden="true" />
       </header>
       <main className="detail">
-        {options.length > 2 && <Segmented label="Sport" options={options} value={sport} onChange={setSport} />}
-        <Segmented label="Taille des bulles" options={SIZES} value={size} onChange={setSize} />
+        {options.length > 2 && <Segmented label={t('Sport')} options={options} value={sport} onChange={setSport} />}
+        <Segmented label={t('Taille des bulles')} options={SIZES} value={size} onChange={setSize} />
         <section className="card log">
-          <div className="log-dow">{WEEKDAYS.map((d, i) => <span key={i}>{d}</span>)}</div>
+          <div className="log-dow">{weekdayInitials().map((d, i) => <span key={i}>{d}</span>)}</div>
           {weeks.map((w) => (
             <div key={w.start} className="log-week">
               <p className="log-head">
@@ -67,7 +67,7 @@ export default function TrainingLogPage({ activities, hr }) {
             </div>
           ))}
         </section>
-        {more && <button type="button" className="ghost" onClick={() => setCount((c) => c + PAGE)}>Semaines précédentes</button>}
+        {more && <button type="button" className="ghost" onClick={() => setCount((c) => c + PAGE)}>{t('Semaines précédentes')}</button>}
       </main>
     </>
   );
@@ -78,6 +78,6 @@ function fmtWeek(start) {
   const s = new Date(start), end = new Date(start);
   end.setDate(end.getDate() + 6);
   const opt = { day: 'numeric', month: 'short' };
-  const from = s.getMonth() === end.getMonth() ? s.getDate() : s.toLocaleDateString('fr-FR', opt);
-  return `${from} – ${end.toLocaleDateString('fr-FR', opt)}`;
+  const from = s.getMonth() === end.getMonth() ? s.getDate() : s.toLocaleDateString(locale(), opt);
+  return `${from} – ${end.toLocaleDateString(locale(), opt)}`;
 }

@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 import { useEffect, useState } from 'react';
 
 /** Max and resting heart rate, FTP. Empty fields fall back to the estimate from history. */
@@ -15,23 +16,23 @@ export default function HrSettings({ hr, ftpEstimate, saved, onSave }) {
   };
   return (
     <form className="card edit hr-settings" onSubmit={submit}>
-      <h3>Cardio et puissance</h3>
-      <p className="muted">La FC sert aux zones cardio, à l'effort relatif et à la courbe de forme ; la FTP à l'intensité et à la charge des sorties vélo.</p>
+      <h3>{t('Cardio et puissance')}</h3>
+      <p className="muted">{t("La FC sert aux zones cardio, à l'effort relatif et à la courbe de forme ; la FTP à l'intensité et à la charge des sorties vélo.")}</p>
       <div className="row">
-        <label>FC max
-          <input type="number" inputMode="numeric" min="120" max="230" placeholder={`${hr.max} (estimée)`} value={max}
+        <label>{t('FC max')}
+          <input type="number" inputMode="numeric" min="120" max="230" placeholder={t('{n} (estimée)', { n: hr.max })} value={max}
             onChange={(e) => { setMax(e.target.value); setDone(false); }} />
         </label>
-        <label>FC repos
+        <label>{t('FC repos')}
           <input type="number" inputMode="numeric" min="30" max="100" placeholder={String(hr.rest)} value={rest}
             onChange={(e) => { setRest(e.target.value); setDone(false); }} />
         </label>
-        <label>FTP (W)
-          <input type="number" inputMode="numeric" min="50" max="600" placeholder={ftpEstimate ? `${ftpEstimate} (estimée)` : 'Auto'} value={ftp}
+        <label>{t('FTP (W)')}
+          <input type="number" inputMode="numeric" min="50" max="600" placeholder={ftpEstimate ? t('{n} (estimée)', { n: ftpEstimate }) : t('Auto')} value={ftp}
             onChange={(e) => { setFtp(e.target.value); setDone(false); }} />
         </label>
       </div>
-      <div className="row"><button type="submit">{done ? 'Enregistré ✓' : 'Enregistrer'}</button></div>
+      <div className="row"><button type="submit">{t(done ? 'Enregistré ✓' : 'Enregistrer')}</button></div>
     </form>
   );
 }

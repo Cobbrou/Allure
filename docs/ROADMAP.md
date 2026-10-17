@@ -205,7 +205,8 @@ Pixel Watch / Google
 
 ## Cross-cutting
 
-- [ ] i18n (UI currently French only): English + French
+- [x] i18n: English + French (Settings → Langue, device language by default; French
+      strings are the keys of `lib/en.js`, legal pages written in both languages)
 - [x] Imperial units (Profile → Unités: mi, ft, /mi, mi/h, /100 yd, mile splits and
       spoken cues; named race distances and monthly challenges stay metric)
 - [x] Accessibility pass (keyboard navigation of chart and map, contrast)

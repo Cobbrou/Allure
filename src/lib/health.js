@@ -1,6 +1,7 @@
 // Platform module for Health Connect (Android): reads exercise sessions recorded by a
 // watch (Pixel Watch, Fitbit…) through the capacitor-health plugin. Native shell only.
 
+import { t } from './i18n.js';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 
 const PERMISSIONS = ['READ_WORKOUTS', 'READ_ROUTE', 'READ_HEART_RATE'];
@@ -27,7 +28,7 @@ export async function readWorkouts(days = 365) {
   const { permissions } = await plugin().requestHealthPermissions({ permissions: PERMISSIONS });
   // The plugin returns { permissions: { READ_WORKOUTS: true, … } } despite its typings.
   const granted = Array.isArray(permissions) ? Object.assign({}, ...permissions) : permissions;
-  if (!granted.READ_WORKOUTS) throw new Error('Accès aux séances Health Connect refusé.');
+  if (!granted.READ_WORKOUTS) throw new Error(t('Accès aux séances Health Connect refusé.'));
   const endDate = new Date();
   const startDate = new Date(+endDate - days * 86400e3);
   const { workouts } = await plugin().queryWorkouts({

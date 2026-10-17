@@ -28,8 +28,12 @@ So:
 
 - **Everything is written in English**: commits, branch names, PR titles/descriptions,
   issues, code identifiers, comments, docs, test names.
-- Exception: user-facing UI copy is currently French. Keep UI strings French until i18n
-  lands (see roadmap), and do not translate them on your own.
+- Exception: user-facing UI copy is French in the source and translated to English through
+  `lib/i18n.js`: wrap every UI string in `t('Texte français')` (`tn(n, one, many)` for plurals)
+  and add its English entry to `lib/en.js` (`npm test` fails on a missing one). Module-level
+  labels use getters (`get label() { return t('…'); }`) so they follow the language. Same
+  French text, different English: add a context suffix (`t('Vélo|matériel')` → Bike). Legal
+  pages (`LegalPage.jsx`) are written out in both languages: change both.
 - The owner may talk to you in French; still write all project artifacts in English.
 
 ## Commands
@@ -63,7 +67,7 @@ src/
   pages/            one component per route (Feed, Maps, Record, Groups, Profile, Settings, Legal,
                     Activity, Route, TrainingLog, Segment)
   components/       reusable React components, one per file, default export
-  lib/              pure logic (analyze, records, stats, sports, format…)
+  lib/              pure logic (analyze, records, stats, sports, format, i18n…)
                     + platform modules (db, offline, share, story, importer, formats/, location,
                       sensors, lockscreen, haptics, health, shell: native-only, loaded in the app)
   styles/global.css design tokens (CSS vars) + all styles

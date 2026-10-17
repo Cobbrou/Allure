@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fmtDate } from '../components/ActivityCard.jsx';
 import BestEfforts from '../components/BestEfforts.jsx';
@@ -39,7 +40,7 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
   const splits = useMemo(() => analysis && computeSplits(analysis.track, splitSize), [analysis, splitSize]);
 
   if (data === undefined) return (<><TopBar /><DetailSkeleton /></>);
-  if (data === null) return (<><TopBar /><p className="empty">Activité introuvable.</p></>);
+  if (data === null) return (<><TopBar /><p className="empty">{t('Activité introuvable.')}</p></>);
 
   const act = { ...analysis, ...data.meta };
   const gear = gears.find((g) => g.id === data.meta.gear);
@@ -65,14 +66,14 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
   return (
     <>
       <TopBar>
-        <button className="ghost small" onClick={() => setSheet('edit')}>Modifier</button>
-        <button className="small" onClick={() => setSheet('share')}>Partager</button>
+        <button className="ghost small" onClick={() => setSheet('edit')}>{t('Modifier')}</button>
+        <button className="small" onClick={() => setSheet('share')}>{t('Partager')}</button>
       </TopBar>
-      <BottomSheet open={sheet === 'edit'} onClose={() => setSheet(null)} title="Modifier l'activité">
+      <BottomSheet open={sheet === 'edit'} onClose={() => setSheet(null)} title={t("Modifier l'activité")}>
         <EditForm meta={data.meta} gears={gears} onSave={save} onDelete={remove} />
       </BottomSheet>
       <ShareSheet act={act} zones={zones} photos={photos} open={sheet === 'share'} onClose={() => setSheet(null)}>
-        <button type="button" className="ghost" onClick={exportGpx}>Fichier GPX</button>
+        <button type="button" className="ghost" onClick={exportGpx}>{t('Fichier GPX')}</button>
       </ShareSheet>
       <main className="detail">
         <div className="title">
@@ -91,7 +92,7 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
         <SegmentEfforts meta={activities?.find((a) => a.id === id) ?? data.meta} track={act.track} segments={segments}
           activities={activities} range={range} onCreate={onSegment} />
         <section className="card">
-          <h3>Profil <span className="legend ele">Altitude</span> <span className="legend hr">Cardio</span></h3>
+          <h3>{t('Profil')} <span className="legend ele">{t('Altitude')}</span> <span className="legend hr">{t('Cardio')}</span></h3>
           <ProfileChart track={act.track} hover={hover} />
         </section>
         <HrZones hist={data.meta.hrTime} hr={hr} />
@@ -107,7 +108,7 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
 function TopBar({ children }) {
   return (
     <header className="topbar">
-      <a className="back" href="#/" aria-label="Retour aux activités">‹</a>
+      <a className="back" href="#/" aria-label={t('Retour aux activités')}>‹</a>
       <div className="actions">{children}</div>
     </header>
   );
@@ -126,11 +127,11 @@ function EditForm({ meta, gears, onSave, onDelete }) {
   return (
     <form className="card edit" onSubmit={(e) => { e.preventDefault(); onSave({ name: name.trim() || meta.name, sport, gear: gearId || undefined }); }}>
       <label>
-        Titre
+        {t('Titre')}
         <input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
       </label>
       <fieldset>
-        <legend>Sport</legend>
+        <legend>{t('Sport')}</legend>
         <div className="sport-picker">
           {Object.entries(SPORTS).map(([sid, s]) => (
             <label key={sid} className={sid === sport ? 'selected' : ''}>
@@ -141,16 +142,16 @@ function EditForm({ meta, gears, onSave, onDelete }) {
         </div>
       </fieldset>
       {options.length > 0 && (
-        <label>Matériel
+        <label>{t('Matériel')}
           <select value={gearId} onChange={(e) => setGear(e.target.value)}>
-            <option value="">Aucun</option>
-            {options.map((g) => <option key={g.id} value={g.id}>{GEAR_KINDS[g.kind].icon} {g.name}{g.retired ? ' (retiré)' : ''}</option>)}
+            <option value="">{t('Aucun')}</option>
+            {options.map((g) => <option key={g.id} value={g.id}>{GEAR_KINDS[g.kind].icon} {g.name}{g.retired ? t(' (retiré)') : ''}</option>)}
           </select>
         </label>
       )}
       <div className="edit-actions">
-        <ConfirmButton onConfirm={onDelete} confirmLabel="Confirmer">Supprimer</ConfirmButton>
-        <button type="submit">Enregistrer</button>
+        <ConfirmButton onConfirm={onDelete} confirmLabel={t('Confirmer')}>{t('Supprimer')}</ConfirmButton>
+        <button type="submit">{t('Enregistrer')}</button>
       </div>
     </form>
   );

@@ -1,6 +1,7 @@
 // Live segments: while recording, notice when the athlete starts one of their segments,
 // follow them along it, and time the effort against their record at the finish.
 
+import { t, tn } from './i18n.js';
 import { followRoute, progress } from './follow.js';
 import { haversine } from './geo.js';
 import { leaderboard } from './segments.js';
@@ -49,11 +50,12 @@ export function segmentCue(prev, next) {
   const name = (id) => next.liveSegs.find((s) => s.id === id)?.name;
   if (b.active && b.active.id !== a?.active?.id) {
     const pr = next.liveSegs.find((s) => s.id === b.active.id)?.pr;
-    return `Segment ${name(b.active.id)}.${pr ? ` Record : ${speakTime(pr)}.` : ''}`;
+    return t('Segment {name}.', { name: name(b.active.id) }) + (pr ? t(' Record : {time}.', { time: speakTime(pr) }) : '');
   }
   if (b.last && b.last !== a?.last) {
     const { time, pr } = b.last;
-    return `Segment terminé en ${speakTime(time)}.${pr == null ? '' : time < pr ? ' Nouveau record !' : ` ${speakTime(time - pr)} de plus que ton record.`}`;
+    const vs = pr == null ? '' : time < pr ? t(' Nouveau record !') : t(' {time} de plus que ton record.', { time: speakTime(time - pr) });
+    return t('Segment terminé en {time}.', { time: speakTime(time) }) + vs;
   }
   return null;
 }
@@ -61,5 +63,5 @@ export function segmentCue(prev, next) {
 const speakTime = (s) => {
   s = Math.round(s);
   const m = Math.floor(s / 60);
-  return m ? `${m} minute${m > 1 ? 's' : ''} ${s % 60}` : `${s} secondes`;
+  return m ? `${tn(m, '{n} minute', '{n} minutes')} ${s % 60}` : t('{n} secondes', { n: s });
 };

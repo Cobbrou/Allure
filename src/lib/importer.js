@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { createActivity, dupKey } from './activity.js';
 import { saveActivities } from './db.js';
 import { parseCsv } from './formats/csv.js';
@@ -21,7 +22,7 @@ export async function parseActivityFile(name, bytes) {
   if (lower.endsWith('.tcx')) return parseTcx(utf8(bytes));
   // Garmin's FIT SDK is heavy: load it only when a FIT file shows up.
   if (lower.endsWith('.fit')) return (await import('./formats/fit.js')).parseFit(bytes);
-  throw new Error('Format non supporté (.gpx, .tcx, .fit, .gz ou archive .zip).');
+  throw new Error(t('Format non supporté (.gpx, .tcx, .fit, .gz ou archive .zip).'));
 }
 
 /**

@@ -3,6 +3,7 @@
 // `segments`, planned `routes` and activity `photos`.
 // Platform module: a native storage plugin can replace it without touching components.
 
+import { t } from './i18n.js';
 import { analyze } from './analyze.js';
 import { defaultGear } from './gear.js';
 import { bestEfforts } from './records.js';
@@ -68,7 +69,7 @@ function open() {
     // An older version of the app open elsewhere holds the DB: the upgrade waits for it.
     req.onblocked = () => {
       dbPromise = null; // retry on next access
-      reject(new Error("Allure est ouvert dans un autre onglet : ferme-le pour terminer la mise à jour."));
+      reject(new Error(t("Allure est ouvert dans un autre onglet : ferme-le pour terminer la mise à jour.")));
     };
   }));
 }
@@ -228,6 +229,6 @@ export async function deleteAllData() {
     const req = indexedDB.deleteDatabase(DB_NAME);
     req.onsuccess = resolve;
     req.onerror = () => reject(req.error);
-    req.onblocked = () => reject(new Error('Allure est ouvert dans un autre onglet : ferme-le puis réessaie.'));
+    req.onblocked = () => reject(new Error(t('Allure est ouvert dans un autre onglet : ferme-le puis réessaie.')));
   });
 }

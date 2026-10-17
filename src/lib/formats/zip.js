@@ -2,6 +2,8 @@
 // read, so multi-GB Strava archives (photos included) never load fully into memory.
 // ponytail: no ZIP64 (archives > 4 GB or > 65535 entries), add it if users hit the error.
 
+import { t } from '../i18n.js';
+
 /** List entries of a ZIP Blob: [{ name, bytes(): Promise<Uint8Array> }]. */
 export async function readZip(blob) {
   const tailStart = Math.max(0, blob.size - 65557); // EOCD (22 bytes) + max comment length
@@ -14,7 +16,7 @@ export async function readZip(blob) {
   const count = tail.getUint16(eocd + 10, true);
   const cdSize = tail.getUint32(eocd + 12, true);
   const cdOffset = tail.getUint32(eocd + 16, true);
-  if (cdOffset === 0xffffffff || count === 0xffff) throw new Error('Archive trop volumineuse (ZIP64 non supporté).');
+  if (cdOffset === 0xffffffff || count === 0xffff) throw new Error(t('Archive trop volumineuse (ZIP64 non supporté).'));
 
   const cd = new DataView(await blob.slice(cdOffset, cdOffset + cdSize).arrayBuffer());
   const utf8 = new TextDecoder();
@@ -37,7 +39,7 @@ export async function readZip(blob) {
         const data = new Uint8Array(await blob.slice(start, start + size).arrayBuffer());
         if (method === 0) return data;
         if (method === 8) return inflate(data, 'deflate-raw');
-        throw new Error(`Compression ZIP non supportée (méthode ${method}).`);
+        throw new Error(t('Compression ZIP non supportée (méthode {method}).', { method }));
       },
     });
   }

@@ -1,3 +1,4 @@
+import { getLang, t, tn } from './i18n.js';
 import { progress } from './follow.js';
 import { haversine } from './geo.js';
 import { segmentStep } from './liveSegments.js';
@@ -44,7 +45,8 @@ export function lapStatus(rec, now) {
 /** Spoken summary of a finished lap. */
 export function lapCue(n, seconds) {
   const s = Math.round(seconds), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
-  return `Tour ${n} : ${h ? `${h} heure${h > 1 ? 's' : ''} ` : ''}${m} minute${m > 1 ? 's' : ''} ${s % 60}.`;
+  const hours = h ? `${tn(h, '{n} heure', '{n} heures')} ` : '';
+  return t('Tour {n} : {time}.', { n, time: `${hours}${tn(m, '{n} minute', '{n} minutes')} ${s % 60}` });
 }
 
 /** Lap start times (ms) for the saved activity: the start, then each lap press. Null without laps. */
@@ -92,8 +94,8 @@ export function currentPace(rec) {
   if (!last) return null;
   let i = pts.length - 1, d = 0;
   for (; i > 0 && last.time - pts[i - 1].time <= PACE_WINDOW; i--) d += haversine(pts[i - 1], pts[i]);
-  const t = (last.time - pts[i].time) / 1000;
-  return d > 10 && t > 0 ? t / (d / 1000) : null;
+  const dt = (last.time - pts[i].time) / 1000;
+  return d > 10 && dt > 0 ? dt / (d / 1000) : null;
 }
 
 /** Spoken summary when `next` crosses a split boundary (sport split size), else null. */
@@ -103,9 +105,14 @@ export function splitCue(prev, next, now) {
   const n = Math.floor(next.distance / size);
   if (n <= Math.floor(prev.distance / size)) return null;
   const sPerKm = elapsed(next, now) / (next.distance / 1000);
-  const count = n * sport.split, long = isImperial() ? 'mile' : 'kilomètre';
-  const dist = sport.display === 'pace100' ? `${count} ${isImperial() ? 'yards' : 'mètres'}` : `${count} ${long}${count > 1 ? 's' : ''}`;
-  if (sport.display === 'speed') return `${dist}. Vitesse moyenne ${fmtSpeed(sPerKm).replace('.', ',')} ${long}s heure.`;
+  const count = n * sport.split;
+  const dist = sport.display === 'pace100'
+    ? t(isImperial() ? '{n} yards' : '{n} mètres', { n: count })
+    : isImperial() ? tn(count, '{n} mile', '{n} miles') : tn(count, '{n} kilomètre', '{n} kilomètres');
+  if (sport.display === 'speed') {
+    const speed = getLang() === 'fr' ? fmtSpeed(sPerKm).replace('.', ',') : fmtSpeed(sPerKm);
+    return t(isImperial() ? '{dist}. Vitesse moyenne {speed} miles heure.' : '{dist}. Vitesse moyenne {speed} kilomètres heure.', { dist, speed });
+  }
   const s = Math.round(sport.display === 'pace100' ? (sPerKm / 10) * shortLen() : (sPerKm * distLen()) / 1000);
-  return `${dist}. Allure moyenne ${Math.floor(s / 60)} minutes ${s % 60}.`;
+  return t('{dist}. Allure moyenne {m} minutes {s}.', { dist, m: Math.floor(s / 60), s: s % 60 });
 }

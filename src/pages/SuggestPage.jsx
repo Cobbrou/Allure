@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 import { useEffect, useRef, useState } from 'react';
 import RoutePreview from '../components/RoutePreview.jsx';
 import Segmented from '../components/Segmented.jsx';
@@ -12,10 +13,10 @@ import { SPORTS } from '../lib/sports.js';
 import { BEARINGS, cellKey, familiarity, loopWaypoints, rank } from '../lib/suggest.js';
 import { back } from '../router.js';
 
-const SPORT_OPTIONS = ['run', 'ride', 'hike'].map((id) => ({ id, label: `${SPORTS[id].icon} ${SPORTS[id].label}` }));
+const sportOptions = () => ['run', 'ride', 'hike'].map((id) => ({ id, label: `${SPORTS[id].icon} ${SPORTS[id].label}` }));
 const KM = { run: [3, 30, 10], ride: [10, 150, 40], hike: [5, 30, 12] }; // min, max, default
-const TERRAIN = [{ id: '', label: 'Peu importe' }, { id: 'flat', label: 'Plat' }, { id: 'hilly', label: 'Vallonné' }];
-const SURFACE = [{ id: '', label: 'Peu importe' }, { id: 'paved', label: 'Route' }, { id: 'trail', label: 'Chemins' }];
+const terrains = () => [{ id: '', label: t('Peu importe') }, { id: 'flat', label: t('Plat') }, { id: 'hilly', label: t('Vallonné') }];
+const surfaces = () => [{ id: '', label: t('Peu importe') }, { id: 'paved', label: t('Route') }, { id: 'trail', label: t('Chemins') }];
 const FALLBACK_START = [6.8696, 45.9237]; // Chamonix, where the demo history lives
 const OFF_TARGET = 0.15; // a first loop further than this from the target distance is routed again, resized
 
@@ -35,8 +36,8 @@ export default function SuggestPage({ activities, onPick }) {
   useEffect(() => {
     currentPosition().then((p) => {
       const last = activities?.find((a) => a.preview?.length)?.preview[0];
-      setStart(p ? { coords: [p.lon, p.lat], label: 'ma position' }
-        : last ? { coords: last, label: 'départ de ta dernière activité' }
+      setStart(p ? { coords: [p.lon, p.lat], label: t('ma position') }
+        : last ? { coords: last, label: t('départ de ta dernière activité') }
         : { coords: FALLBACK_START, label: 'Chamonix' });
     });
     // ~100 m cells covered by past tracks, for the "new ground" preference.
@@ -62,11 +63,11 @@ export default function SuggestPage({ activities, onPick }) {
       return { bearing, waypoints, points: r.points, distance, gain, unpaved: r.unpaved, familiar: familiarity(r.points, cells.current) };
     };
     const all = (await Promise.allSettled(BEARINGS.map(loop))).filter((x) => x.status === 'fulfilled').map((x) => x.value);
-    setResults(all.length ? rank(all, { distance: target, terrain, surface, discover }) : { error: 'Aucun itinéraire trouvé : vérifie ta connexion.' });
+    setResults(all.length ? rank(all, { distance: target, terrain, surface, discover }) : { error: t('Aucun itinéraire trouvé : vérifie ta connexion.') });
   };
 
   const keep = (c) => onPick(createRoute({
-    name: `Boucle de ${fmtDist(c.distance, 0)} ${distUnit()}`, sport, snap: true,
+    name: t('Boucle de {dist}', { dist: `${fmtDist(c.distance, 0)} ${distUnit()}` }), sport, snap: true,
     waypoints: c.waypoints, legs: splitLegs(c.points, c.waypoints),
   }));
 
@@ -75,22 +76,22 @@ export default function SuggestPage({ activities, onPick }) {
   return (
     <>
       <header className="topbar">
-        <a className="back" href="#/maps" aria-label="Retour" onClick={(e) => { e.preventDefault(); back('/maps'); }}>‹</a>
-        <h1>Idées d'itinéraires</h1>
+        <a className="back" href="#/maps" aria-label={t('Retour')} onClick={(e) => { e.preventDefault(); back('/maps'); }}>‹</a>
+        <h1>{t("Idées d'itinéraires")}</h1>
         <span className="back" aria-hidden="true" />
       </header>
       <main className="detail">
         <section className="card edit suggest-form">
-          <Segmented label="Sport" options={SPORT_OPTIONS} value={sport} onChange={pickSport} />
-          <label>Distance : {fmtDist(km * 1000, isImperial() ? 1 : 0)} {distUnit()}
+          <Segmented label={t('Sport')} options={sportOptions()} value={sport} onChange={pickSport} />
+          <label>{t('Distance : {dist}', { dist: `${fmtDist(km * 1000, isImperial() ? 1 : 0)} ${distUnit()}` })}
             <input type="range" min={min} max={max} step={sport === 'ride' ? 5 : 1} value={km} onChange={(e) => setKm(Number(e.target.value))} />
           </label>
-          <div className="field"><span>Dénivelé</span><Segmented label="Dénivelé" options={TERRAIN} value={terrain} onChange={setTerrain} /></div>
-          <div className="field"><span>Revêtement</span><Segmented label="Revêtement" options={SURFACE} value={surface} onChange={setSurface} /></div>
-          <label className="switch"><input type="checkbox" checked={discover} onChange={(e) => setDiscover(e.target.checked)} />Découvrir de nouveaux coins</label>
-          <p className="muted small-label">Départ : {start ? start.label : 'recherche de ta position…'}</p>
+          <div className="field"><span>{t('Dénivelé')}</span><Segmented label={t('Dénivelé')} options={terrains()} value={terrain} onChange={setTerrain} /></div>
+          <div className="field"><span>{t('Revêtement')}</span><Segmented label={t('Revêtement')} options={surfaces()} value={surface} onChange={setSurface} /></div>
+          <label className="switch"><input type="checkbox" checked={discover} onChange={(e) => setDiscover(e.target.checked)} />{t('Découvrir de nouveaux coins')}</label>
+          <p className="muted small-label">{t('Départ : {where}', { where: start ? start.label : t('recherche de ta position…') })}</p>
           <button type="button" onClick={generate} disabled={!start || results === 'loading'}>
-            {results === 'loading' ? 'Recherche d\'itinéraires…' : 'Proposer des boucles'}
+            {t(results === 'loading' ? "Recherche d'itinéraires…" : 'Proposer des boucles')}
           </button>
         </section>
 
@@ -104,13 +105,13 @@ export default function SuggestPage({ activities, onPick }) {
                 <span>
                   <b>{fmtDist(c.distance, 1)} {distUnit()} · {fmtElev(c.gain ?? 0)} {elevUnit()} D+</b>
                   <span className="muted">
-                    {c.unpaved != null && `${Math.round(c.unpaved * 100)} % de chemins · `}
-                    {cells.current?.size ? `${Math.round((1 - c.familiar) * 100)} % de nouveau` : 'Nouveau terrain'}
+                    {c.unpaved != null && `${t('{n} % de chemins', { n: Math.round(c.unpaved * 100) })} · `}
+                    {cells.current?.size ? t('{n} % de nouveau', { n: Math.round((1 - c.familiar) * 100) }) : t('Nouveau terrain')}
                   </span>
                 </span>
               </button>
             ))}
-            <button type="button" onClick={() => keep(list[picked])}>Garder cet itinéraire</button>
+            <button type="button" onClick={() => keep(list[picked])}>{t('Garder cet itinéraire')}</button>
           </>
         )}
       </main>

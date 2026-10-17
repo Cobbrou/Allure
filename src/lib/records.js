@@ -1,8 +1,10 @@
+
+import { t } from './i18n.js';
 export const RECORD_DISTANCES = [
   { id: '1k', label: '1 km', m: 1000 },
   { id: '5k', label: '5 km', m: 5000 },
   { id: '10k', label: '10 km', m: 10000 },
-  { id: 'half', label: 'Semi-marathon', m: 21097.5 },
+  { id: 'half', get label() { return t('Semi-marathon'); }, m: 21097.5 },
   { id: 'marathon', label: 'Marathon', m: 42195 },
 ];
 

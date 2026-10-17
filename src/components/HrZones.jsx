@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 import { fmtDuration } from '../lib/format.js';
 import { relativeEffort, timeInZones, ZONES } from '../lib/training.js';
 
@@ -9,7 +10,7 @@ export default function HrZones({ hist, hr }) {
   const total = zones.reduce((a, b) => a + b, 0) || 1;
   return (
     <section className="card">
-      <h3>Effort relatif <span className="effort-score">{effort}</span></h3>
+      <h3>{t('Effort relatif')} <span className="effort-score">{effort}</span></h3>
       <ul className="zones">
         {ZONES.map((z, i) => (
           <li key={z.label}>
@@ -19,7 +20,7 @@ export default function HrZones({ hist, hr }) {
           </li>
         ))}
       </ul>
-      <p className="muted small-label">Zones calculées sur une FC max de {hr.max} bpm (modifiable dans le profil).</p>
+      <p className="muted small-label">{t('Zones calculées sur une FC max de {max} bpm (modifiable dans les paramètres).', { max: hr.max })}</p>
     </section>
   );
 }

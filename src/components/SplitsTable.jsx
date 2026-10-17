@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 import { distLen, fmtElev, fmtPaceUnit, shortLen } from '../lib/format.js';
 import { effort, SPORTS, usesGap } from '../lib/sports.js';
 
@@ -20,7 +21,7 @@ export default function SplitsTable({ splits, sport, size }) {
   };
   return (
     <section className="card">
-      <h3>Splits <span className="muted small-label">{effort(sport).short}{gap && ' · GAP'} · dénivelé</span></h3>
+      <h3>{t('Splits')} <span className="muted small-label">{effort(sport).short}{gap && ' · GAP'} · {t('dénivelé')}</span></h3>
       <ol className="splits">
         {splits.map((s, i) => (
           <SplitRow key={i} label={label(s, i)} best={i === best && max > 0} fill={fill(speeds[i])}
@@ -39,7 +40,7 @@ function SplitRow({ label, best, fill, pace, gap, up, down }) {
       <span className="split-bar">
         <span className="bar" style={{ width: `${fill * 100}%` }} />
         <b>{pace}</b>
-        {gap && <span className="split-gap" title="Allure ajustée à la pente">{gap}</span>}
+        {gap && <span className="split-gap" title={t('Allure ajustée à la pente')}>{gap}</span>}
       </span>
       <span className="split-elev"><span className="up">+{fmtElev(up)}</span> <span className="down">−{fmtElev(down)}</span></span>
     </li>

@@ -1,3 +1,4 @@
+import { t } from '../i18n.js';
 import { Decoder, Stream } from '@garmin/fitsdk';
 
 const SEMICIRCLE = 180 / 2 ** 31;
@@ -19,7 +20,7 @@ export function parseFit(bytes) {
       hr: r.heartRate ?? null,
       ...(r.power != null && { power: r.power }),
     }));
-  if (points.length < 2) throw new Error('Aucun point GPS dans ce fichier FIT (activité en salle ?).');
+  if (points.length < 2) throw new Error(t('Aucun point GPS dans ce fichier FIT (activité en salle ?).'));
   const laps = (messages.lapMesgs ?? []).map((l) => +l.startTime).filter(Number.isFinite);
   return { type: messages.sessionMesgs?.[0]?.sport, points, laps };
 }

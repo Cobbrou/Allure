@@ -1,19 +1,21 @@
+import { getLang, t } from '../lib/i18n.js';
 import { back } from '../router.js';
 
 // Legal texts shown in the app. Keep them in sync with what the app actually sends out:
-// every new network service or permission must be listed in the privacy policy.
-const UPDATED = '17 octobre 2026';
+// every new network service or permission must be listed in the privacy policy, in both
+// languages (FR and EN below say the same thing).
+const UPDATED = { fr: '17 octobre 2026', en: '17 October 2026' };
 const REPO = 'https://github.com/Cobbrou/Allure';
 
 const Ext = ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>;
 
-const DOCS = {
+const FR = {
   privacy: {
     title: 'Confidentialité',
     body: (
       <>
         <h2>Politique de confidentialité</h2>
-        <p className="muted">Dernière mise à jour : {UPDATED}</p>
+        <p className="muted">Dernière mise à jour : {UPDATED.fr}</p>
         <p>
           Allure n'a ni compte en ligne, ni serveur, ni publicité, ni outil de mesure d'audience.
           Tes activités restent sur ton téléphone : personne, pas même nous, n'y a accès.
@@ -21,7 +23,7 @@ const DOCS = {
         <h3>Données stockées sur ton téléphone</h3>
         <ul>
           <li>Activités : traces GPS, temps, altitude, fréquence cardiaque et puissance.</li>
-          <li>Réglages : nom affiché, unités, fréquence cardiaque, objectifs, équipement.</li>
+          <li>Réglages : nom affiché, langue, unités, fréquence cardiaque, objectifs, équipement.</li>
           <li>Zones de confidentialité et contacts d'urgence que tu saisis.</li>
           <li>Segments, itinéraires et cartes téléchargées pour une utilisation hors ligne.</li>
         </ul>
@@ -65,7 +67,7 @@ const DOCS = {
     body: (
       <>
         <h2>Conditions d'utilisation</h2>
-        <p className="muted">Dernière mise à jour : {UPDATED}</p>
+        <p className="muted">Dernière mise à jour : {UPDATED.fr}</p>
         <p>
           Allure est un logiciel libre, fourni gratuitement « en l'état », sans garantie d'aucune
           sorte, selon la licence GNU GPL version 3 ou ultérieure.
@@ -113,6 +115,7 @@ const DOCS = {
           <li>Recharts : MIT</li>
           <li>Capacitor et ses plugins : MIT</li>
           <li>Capacitor Background Geolocation : MIT</li>
+          <li>Capacitor Health : MIT</li>
           <li>Garmin FIT SDK : licence du protocole FIT</li>
           <li>Police Inter : SIL Open Font License 1.1</li>
         </ul>
@@ -125,12 +128,132 @@ const DOCS = {
   },
 };
 
+const EN = {
+  privacy: {
+    title: 'Privacy',
+    body: (
+      <>
+        <h2>Privacy policy</h2>
+        <p className="muted">Last updated: {UPDATED.en}</p>
+        <p>
+          Allure has no online account, no server, no ads and no analytics.
+          Your activities stay on your phone: nobody, not even us, can access them.
+        </p>
+        <h3>Data stored on your phone</h3>
+        <ul>
+          <li>Activities: GPS tracks, times, elevation, heart rate and power.</li>
+          <li>Settings: display name, language, units, heart rate, goals, gear.</li>
+          <li>Privacy zones and emergency contacts you enter.</li>
+          <li>Segments, routes and maps downloaded for offline use.</li>
+        </ul>
+        <h3>Permissions</h3>
+        <ul>
+          <li><b>Location</b>: only while recording, including with the screen off
+            (a notification stays visible as long as the recording runs), and to suggest
+            loops around you.</li>
+          <li><b>Bluetooth</b>: to read a heart rate strap you pick. Readings stay on the phone.</li>
+          <li><b>Health Connect</b> (Android): reads exercise sessions, their GPS track and
+            heart rate, only when you start an import. Allure writes nothing to
+            Health Connect and this data stays on the phone.</li>
+        </ul>
+        <h3>External services</h3>
+        <p>Some features query third-party services. They receive your IP address and the information listed:</p>
+        <ul>
+          <li><b>CARTO</b> (basemap): the map area shown.</li>
+          <li><b>Amazon Web Services</b> (relief of the 3D view): the area shown in 3D.</li>
+          <li><b>BRouter</b> (brouter.de, route drawing and suggested loops): the route's waypoints.</li>
+          <li><b>Google Fonts</b> (typeface): one request at startup.</li>
+        </ul>
+        <p>No activity, name or health data is sent to them.</p>
+        <h3>Sharing</h3>
+        <p>
+          Nothing leaves your phone without you acting: GPX export, share image, backup or
+          alert SMS to your emergency contacts go through the app you choose. Privacy zones
+          hide the start and finish of shared images.
+        </p>
+        <h3>Your rights</h3>
+        <p>
+          You can export all your data (Settings → My data → Back up) and delete it at any
+          time (Delete my data, or uninstall the app).
+        </p>
+        <h3>Contact</h3>
+        <p>Any question: <Ext href={`${REPO}/issues`}>open an issue on GitHub</Ext>.</p>
+      </>
+    ),
+  },
+  terms: {
+    title: 'Terms',
+    body: (
+      <>
+        <h2>Terms of use</h2>
+        <p className="muted">Last updated: {UPDATED.en}</p>
+        <p>
+          Allure is free software, provided at no cost "as is", without warranty of any kind,
+          under the GNU GPL version 3 or later.
+        </p>
+        <h3>Your safety</h3>
+        <ul>
+          <li>Practise your sport at your own risk and within your fitness. If in doubt, ask a doctor.</li>
+          <li>Follow traffic rules and the rules of the places you cross. Don't handle your phone while riding.</li>
+          <li>Routes and maps come from collaborative data: they can be wrong or dangerous. Trust the terrain and the signs.</li>
+          <li>The stillness alert and SOS don't replace emergency services (112). They depend on your battery, the network and the SMS being sent.</li>
+        </ul>
+        <h3>Measurements</h3>
+        <p>
+          Distances, paces, heart rate, predictions and training metrics are estimates. They
+          are not medical advice.
+        </p>
+        <h3>Your data</h3>
+        <p>
+          It belongs to you and stays on your phone. Remember to back it up: uninstalling the
+          app or losing your phone erases it.
+        </p>
+      </>
+    ),
+  },
+  licenses: {
+    title: 'Licenses',
+    body: (
+      <>
+        <h2>Licenses and credits</h2>
+        <p>
+          Allure © 2026 Cobbrou, free software under the <Ext href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3 or later</Ext>.
+          The <Ext href={REPO}>source code</Ext> is public.
+        </p>
+        <h3>Data</h3>
+        <ul>
+          <li>Map data © <Ext href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</Ext> (ODbL).</li>
+          <li>Basemap © <Ext href="https://carto.com/attributions">CARTO</Ext>.</li>
+          <li>Relief: <Ext href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</Ext> (Mapzen, AWS Open Data), from SRTM, GMTED, ETOPO1 and other sources.</li>
+          <li>Routes computed by <Ext href="https://brouter.de">BRouter</Ext>.</li>
+        </ul>
+        <h3>Software</h3>
+        <ul>
+          <li>React and React DOM: MIT</li>
+          <li>MapLibre GL JS: BSD-3-Clause</li>
+          <li>Recharts: MIT</li>
+          <li>Capacitor and its plugins: MIT</li>
+          <li>Capacitor Background Geolocation: MIT</li>
+          <li>Capacitor Health: MIT</li>
+          <li>Garmin FIT SDK: FIT protocol license</li>
+          <li>Inter typeface: SIL Open Font License 1.1</li>
+        </ul>
+        <p className="muted">
+          Allure is an independent project, not affiliated with Strava, Garmin or any other
+          connected sports company.
+        </p>
+      </>
+    ),
+  },
+};
+
 export default function LegalPage({ id }) {
-  const doc = DOCS[id] ?? DOCS.privacy;
+  const docs = getLang() === 'en' ? EN : FR;
+  const doc = docs[id] ?? docs.privacy;
   return (
     <>
       <header className="topbar">
-        <a className="back" href="#/settings" aria-label="Retour" onClick={(e) => { e.preventDefault(); back('/settings'); }}>‹</a>
+        <a className="back" href="#/settings" aria-label={t('Retour')} onClick={(e) => { e.preventDefault(); back('/settings'); }}>‹</a>
         <h1>{doc.title}</h1>
         <span className="back" aria-hidden="true" />
       </header>

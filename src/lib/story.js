@@ -1,3 +1,4 @@
+import { locale, t } from './i18n.js';
 import { ACCENT, BG, GOOD, TEXT, TICK, TRACK } from '../theme.js';
 import { computeSplits } from './analyze.js';
 import { distUnit, elevUnit, fmtDist, fmtDuration, fmtElev, shortUnit } from './format.js';
@@ -17,9 +18,9 @@ const MAX_SPLITS = 20; // ponytail: longer activities show their first 20 splits
 const splitsOf = (act) => computeSplits(act.track, splitSize(act.sport)).filter((s) => s.pace);
 
 export const TEMPLATES = [
-  { id: 'track', label: 'Tracé' },
+  { id: 'track', get label() { return t('Tracé'); } },
   { id: 'sticker', label: 'Stats' },
-  { id: 'profile', label: 'Profil', ok: (a) => a.gain != null },
+  { id: 'profile', get label() { return t('Profil'); }, ok: (a) => a.gain != null },
   { id: 'splits', label: 'Splits', ok: (a) => splitsOf(a).length > 1 },
 ];
 
@@ -27,9 +28,9 @@ export const TEMPLATES = [
 export const templatesFor = (act) => TEMPLATES.filter((t) => !t.ok || t.ok(act));
 
 export const BACKGROUNDS = [
-  { id: 'dark', label: 'Sombre' },
-  { id: 'clear', label: 'Transparent' },
-  { id: 'photo', label: 'Photo' },
+  { id: 'dark', get label() { return t('Sombre'); } },
+  { id: 'clear', get label() { return t('Transparent'); } },
+  { id: 'photo', get label() { return t('Photo'); } },
 ];
 
 /**
@@ -120,7 +121,7 @@ function header(s, act) {
   s.g.font = `800 76px ${FONT}`;
   text(s, truncate(s.g, act.name, W - 180), 90, 250, '800 76px', TEXT);
   if (act.date) {
-    const d = new Date(act.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const d = new Date(act.date).toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     text(s, d, 90, 310, '500 36px', s.muted);
   }
 }
@@ -128,10 +129,10 @@ function header(s, act) {
 function stats(act) {
   const e = effort(act.sport, act.avgPace);
   return {
-    time: ['TEMPS', fmtDuration(act.movingTime)],
+    time: [t('TEMPS'), fmtDuration(act.movingTime)],
     effort: [e.short.toUpperCase(), act.avgPace ? `${e.value} ${e.unit}` : '—'],
-    gain: ['D+', act.gain != null ? `${fmtElev(act.gain)} ${elevUnit()}` : '—'],
-    hr: ['FC MOY.', act.avgHr ? `${Math.round(act.avgHr)} bpm` : '—'],
+    gain: [t('D+'), act.gain != null ? `${fmtElev(act.gain)} ${elevUnit()}` : '—'],
+    hr: [t('FC MOY.'), act.avgHr ? `${Math.round(act.avgHr)} bpm` : '—'],
   };
 }
 

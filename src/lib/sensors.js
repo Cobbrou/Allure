@@ -1,6 +1,8 @@
 // Platform module for Bluetooth sensors: a heart rate strap through Web Bluetooth (Chrome on
 // Android and desktop; not iOS Safari). A native BLE plugin can replace it.
 
+import { t } from './i18n.js';
+
 /** Bpm from a Heart Rate Measurement (GATT 0x2A37) value: flag bit 0 says 8 or 16 bits. */
 export function parseHeartRate(view) {
   return view.getUint8(0) & 1 ? view.getUint16(1, true) : view.getUint8(1);
@@ -20,5 +22,5 @@ export async function connectHeartRate(onBpm, onLost) {
   const ch = await service.getCharacteristic('heart_rate_measurement');
   ch.addEventListener('characteristicvaluechanged', (e) => onBpm(parseHeartRate(e.target.value)));
   await ch.startNotifications();
-  return { name: device.name || 'Ceinture cardio', disconnect: () => device.gatt.disconnect() };
+  return { name: device.name || t('Ceinture cardio'), disconnect: () => device.gatt.disconnect() };
 }

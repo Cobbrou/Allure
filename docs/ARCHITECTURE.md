@@ -58,6 +58,7 @@ IndexedDB database `allure`, version 7:
   `privacy` → `[{ id, name, lat, lon, radius }]` privacy zones (see `lib/privacy.js`)
   `contacts` → `[{ id, name, phone }]` emergency contacts (see `lib/safety.js`)
   `units` → `'metric' | 'imperial'` display unit system (see `lib/format.js`)
+  `lang` → `'fr' | 'en'` UI language, device language when unset (see `lib/i18n.js`)
   `prefs` → `{ name, autoPause, audio }` display name and recording defaults (Settings page)
 - `segments` (keyPath `id`): user-created segments (see `lib/segments.js`)
 - `routes` (keyPath `id`): planned routes with waypoints, points and stats (see `lib/routes.js`)
@@ -124,6 +125,11 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
   splits,                // per km, each with pace and gap; the detail page uses computeSplits(track, sport.split)
 }
 ```
+
+UI text: `lib/i18n.js` `t()` returns the French source string or its `lib/en.js` entry.
+Like the units, the language is module state set by App before rendering; the page remounts
+on change, and dates use `locale()`. Stored data (activity names) keeps the language it was
+created in.
 
 Units are SI everywhere (m, s, ms epoch). Display conversion happens in `lib/format.js`
 and `lib/sports.js` (`effort()` picks km/h, min/km or min/100 m by sport).

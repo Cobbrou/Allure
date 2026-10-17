@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 import { useState } from 'react';
 import ConfirmButton from './ConfirmButton.jsx';
 import { backupName, makeBackup, parseBackup } from '../lib/backup.js';
@@ -36,19 +37,18 @@ export default function MyData({ count }) {
 
   return (
     <section className="card">
-      <h3>Mes données</h3>
+      <h3>{t('Mes données')}</h3>
       <p className="muted">
-        Tout est stocké sur cet appareil. La sauvegarde regroupe tes {count} activités avec leurs traces et photos,
-        réglages, segments et itinéraires dans un fichier à garder ou à restaurer sur un autre téléphone.
+        {t('Tout est stocké sur cet appareil. La sauvegarde regroupe tes {n} activités avec leurs traces et photos, réglages, segments et itinéraires dans un fichier à garder ou à restaurer sur un autre téléphone.', { n: count })}
       </p>
       <div className="row">
-        <button type="button" className="ghost" onClick={save} disabled={busy}>Sauvegarder</button>
+        <button type="button" className="ghost" onClick={save} disabled={busy}>{t('Sauvegarder')}</button>
         <label className="button ghost">
-          Restaurer
+          {t('Restaurer')}
           <input type="file" accept=".json,application/json" hidden disabled={busy}
             onChange={(e) => { const f = e.target.files[0]; e.target.value = ''; if (f) restore(f); }} />
         </label>
-        <ConfirmButton onConfirm={wipe} confirmLabel="Tout effacer ?">Supprimer mes données</ConfirmButton>
+        <ConfirmButton onConfirm={wipe} confirmLabel={t('Tout effacer ?')}>{t('Supprimer mes données')}</ConfirmButton>
       </div>
       {status && <p className="record-status bad" role="alert">{status}</p>}
     </section>

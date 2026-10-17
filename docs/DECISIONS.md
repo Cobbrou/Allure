@@ -220,6 +220,21 @@ are in display units (`SPORTS[sport].split`, see `splitSize`), so imperial runs 
 more; tests reset it with `setUnits('metric')`. Named race distances (5 km, 10 km…) and
 monthly challenges stay metric, as on the reference app.
 
+## 2026-10-17: i18n with French source strings as keys, no library
+
+**Context**: the UI was French only; the roadmap asks for English + French.
+**Decision**: `lib/i18n.js` exposes `t(fr, vars)` and `tn(n, one, many, vars)`. The French
+text stays in the code as the key, and `lib/en.js` maps it to English, so the source stays
+readable and French needs no dictionary. A `|context` suffix separates identical French
+strings that translate differently. The language is module state set by App before render
+(same pattern as the units), stored in the `lang` setting, defaulting to the device
+language. `tests/i18n.test.js` extracts every `t()` / `tn()` key from `src` and fails on a
+missing or unused English entry, or a placeholder mismatch. Legal pages are written out
+in both languages rather than split into keys.
+**Consequences**: i18next / FormatJS stay unneeded until a third language or complex
+plurals. Stored data (default activity names, demo names) keeps the language it was
+created in.
+
 ## Open questions
 
 - **Backend stack** (phase 3). Candidates: Supabase (Postgres + PostGIS + auth, fastest

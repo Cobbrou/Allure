@@ -1,7 +1,8 @@
+import { locale, t, tn } from '../lib/i18n.js';
 import { useMemo } from 'react';
 import { badges, fmtChallenge, monthChallenges } from '../lib/challenges.js';
 
-const monthName = (y, m) => new Date(y, m, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+const monthName = (y, m) => new Date(y, m, 1).toLocaleDateString(locale(), { month: 'long', year: 'numeric' });
 
 /**
  * Groups tab: this month's challenges and the trophy case (local, from your activities),
@@ -15,10 +16,10 @@ export default function GroupsPage({ activities }) {
 
   return (
     <>
-      <header className="topbar"><h1>Groupes</h1></header>
+      <header className="topbar"><h1>{t('Groupes')}</h1></header>
       <main className="detail">
-        <h2 className="section-title">Défis de {monthName(d.getFullYear(), d.getMonth())}</h2>
-        <p className="muted small-label">Plus que {month.daysLeft} jour{month.daysLeft > 1 ? 's' : ''} · {month.list.filter((c) => c.done).length}/{month.list.length} terminés</p>
+        <h2 className="section-title">{t('Défis de {month}', { month: monthName(d.getFullYear(), d.getMonth()) })}</h2>
+        <p className="muted small-label">{tn(month.daysLeft, 'Plus que {n} jour', 'Plus que {n} jours')} · {t('{done}/{total} terminés', { done: month.list.filter((c) => c.done).length, total: month.list.length })}</p>
         <div className="challenges">
           {month.list.map((c) => (
             <section key={c.id} className={`card challenge ${c.done ? 'done' : ''}`}>
@@ -29,13 +30,13 @@ export default function GroupsPage({ activities }) {
                 <div className="progress" role="progressbar" aria-label={c.title} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(c.ratio * 100)}>
                   <div style={{ width: `${c.ratio * 100}%` }} />
                 </div>
-                <span className="muted small-label">{c.done ? '✓ Terminé' : `${fmtChallenge(c.metric, c.value)} / ${fmtChallenge(c.metric, c.target)}`}</span>
+                <span className="muted small-label">{c.done ? t('✓ Terminé') : `${fmtChallenge(c.metric, c.value)} / ${fmtChallenge(c.metric, c.target)}`}</span>
               </div>
             </section>
           ))}
         </div>
 
-        <h2 className="section-title">Trophées</h2>
+        <h2 className="section-title">{t('Trophées')}</h2>
         {won.length ? (
           <ul className="trophies">
             {won.map((b) => (
@@ -46,14 +47,14 @@ export default function GroupsPage({ activities }) {
               </li>
             ))}
           </ul>
-        ) : <p className="muted">Termine un défi pour gagner ton premier trophée.</p>}
+        ) : <p className="muted">{t('Termine un défi pour gagner ton premier trophée.')}</p>}
 
-        <h2 className="section-title">Clubs</h2>
-        <Soon title="Rejoindre un club" text="Retrouve ton club, son fil d'activités et ses classements" />
-        <Soon title="Créer un club" text="Rassemble tes partenaires d'entraînement" />
-        <h2 className="section-title">Événements</h2>
-        <Soon title="Sorties de groupe" text="Organise une sortie ou rejoins celles de tes clubs" />
-        <Soon title="Défis entre amis" text="Défie tes amis sur la distance, le dénivelé ou la régularité" />
+        <h2 className="section-title">{t('Clubs')}</h2>
+        <Soon title={t('Rejoindre un club')} text={t("Retrouve ton club, son fil d'activités et ses classements")} />
+        <Soon title={t('Créer un club')} text={t("Rassemble tes partenaires d'entraînement")} />
+        <h2 className="section-title">{t('Événements')}</h2>
+        <Soon title={t('Sorties de groupe')} text={t('Organise une sortie ou rejoins celles de tes clubs')} />
+        <Soon title={t('Défis entre amis')} text={t('Défie tes amis sur la distance, le dénivelé ou la régularité')} />
       </main>
     </>
   );
@@ -64,7 +65,7 @@ function Soon({ title, text }) {
   return (
     <div className="card link-card">
       <span><b>{title}</b><span className="muted">{text}</span></span>
-      <span className="pill">Bientôt</span>
+      <span className="pill">{t('Bientôt')}</span>
     </div>
   );
 }

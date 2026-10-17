@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 import { memo, useMemo } from 'react';
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { distLen, distUnit, elevLen, elevUnit } from '../lib/format.js';
@@ -17,15 +18,15 @@ const ProfileChart = memo(function ProfileChart({ track, hover }) {
     return out;
   }, [track]);
 
-  if (!hasEle && !hasHr) return <p className="muted">Ni altitude ni fréquence cardiaque dans ce fichier.</p>;
-  const title = `Profil${hasEle ? " d'altitude" : ''}${hasHr ? `${hasEle ? ' et' : ''} de fréquence cardiaque` : ''}`;
+  if (!hasEle && !hasHr) return <p className="muted">{t('Ni altitude ni fréquence cardiaque dans ce fichier.')}</p>;
+  const title = t(hasEle && hasHr ? "Profil d'altitude et de fréquence cardiaque" : hasEle ? "Profil d'altitude" : 'Profil de fréquence cardiaque');
   // accessibilityLayer: the chart takes focus and ←/→ move the cursor (Recharts spoofs onMouseMove).
   return (
     <div onBlur={() => hover.current(null)}>
       <ResponsiveContainer width="100%" height={280}>
         <ComposedChart
           accessibilityLayer
-          title={`${title}, flèches gauche et droite pour parcourir`}
+          title={t('{title}, flèches gauche et droite pour parcourir', { title })}
           data={data}
           margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
           onMouseMove={(s) => hover.current(s?.activePayload?.[0]?.payload.i ?? null)}

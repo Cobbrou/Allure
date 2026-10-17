@@ -5,6 +5,7 @@ import { createActivity } from './lib/activity.js';
 import { deleteRoute, deleteSegment, getSetting, listActivities, listRoutes, listSegments, saveActivities, saveRoute, saveSegment, setSetting } from './lib/db.js';
 import { demoHistory } from './lib/demo.js';
 import { setUnits } from './lib/format.js';
+import { deviceLang, getLang, setLang, t, tn } from './lib/i18n.js';
 import { newlyCompleted } from './lib/challenges.js';
 import { goalLabel, newlyReached } from './lib/goals.js';
 import { healthTasks, importFiles, importTasks } from './lib/importer.js';
@@ -55,8 +56,8 @@ export default function App() {
   const [dragging, setDragging] = useState(false);
   const recording = useRecording();
   useEffect(() => {
-    const t = setTimeout(() => Object.values(pages).forEach((load) => load()), 1500);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => Object.values(pages).forEach((load) => load()), 1500);
+    return () => clearTimeout(timer);
   }, []);
   const [hrSaved, setHrSaved] = useState(null); // { max?, rest? } set by the athlete
   useEffect(() => { getSetting('hr').then(setHrSaved, () => {}); }, []);
@@ -99,6 +100,14 @@ export default function App() {
   useEffect(() => { getSetting('units').then((u) => u && setUnitsState(u), () => {}); }, []);
   const saveUnits = async (u) => { await setSetting('units', u); setUnitsState(u); };
   setUnits(units); // read by format.js during render; the page remounts on change (key below)
+  const [lang, setLangState] = useState(deviceLang); // 'fr' | 'en'
+  useEffect(() => { getSetting('lang').then((l) => l && setLangState(l), () => {}); }, []);
+  const saveLang = async (l) => { await setSetting('lang', l); setLangState(l); };
+  setLang(lang); // read by t() during render, like the units
+  useEffect(() => {
+    document.documentElement.lang = getLang();
+    document.title = t('Allure — Analyse de course');
+  }, [lang]);
   const [prefs, setPrefs] = useState({}); // { name?, autoPause?, audio? }
   useEffect(() => { getSetting('prefs').then((p) => p && setPrefs(p), () => {}); }, []);
   const savePrefs = async (p) => { await setSetting('prefs', p); setPrefs(p); };
@@ -117,10 +126,10 @@ export default function App() {
       const done = prevList.current ? newlyCompleted(prevList.current, list) : [];
       prevList.current = list;
       setActivities(list);
-      const news = [...won.map((g) => `🎉 Objectif atteint : ${goalLabel(g)}`), ...done.map((c) => `🏆 Défi terminé : ${c.title}`)];
+      const news = [...won.map((g) => t('🎉 Objectif atteint : {goal}', { goal: goalLabel(g) })), ...done.map((c) => t('🏆 Défi terminé : {title}', { title: c.title }))];
       if (news.length) setToast({ kind: 'notice', goal: true, text: news.join(' · ') });
     } catch (e) {
-      setToast({ kind: 'error', text: `Stockage indisponible : ${e.message}` });
+      setToast({ kind: 'error', text: t('Stockage indisponible : {error}', { error: e.message }) });
     }
   }, []);
   useEffect(() => { reload(); }, [reload]);
@@ -130,7 +139,7 @@ export default function App() {
     const { readWorkouts } = await import('./lib/health.js');
     const workouts = await readWorkouts();
     const tasks = healthTasks(workouts);
-    if (!tasks.length) throw new Error(workouts.length ? 'Aucune séance avec trace GPS dans Health Connect.' : 'Aucune séance trouvée dans Health Connect.');
+    if (!tasks.length) throw new Error(t(workouts.length ? 'Aucune séance avec trace GPS dans Health Connect.' : 'Aucune séance trouvée dans Health Connect.'));
     return importTasks(tasks, existing, onProgress);
   });
   // run(existing, onProgress) imports and returns importTasks' result.
@@ -167,7 +176,7 @@ ${cur.text}` } : summary));
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
   else if (page === 'record') content = <RecordPage recording={recording} contacts={contacts} routes={routes} routeId={id} segments={segments ?? []} activities={activities ?? []} prefs={prefs} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
   else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} name={prefs.name} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} />;
-  else if (page === 'settings') content = <SettingsPage activities={activities} hr={hr} hrSaved={hrSaved} ftpEstimate={ftpEstimate} onSaveHr={saveHr} units={units} onSaveUnits={saveUnits} prefs={prefs} onSavePrefs={savePrefs} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} onDemo={addDemo} onHealthImport={onHealthImport} onChange={reload} />;
+  else if (page === 'settings') content = <SettingsPage activities={activities} hr={hr} hrSaved={hrSaved} ftpEstimate={ftpEstimate} onSaveHr={saveHr} units={units} onSaveUnits={saveUnits} lang={lang} onSaveLang={saveLang} prefs={prefs} onSavePrefs={savePrefs} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} onDemo={addDemo} onHealthImport={onHealthImport} onChange={reload} />;
   else if (page === 'legal') content = <LegalPage id={id} />;
   else content = <FeedPage activities={activities} zones={zones} onRefresh={reload} onImport={onImport} onDemo={addDemo} />;
 
@@ -180,7 +189,7 @@ ${cur.text}` } : summary));
     >
       {progress && (
         <div className="toast notice" role="status">
-          Import… {progress.done} / {progress.total}
+          {t('Import… {done} / {total}', progress)}
           <div className="progress"><div style={{ width: `${(progress.done / progress.total) * 100}%` }} /></div>
         </div>
       )}
@@ -189,7 +198,7 @@ ${cur.text}` } : summary));
           {toast.text}
         </div>
       )}
-      <ErrorBoundary key={`${page}/${id ?? ''}/${units}`}>
+      <ErrorBoundary key={`${page}/${id ?? ''}/${units}/${lang}`}>
         <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
       </ErrorBoundary>
       {!(page === 'record' && recording.rec) && <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'log' || page === 'settings' || page === 'legal' ? 'profile' : page === 'route' || page === 'suggest' ? 'maps' : page} />}
@@ -198,8 +207,8 @@ ${cur.text}` } : summary));
 }
 
 function importSummary({ ids, duplicates, failed }) {
-  const parts = [`${ids.length} activité${ids.length > 1 ? 's' : ''} importée${ids.length > 1 ? 's' : ''}`];
-  if (duplicates) parts.push(`${duplicates} doublon${duplicates > 1 ? 's' : ''} ignoré${duplicates > 1 ? 's' : ''}`);
-  if (failed.length) parts.push(`${failed.length} échec${failed.length > 1 ? 's' : ''} (${failed[0].label} : ${failed[0].error})`);
+  const parts = [tn(ids.length, '{n} activité importée', '{n} activités importées')];
+  if (duplicates) parts.push(tn(duplicates, '{n} doublon ignoré', '{n} doublons ignorés'));
+  if (failed.length) parts.push(tn(failed.length, '{n} échec ({label} : {error})', '{n} échecs ({label} : {error})', failed[0]));
   return { kind: failed.length && !ids.length ? 'error' : 'notice', text: parts.join(' · ') };
 }

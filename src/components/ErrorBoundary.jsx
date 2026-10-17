@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 import { Component } from 'react';
 
 /** Catches render crashes so one broken page doesn't blank the app. Key it by route to reset on navigation. */
@@ -17,11 +18,11 @@ export default class ErrorBoundary extends Component {
     return (
       <main className="empty" role="alert">
         <div className="drop-icon">⚠</div>
-        <h2>Oups, cet écran a planté</h2>
+        <h2>{t('Oups, cet écran a planté')}</h2>
         <p>{String(this.state.error.message || this.state.error)}</p>
         <div className="row">
-          <a className="button ghost" href="#/">Retour aux activités</a>
-          <button onClick={() => location.reload()}>Recharger</button>
+          <a className="button ghost" href="#/">{t('Retour aux activités')}</a>
+          <button onClick={() => location.reload()}>{t('Recharger')}</button>
         </div>
       </main>
     );

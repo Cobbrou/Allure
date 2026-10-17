@@ -1,5 +1,7 @@
+import { t } from './i18n.js';
 import { DEMO_ROUTES } from './demoRoutes.js';
 import { haversine } from './geo.js';
+import { SPORTS } from './sports.js';
 
 // Each place has a real foot loop and bike loop (see scripts/demo-routes.mjs).
 export const PLACES = [
@@ -106,7 +108,7 @@ export function demoHistory(now = Date.now(), count = 20, rand = Math.random) {
     const day = new Date(now - ((i * 60) / count + rand()) * 86400e3);
     day.setHours(7 + Math.floor(rand() * 12), Math.floor(rand() * 60), 0, 0);
     if (day.getTime() > now) day.setTime(now - 3 * 3600e3);
-    return { sport, name: `${{ run: 'Course', ride: 'Vélo', hike: 'Randonnée' }[sport]} à ${place.name}`,
+    return { sport, name: t('{sport} à {place}', { sport: SPORTS[sport].label, place: place.name }),
       points: demoTrack({ place, sport, km, start: day.getTime(), rand }) };
   });
 }

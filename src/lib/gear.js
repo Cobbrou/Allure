@@ -3,10 +3,12 @@
 //         isDefault (assigned to new activities of its sports), retired }.
 // Activities point to it with `meta.gear` (id).
 
+import { t } from './i18n.js';
+
 // alert: default distance after which shoes should be replaced.
 export const GEAR_KINDS = {
-  shoes: { label: 'Chaussures', icon: '👟', sports: ['run', 'hike', 'walk'], alert: 700_000 },
-  bike: { label: 'Vélo', icon: '🚲', sports: ['ride'], alert: null },
+  shoes: { get label() { return t('Chaussures'); }, icon: '👟', sports: ['run', 'hike', 'walk'], alert: 700_000 },
+  bike: { get label() { return t('Vélo|matériel'); }, icon: '🚲', sports: ['ride'], alert: null },
 };
 
 /** Distance (initial included), activity count, moving time and last use of one gear. */

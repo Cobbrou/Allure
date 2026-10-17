@@ -1,11 +1,12 @@
+import { locale, t, tn } from '../lib/i18n.js';
 import { useState } from 'react';
 import { distLen, distUnit } from '../lib/format.js';
 import { GEAR_KINDS, gearUsage, toggleDefault } from '../lib/gear.js';
 import ConfirmButton from './ConfirmButton.jsx';
 import Segmented from './Segmented.jsx';
 
-const KIND_OPTIONS = Object.entries(GEAR_KINDS).map(([id, k]) => ({ id, label: `${k.icon} ${k.label}` }));
-const km = (m) => `${Math.round(m / distLen()).toLocaleString('fr-FR')} ${distUnit()}`;
+const kindOptions = () => Object.entries(GEAR_KINDS).map(([id, k]) => ({ id, label: `${k.icon} ${k.label}` }));
+const km = (m) => `${Math.round(m / distLen()).toLocaleString(locale())} ${distUnit()}`;
 
 /** Shoes and bikes with their mileage; shoes show wear against their replacement distance. */
 export default function Gear({ gears, activities, onSave }) {
@@ -25,13 +26,13 @@ export default function Gear({ gears, activities, onSave }) {
           <span className="gear-name">
             <b>{g.name}</b>
             <span className="muted">
-              {u.count} activité{u.count > 1 ? 's' : ''}{g.isDefault && !g.retired && ' · par défaut'}{g.retired && ' · retiré'}
+              {tn(u.count, '{n} activité', '{n} activités')}{g.isDefault && !g.retired && t(' · par défaut')}{g.retired && t(' · retiré')}
             </span>
           </span>
           <span className="gear-km">
             <b>{km(u.distance)}</b>
-            {ratio >= 1 && !g.retired ? <span className="gear-alert">À remplacer</span>
-              : ratio != null && !g.retired && <span className="muted small-label">sur {km(g.alert)}</span>}
+            {ratio >= 1 && !g.retired ? <span className="gear-alert">{t('À remplacer')}</span>
+              : ratio != null && !g.retired && <span className="muted small-label">{t('sur {dist}', { dist: km(g.alert) })}</span>}
           </span>
         </button>
         {ratio != null && !g.retired && (
@@ -43,13 +44,13 @@ export default function Gear({ gears, activities, onSave }) {
           <div className="row gear-actions">
             {!g.retired && (
               <button type="button" className="ghost small" onClick={() => onSave(toggleDefault(gears, g.id))}>
-                {g.isDefault ? 'Retirer le défaut' : 'Par défaut'}
+                {t(g.isDefault ? 'Retirer le défaut' : 'Par défaut')}
               </button>
             )}
             <button type="button" className="ghost small" onClick={() => patch(g.id, { retired: !g.retired, isDefault: false })}>
-              {g.retired ? 'Réactiver' : 'Retirer'}
+              {t(g.retired ? 'Réactiver' : 'Retirer')}
             </button>
-            <ConfirmButton className="danger small" onConfirm={() => onSave(gears.filter((x) => x.id !== g.id))}>Supprimer</ConfirmButton>
+            <ConfirmButton className="danger small" onConfirm={() => onSave(gears.filter((x) => x.id !== g.id))}>{t('Supprimer')}</ConfirmButton>
           </div>
         )}
       </li>
@@ -58,12 +59,12 @@ export default function Gear({ gears, activities, onSave }) {
 
   return (
     <section className="card">
-      <h3>Matériel</h3>
-      {gears.length === 0 && !adding && <p className="muted">Ajoute tes chaussures et tes vélos pour suivre leur kilométrage.</p>}
+      <h3>{t('Matériel')}</h3>
+      {gears.length === 0 && !adding && <p className="muted">{t('Ajoute tes chaussures et tes vélos pour suivre leur kilométrage.')}</p>}
       <ul className="gear">{active.map(row)}</ul>
       {retired.length > 0 && (
         <details className="gear-retired">
-          <summary className="muted">Matériel retiré ({retired.length})</summary>
+          <summary className="muted">{t('Matériel retiré ({n})', { n: retired.length })}</summary>
           <ul className="gear">{retired.map(row)}</ul>
         </details>
       )}
@@ -73,7 +74,7 @@ export default function Gear({ gears, activities, onSave }) {
             await onSave(g.isDefault ? toggleDefault(list, g.id) : list);
             setAdding(false);
           }} />
-        : <div className="row"><button type="button" className="ghost" onClick={() => setAdding(true)}>+ Ajouter du matériel</button></div>}
+        : <div className="row"><button type="button" className="ghost" onClick={() => setAdding(true)}>{t('+ Ajouter du matériel')}</button></div>}
     </section>
   );
 }
@@ -93,25 +94,25 @@ function GearForm({ gears, onAdd, onCancel }) {
   };
   return (
     <form className="edit goal-form" onSubmit={submit}>
-      <Segmented label="Type" options={KIND_OPTIONS} value={kind} onChange={pickKind} />
-      <label>Nom
-        <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder={kind === 'shoes' ? 'Pegasus 41' : 'Vélo de route'} />
+      <Segmented label={t('Type')} options={kindOptions()} value={kind} onChange={pickKind} />
+      <label>{t('Nom')}
+        <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder={kind === 'shoes' ? 'Pegasus 41' : t('Vélo de route')} />
       </label>
       <div className="row">
-        <label>Déjà parcouru ({distUnit()})
+        <label>{t('Déjà parcouru ({unit})', { unit: distUnit() })}
           <input type="number" inputMode="decimal" min="0" step="any" placeholder="0" value={initial} onChange={(e) => setInitial(e.target.value)} />
         </label>
-        <label>Alerte à ({distUnit()})
-          <input type="number" inputMode="decimal" min="0" step="any" placeholder="aucune" value={alert} onChange={(e) => setAlert(e.target.value)} />
+        <label>{t('Alerte à ({unit})', { unit: distUnit() })}
+          <input type="number" inputMode="decimal" min="0" step="any" placeholder={t('aucune')} value={alert} onChange={(e) => setAlert(e.target.value)} />
         </label>
       </div>
       <label className="switch">
         <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} />
-        Par défaut pour les nouvelles activités{hasDefault && isDefault && ' (remplace l\'actuel)'}
+        {t('Par défaut pour les nouvelles activités')}{hasDefault && isDefault && t(" (remplace l'actuel)")}
       </label>
       <div className="edit-actions">
-        <button type="button" className="ghost" onClick={onCancel}>Annuler</button>
-        <button type="submit">Ajouter</button>
+        <button type="button" className="ghost" onClick={onCancel}>{t('Annuler')}</button>
+        <button type="submit">{t('Ajouter')}</button>
       </div>
     </form>
   );

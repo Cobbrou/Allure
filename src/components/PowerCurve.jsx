@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 import { useMemo } from 'react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { bestCurve, CURVE, trainingStress } from '../lib/power.js';
@@ -20,21 +21,21 @@ export default function PowerCurve({ meta, activities, ftp }) {
 
   return (
     <section className="card">
-      <h3>{meta ? 'Puissance' : 'Courbe de puissance'}
-        {meta && <><span className="legend power">Cette sortie</span> <span className="legend best">Meilleur 90 j</span></>}
+      <h3>{t(meta ? 'Puissance' : 'Courbe de puissance')}
+        {meta && <><span className="legend power">{t('Cette sortie')}</span> <span className="legend best">{t('Meilleur 90 j')}</span></>}
       </h3>
       <div className="totals">
         {meta ? (
           <>
-            <div><span>Moyenne</span><b>{meta.avgPower} <small>W</small></b></div>
-            <div><span>Normalisée</span><b>{meta.np ?? '—'} <small>W</small></b></div>
-            <div><span>Intensité</span><b>{stress ? stress.intensity.toFixed(2) : '—'}</b></div>
-            <div><span>Charge (TSS)</span><b>{stress?.tss ?? '—'}</b></div>
+            <div><span>{t('Moyenne')}</span><b>{meta.avgPower} <small>W</small></b></div>
+            <div><span>{t('Normalisée')}</span><b>{meta.np ?? '—'} <small>W</small></b></div>
+            <div><span>{t('Intensité')}</span><b>{stress ? stress.intensity.toFixed(2) : '—'}</b></div>
+            <div><span>{t('Charge (TSS)')}</span><b>{stress?.tss ?? '—'}</b></div>
           </>
         ) : (
           <>
-            <div><span>{ftp?.manual ? 'FTP' : 'FTP estimée'}</span><b>{ftp?.watts ?? '—'} <small>W</small></b></div>
-            <div><span>Meilleur 5 min</span><b>{best[300] ?? '—'} <small>W</small></b></div>
+            <div><span>{t(ftp?.manual ? 'FTP' : 'FTP estimée')}</span><b>{ftp?.watts ?? '—'} <small>W</small></b></div>
+            <div><span>{t('Meilleur 5 min')}</span><b>{best[300] ?? '—'} <small>W</small></b></div>
           </>
         )}
       </div>
@@ -44,14 +45,14 @@ export default function PowerCurve({ meta, activities, ftp }) {
           <XAxis dataKey="d" stroke={AXIS} tick={{ fill: TICK, fontSize: 11 }} interval="preserveStartEnd" />
           <YAxis stroke={AXIS} tick={{ fill: TICK, fontSize: 12 }} width={36} />
           <Tooltip contentStyle={{ background: BG, border: `1px solid ${GRID}`, borderRadius: 8 }} labelStyle={{ color: '#f2f4f8' }}
-            formatter={(v, k) => [`${v} W`, k === 'w' ? (meta ? 'Cette sortie' : 'Meilleur 90 j') : 'Meilleur 90 j']} />
+            formatter={(v, k) => [`${v} W`, t(k === 'w' && meta ? 'Cette sortie' : 'Meilleur 90 j')]} />
           {meta && <Line dataKey="best" stroke="#64748b" strokeDasharray="4 4" strokeWidth={1.5} dot={false} isAnimationActive={false} />}
           <Line dataKey="w" stroke={ACCENT} strokeWidth={2.5} dot={{ r: 2.5, fill: ACCENT }} isAnimationActive={false} />
         </LineChart>
       </ResponsiveContainer>
       <p className="muted small-label">
-        {meta ? (ftp ? `Intensité et charge calculées sur une FTP ${ftp.manual ? 'de' : 'estimée à'} ${ftp.watts} W.` : 'Une sortie de 20 min avec capteur permet d\'estimer ta FTP.')
-          : ftp?.manual ? 'FTP saisie dans les réglages.' : 'FTP : 95 % de ta meilleure puissance sur 20 min ces 90 derniers jours.'}
+        {meta ? (ftp ? t(ftp.manual ? 'Intensité et charge calculées sur une FTP de {w} W.' : 'Intensité et charge calculées sur une FTP estimée à {w} W.', { w: ftp.watts }) : t("Une sortie de 20 min avec capteur permet d'estimer ta FTP."))
+          : t(ftp?.manual ? 'FTP saisie dans les réglages.' : 'FTP : 95 % de ta meilleure puissance sur 20 min ces 90 derniers jours.')}
       </p>
     </section>
   );

@@ -2,6 +2,7 @@
 // Web APIs in development; in the native shell, recording uses the background
 // geolocation plugin (a foreground service keeps the GPS on with the screen off).
 
+import { locale, t } from './i18n.js';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import { demoTrack } from './demo.js';
 
@@ -22,7 +23,7 @@ export function watchPosition(onFix, onError, { background = false } = {}) {
   const id = navigator.geolocation.watchPosition(
     ({ coords: c, timestamp }) =>
       onFix({ lat: c.latitude, lon: c.longitude, ele: c.altitude, time: timestamp, accuracy: c.accuracy, speed: c.speed }),
-    (e) => onError(e.code === e.PERMISSION_DENIED ? 'Accès à la position refusé.' : 'Signal GPS perdu.'),
+    (e) => onError(t(e.code === e.PERMISSION_DENIED ? 'Accès à la position refusé.' : 'Signal GPS perdu.')),
     { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 },
   );
   return () => navigator.geolocation.clearWatch(id);
@@ -35,9 +36,9 @@ function watchNative(onFix, onError) {
   BackgroundGeolocation ??= registerPlugin('BackgroundGeolocation');
   let stopped = false;
   const id = BackgroundGeolocation.addWatcher(
-    { backgroundTitle: 'Enregistrement en cours', backgroundMessage: 'Allure suit ta position pour ton activité.', requestPermissions: true, stale: false, distanceFilter: 0 },
+    { backgroundTitle: t('Enregistrement en cours'), backgroundMessage: t('Allure suit ta position pour ton activité.'), requestPermissions: true, stale: false, distanceFilter: 0 },
     (loc, err) => {
-      if (err) return onError(err.code === 'NOT_AUTHORIZED' ? 'Accès à la position refusé.' : 'Signal GPS perdu.');
+      if (err) return onError(t(err.code === 'NOT_AUTHORIZED' ? 'Accès à la position refusé.' : 'Signal GPS perdu.'));
       onFix({ lat: loc.latitude, lon: loc.longitude, ele: loc.altitude, time: loc.time, accuracy: loc.accuracy, speed: loc.speed });
     },
   );
@@ -81,7 +82,7 @@ export function keepAwake() {
 
 export function speak(text) {
   if (!window.speechSynthesis) return;
-  speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance(text), { lang: 'fr-FR' }));
+  speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance(text), { lang: locale() }));
 }
 
 /** One position fix ({ lat, lon }), or null if the GPS gives nothing within `timeout` ms. */

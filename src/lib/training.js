@@ -2,16 +2,18 @@
 // seconds per bpm, so zones and load can be recomputed for any max / resting HR without
 // loading tracks.
 
+import { t } from './i18n.js';
+
 export const DEFAULT_REST_HR = 60;
 export const DEFAULT_MAX_HR = 190;
 
 /** Lower bound of each zone, as a fraction of max HR. */
 export const ZONES = [
-  { label: 'Z1 Récupération', from: 0 },
-  { label: 'Z2 Endurance', from: 0.6 },
-  { label: 'Z3 Tempo', from: 0.7 },
-  { label: 'Z4 Seuil', from: 0.8 },
-  { label: 'Z5 Anaérobie', from: 0.9 },
+  { get label() { return t('Z1 Récupération'); }, from: 0 },
+  { get label() { return t('Z2 Endurance'); }, from: 0.6 },
+  { get label() { return t('Z3 Tempo'); }, from: 0.7 },
+  { get label() { return t('Z4 Seuil'); }, from: 0.8 },
+  { get label() { return t('Z5 Anaérobie'); }, from: 0.9 },
 ];
 
 /** { bpm: seconds } over a track. Gaps of 60 s or more (pauses) are skipped. */

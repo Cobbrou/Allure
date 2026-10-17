@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n.js';
 import { useEffect, useMemo, useState } from 'react';
 import { fmtDuration, fmtLength } from '../lib/format.js';
 import { detectIntervals, lapIntervals } from '../lib/intervals.js';
@@ -5,8 +6,8 @@ import { effort } from '../lib/sports.js';
 import Segmented from './Segmented.jsx';
 
 const SOURCES = [
-  { id: 'laps', label: 'Tours' },
-  { id: 'auto', label: 'Efforts détectés' },
+  { id: 'laps', get label() { return t('Tours'); } },
+  { id: 'auto', get label() { return t('Efforts détectés'); } },
 ];
 
 /**
@@ -34,20 +35,20 @@ export default function Intervals({ meta, track, range }) {
   const avg = work.length && work.reduce((s, l) => s + l.time, 0) / work.reduce((s, l) => s + l.dist, 0) * 1000;
   const label = (l, i) => {
     if (l.work !== false) return `${list.slice(0, i + 1).filter((x) => x.work !== false).length}`;
-    return i === 0 ? 'Échauff.' : i === list.length - 1 ? 'Retour' : 'Récup';
+    return t(i === 0 ? 'Échauff.' : i === list.length - 1 ? 'Retour|intervalle' : 'Récup');
   };
   const e = (pace) => effort(meta.sport, pace);
 
   return (
     <section className="card">
-      <h3>Intervalles</h3>
-      {laps.length > 0 && auto.length > 0 && <Segmented label="Source" options={SOURCES} value={source} onChange={choose} />}
+      <h3>{t('Intervalles')}</h3>
+      {laps.length > 0 && auto.length > 0 && <Segmented label={t('Source')} options={SOURCES} value={source} onChange={choose} />}
       {work.length > 0 && (
         <p className="matched-sum intervals-sum">
-          {work.length} × {fmtLength(work.reduce((s, l) => s + l.dist, 0) / work.length)} · moy. {e(avg).value} {e(avg).unit}
+          {work.length} × {fmtLength(work.reduce((s, l) => s + l.dist, 0) / work.length)} · {t('moy.')} {e(avg).value} {e(avg).unit}
         </p>
       )}
-      <div className="iv-bars" role="group" aria-label="Intervalles">
+      <div className="iv-bars" role="group" aria-label={t('Intervalles')}>
         {list.map((l, i) => (
           <button key={i} type="button" aria-label={`${label(l, i)} ${fmtDuration(l.time)}`} aria-pressed={sel === i}
             className={`iv-bar ${l.work === false ? 'rest' : 'work'} ${sel === i ? 'on' : ''}`}
@@ -56,7 +57,7 @@ export default function Intervals({ meta, track, range }) {
         ))}
       </div>
       <table className="splits intervals">
-        <thead><tr><th></th><th>Dist.</th><th>Temps</th><th>{e().short}</th><th>FC</th></tr></thead>
+        <thead><tr><th></th><th>{t('Dist.')}</th><th>{t('Temps')}</th><th>{e().short}</th><th>{t('FC')}</th></tr></thead>
         <tbody>
           {list.map((l, i) => (
             <tr key={i} className={`${l.work === false ? 'rest' : ''} ${sel === i ? 'on' : ''}`} onClick={() => pick(i)}>

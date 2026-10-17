@@ -1,3 +1,4 @@
+import { t, tn } from '../lib/i18n.js';
 import { useMemo, useState } from 'react';
 import ActivityCalendar from '../components/ActivityCalendar.jsx';
 import FitnessChart from '../components/FitnessChart.jsx';
@@ -15,10 +16,10 @@ import { SPORTS, sportOptions as sportOptionsOf } from '../lib/sports.js';
 import { periodStart, totals, weeklyDistance } from '../lib/stats.js';
 
 const PERIODS = [
-  { id: 'week', label: 'Semaine' },
-  { id: 'month', label: 'Mois' },
-  { id: 'year', label: 'Année' },
-  { id: 'all', label: 'Total' },
+  { id: 'week', get label() { return t('Semaine'); } },
+  { id: 'month', get label() { return t('Mois'); } },
+  { id: 'year', get label() { return t('Année'); } },
+  { id: 'all', get label() { return t('Total'); } },
 ];
 
 export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGoals, segments, gears, onSaveGears }) {
@@ -28,7 +29,7 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
 
   // Only offer sports the athlete actually has.
   const sportOptions = useMemo(() => sportOptionsOf(list), [list]);
-  const t = useMemo(() => totals(list, { from: periodStart(period), sport: sport || undefined }), [list, period, sport]);
+  const tot = useMemo(() => totals(list, { from: periodStart(period), sport: sport || undefined }), [list, period, sport]);
   const weeks = useMemo(() => weeklyDistance(list, Date.now(), 12, sport || undefined), [list, sport]);
   const records = useMemo(() => personalRecords(list), [list]);
   const predictions = useMemo(() => predictRaces(list), [list]);
@@ -37,8 +38,8 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
   return (
     <>
       <header className="topbar">
-        <h1>Profil</h1>
-        <a className="back" href="#/settings" aria-label="Paramètres">
+        <h1>{t('Profil')}</h1>
+        <a className="back" href="#/settings" aria-label={t('Paramètres')}>
           <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
         </a>
       </header>
@@ -46,8 +47,8 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
         <section className="card profile-head">
           <div className="avatar">{(name || 'A')[0].toUpperCase()}</div>
           <div>
-            <h2>{name || 'Athlète Allure'}</h2>
-            <p className="muted">{list.length} activités · {fmtDist(allDist, 0)} {distUnit()} au total</p>
+            <h2>{name || t('Athlète Allure')}</h2>
+            <p className="muted">{tn(list.length, '{n} activité', '{n} activités')} · {t('{dist} au total', { dist: `${fmtDist(allDist, 0)} ${distUnit()}` })}</p>
           </div>
         </section>
 
@@ -55,19 +56,19 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
 
         {list.length > 0 && (
           <>
-            {sportOptions.length > 2 && <Segmented label="Sport" options={sportOptions} value={sport} onChange={setSport} />}
+            {sportOptions.length > 2 && <Segmented label={t('Sport')} options={sportOptions} value={sport} onChange={setSport} />}
             <section className="card">
-              <Segmented label="Période" options={PERIODS} value={period} onChange={setPeriod} />
+              <Segmented label={t('Période')} options={PERIODS} value={period} onChange={setPeriod} />
               <div className="totals">
-                <div><span>Activités</span><b>{t.count}</b></div>
-                <div><span>Distance</span><b>{fmtDist(t.distance, 1)} <small>{distUnit()}</small></b></div>
-                <div><span>Temps</span><b>{fmtDuration(t.movingTime)}</b></div>
-                <div><span>Dénivelé</span><b>{fmtElev(t.gain)} <small>{elevUnit()}</small></b></div>
+                <div><span>{t('Activités')}</span><b>{tot.count}</b></div>
+                <div><span>{t('Distance')}</span><b>{fmtDist(tot.distance, 1)} <small>{distUnit()}</small></b></div>
+                <div><span>{t('Temps')}</span><b>{fmtDuration(tot.movingTime)}</b></div>
+                <div><span>{t('Dénivelé')}</span><b>{fmtElev(tot.gain)} <small>{elevUnit()}</small></b></div>
               </div>
             </section>
             <WeeklyChart weeks={weeks} />
             <a className="card link-card" href="#/log">
-              <span><b>Journal d'entraînement</b><span className="muted">Toutes tes semaines, jour par jour</span></span>
+              <span><b>{t("Journal d'entraînement")}</b><span className="muted">{t('Toutes tes semaines, jour par jour')}</span></span>
               <span aria-hidden="true">›</span>
             </a>
             <FitnessChart activities={list} hr={hr} />
@@ -90,9 +91,9 @@ function SegmentsList({ segments, activities }) {
   if (!segments.length) return null;
   return (
     <section className="card">
-      <h3>Mes segments <span className="muted small-label">{segments.length}</span></h3>
+      <h3>{t('Mes segments')} <span className="muted small-label">{segments.length}</span></h3>
       <ul className="records">
-        {[...segments].sort((a, b) => a.name.localeCompare(b.name, 'fr')).map((seg) => {
+        {[...segments].sort((a, b) => a.name.localeCompare(b.name)).map((seg) => {
           const board = leaderboard(seg, activities);
           return (
             <li key={seg.id}>

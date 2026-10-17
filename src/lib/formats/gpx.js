@@ -1,7 +1,9 @@
+
+import { t } from '../i18n.js';
 /** Parse GPX text into { name, type, points: [{ lat, lon, ele, time, hr, power? }] }. Browser only (DOMParser). */
 export function parseGpx(text) {
   const doc = new DOMParser().parseFromString(text, 'application/xml');
-  if (doc.querySelector('parsererror')) throw new Error('Fichier GPX invalide (XML illisible).');
+  if (doc.querySelector('parsererror')) throw new Error(t('Fichier GPX invalide (XML illisible).'));
   let nodes = [...doc.getElementsByTagNameNS('*', 'trkpt')];
   if (!nodes.length) nodes = [...doc.getElementsByTagNameNS('*', 'rtept')];
   const points = nodes
@@ -18,7 +20,7 @@ export function parseGpx(text) {
       };
     })
     .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon));
-  if (points.length < 2) throw new Error('Aucun point GPS exploitable dans ce fichier.');
+  if (points.length < 2) throw new Error(t('Aucun point GPS exploitable dans ce fichier.'));
   const name = doc.getElementsByTagNameNS('*', 'name')[0]?.textContent?.trim();
   const type = doc.getElementsByTagNameNS('*', 'type')[0]?.textContent?.trim();
   return { name, type, points };

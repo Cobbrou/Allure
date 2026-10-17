@@ -1,6 +1,7 @@
 // Following a planned route while recording: where the athlete is along it, how far is
 // left, and whether they strayed off it.
 
+import { t } from './i18n.js';
 import { haversine, RAD } from './geo.js';
 import { thin } from './heatmap.js';
 
@@ -62,8 +63,8 @@ export function progress(route, pos, prev) {
 export function followCue(prev, next) {
   const a = prev?.follow, b = next?.follow;
   if (!b) return null;
-  if (b.done && !a?.done) return 'Itinéraire terminé.';
-  if (b.off && a && !a.off) return "Vous avez quitté l'itinéraire."; // not at the start: still on the way to it
-  if (!b.off && a?.off) return "De retour sur l'itinéraire.";
+  if (b.done && !a?.done) return t('Itinéraire terminé.');
+  if (b.off && a && !a.off) return t("Vous avez quitté l'itinéraire."); // not at the start: still on the way to it
+  if (!b.off && a?.off) return t("De retour sur l'itinéraire.");
   return null;
 }

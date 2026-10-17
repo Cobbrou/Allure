@@ -1,3 +1,4 @@
+import { t, tn } from '../lib/i18n.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { LngLatBounds, Map as MapLibre, setWorkerUrl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -10,7 +11,7 @@ import { distUnit, elevUnit, fmtDist, fmtElev } from '../lib/format.js';
 import { homeLines, thin } from '../lib/heatmap.js';
 import { sportOptions, SPORTS } from '../lib/sports.js';
 import { MAP_STYLE } from '../lib/offline.js';
-import { ACCENT, MAP_LOCALE } from '../theme.js';
+import { ACCENT, mapLocale } from '../theme.js';
 
 setWorkerUrl(workerUrl);
 
@@ -34,17 +35,17 @@ export default function MapsPage({ activities, routes }) {
 
   return (
     <>
-      <header className="topbar"><h1>Cartes</h1></header>
+      <header className="topbar"><h1>{t('Cartes')}</h1></header>
       <main className="detail">
-        <h2 className="section-title">Carte de chaleur</h2>
-        {options.length > 2 && <Segmented label="Sport" options={options} value={sport} onChange={setSport} />}
+        <h2 className="section-title">{t('Carte de chaleur')}</h2>
+        {options.length > 2 && <Segmented label={t('Sport')} options={options} value={sport} onChange={setSport} />}
         {shown === undefined ? <div className="skeleton heatmap" />
           : shown.length ? <section className="card map-card"><HeatMap lines={shown} /></section>
-          : <p className="empty">Aucun tracé GPS à afficher.</p>}
-        {shown?.length > 0 && <p className="muted small-label">{shown.length} activités · deux doigts pour zoomer</p>}
-        <h2 className="section-title">Itinéraires</h2>
+          : <p className="empty">{t('Aucun tracé GPS à afficher.')}</p>}
+        {shown?.length > 0 && <p className="muted small-label">{tn(shown.length, '{n} activité', '{n} activités')} · {t('deux doigts pour zoomer')}</p>}
+        <h2 className="section-title">{t('Itinéraires')}</h2>
         <a className="card link-card" href="#/route/new">
-          <span><b>Créer un itinéraire</b><span className="muted">Trace ton parcours, collé aux routes et sentiers</span></span>
+          <span><b>{t('Créer un itinéraire')}</b><span className="muted">{t('Trace ton parcours, collé aux routes et sentiers')}</span></span>
           <span aria-hidden="true">›</span>
         </a>
         {routes?.map((r) => (
@@ -58,7 +59,7 @@ export default function MapsPage({ activities, routes }) {
           </a>
         ))}
         <a className="card link-card" href="#/suggest">
-          <span><b>Idées d'itinéraires</b><span className="muted">Des boucles proposées selon ta distance, ton dénivelé et tes envies</span></span>
+          <span><b>{t("Idées d'itinéraires")}</b><span className="muted">{t('Des boucles proposées selon ta distance, ton dénivelé et tes envies')}</span></span>
           <span aria-hidden="true">›</span>
         </a>
       </main>
@@ -80,7 +81,7 @@ function HeatMap({ lines }) {
   }, [lines]);
 
   useEffect(() => {
-    const m = new MapLibre({ container: el.current, style: MAP_STYLE, locale: MAP_LOCALE, bounds, fitBoundsOptions: { padding: 30 }, cooperativeGestures: true });
+    const m = new MapLibre({ container: el.current, style: MAP_STYLE, locale: mapLocale(), bounds, fitBoundsOptions: { padding: 30 }, cooperativeGestures: true });
     m.on('load', () => {
       el.current?.classList.add('ready');
       m.addSource('heat', { type: 'geojson', data });

@@ -1,3 +1,4 @@
+import { locale, t } from '../lib/i18n.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { GeolocateControl, LngLatBounds, Map as MapLibre, Marker, setWorkerUrl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -15,12 +16,12 @@ import { safeName, shareFile } from '../lib/share.js';
 import { SPORTS } from '../lib/sports.js';
 import { back } from '../router.js';
 import { downloadRoute, MAP_STYLE, offlineInfo, removeOffline } from '../lib/offline.js';
-import { ACCENT, MAP_LOCALE } from '../theme.js';
+import { ACCENT, mapLocale } from '../theme.js';
 
 setWorkerUrl(workerUrl);
 
-const SPORT_OPTIONS = ['run', 'ride', 'hike', 'walk'].map((id) => ({ id, label: `${SPORTS[id].icon} ${SPORTS[id].label}` }));
-const SNAP_OPTIONS = [{ id: true, label: 'Suivre les chemins' }, { id: false, label: 'Ligne droite' }];
+const sportOptions = () => ['run', 'ride', 'hike', 'walk'].map((id) => ({ id, label: `${SPORTS[id].icon} ${SPORTS[id].label}` }));
+const snapOptions = () => [{ id: true, label: t('Suivre les chemins') }, { id: false, label: t('Ligne droite') }];
 const FALLBACK_CENTER = [6.8696, 45.9237]; // Chamonix, where the demo history lives
 
 /** Route builder: tap the map to add waypoints, drag them to adjust. `id` is 'new' or a saved route. */
@@ -28,18 +29,18 @@ export default function RoutePage({ id, routes, activities, onSave, onDelete }) 
   const saved = id === 'new' ? null : routes?.find((r) => r.id === id);
   const top = (
     <header className="topbar">
-      <a className="back" href="#/maps" aria-label="Retour" onClick={(e) => { e.preventDefault(); back('/maps'); }}>‹</a>
-      <h1>{saved ? 'Itinéraire' : 'Nouvel itinéraire'}</h1>
+      <a className="back" href="#/maps" aria-label={t('Retour')} onClick={(e) => { e.preventDefault(); back('/maps'); }}>‹</a>
+      <h1>{t(saved ? 'Itinéraire' : 'Nouvel itinéraire')}</h1>
       <span className="back" aria-hidden="true" />
     </header>
   );
   if (id !== 'new' && !routes) return top;
-  if (id !== 'new' && !saved) return (<>{top}<p className="empty">Itinéraire introuvable.</p></>);
+  if (id !== 'new' && !saved) return (<>{top}<p className="empty">{t('Itinéraire introuvable.')}</p></>);
   return (<>{top}<Builder key={id} saved={saved} activities={activities} onSave={onSave} onDelete={onDelete} /></>);
 }
 
 function Builder({ saved, activities, onSave, onDelete }) {
-  const [name, setName] = useState(saved?.name ?? 'Nouvel itinéraire');
+  const [name, setName] = useState(saved?.name ?? t('Nouvel itinéraire'));
   const [sport, setSport] = useState(saved?.sport ?? 'run');
   const [snap, setSnap] = useState(saved?.snap ?? true);
   const [waypoints, setWaypoints] = useState(saved?.waypoints ?? []);
@@ -76,11 +77,11 @@ function Builder({ saved, activities, onSave, onDelete }) {
     try {
       // A new path makes the downloaded map corridor stale.
       if (saved && keys.join() !== saved.waypoints.slice(1).map((b, i) => legKey(saved.waypoints[i], b, saved.sport, saved.snap)).join()) await removeOffline(saved.id);
-      await onSave(createRoute({ id: saved?.id, created: saved?.created, name: name.trim() || 'Itinéraire', sport, snap, waypoints, legs }));
+      await onSave(createRoute({ id: saved?.id, created: saved?.created, name: name.trim() || t('Itinéraire'), sport, snap, waypoints, legs }));
     } finally { setBusy(false); }
   };
   const exportGpx = () => {
-    const meta = { name: name.trim() || 'Itinéraire', sport, date: saved?.created ?? Date.now() };
+    const meta = { name: name.trim() || t('Itinéraire'), sport, date: saved?.created ?? Date.now() };
     shareFile(new Blob([toGpx(meta, points)], { type: 'application/gpx+xml' }), `${safeName(meta.name)}.gpx`);
   };
 
@@ -98,24 +99,24 @@ function Builder({ saved, activities, onSave, onDelete }) {
         />
       </section>
       <p className="muted small-label">
-        {waypoints.length ? 'Touche la carte pour prolonger, fais glisser un point pour le déplacer' : 'Touche la carte pour placer le départ'}
-        {missing.length > 0 && ' · calcul…'}
-        {failed && ' · routage indisponible, tronçon en ligne droite'}
+        {t(waypoints.length ? 'Touche la carte pour prolonger, fais glisser un point pour le déplacer' : 'Touche la carte pour placer le départ')}
+        {missing.length > 0 && t(' · calcul…')}
+        {failed && t(' · routage indisponible, tronçon en ligne droite')}
       </p>
       <div className="row route-tools">
-        <button type="button" className="ghost" disabled={!waypoints.length} onClick={() => setWaypoints((w) => w.slice(0, -1))}>Annuler</button>
-        <button type="button" className="ghost" disabled={waypoints.length < 2} onClick={() => setWaypoints((w) => [...w, w[0]])}>Boucler</button>
-        <button type="button" className="ghost" disabled={!waypoints.length} onClick={() => setWaypoints([])}>Effacer</button>
+        <button type="button" className="ghost" disabled={!waypoints.length} onClick={() => setWaypoints((w) => w.slice(0, -1))}>{t('Annuler')}</button>
+        <button type="button" className="ghost" disabled={waypoints.length < 2} onClick={() => setWaypoints((w) => [...w, w[0]])}>{t('Boucler')}</button>
+        <button type="button" className="ghost" disabled={!waypoints.length} onClick={() => setWaypoints([])}>{t('Effacer')}</button>
       </div>
-      <Segmented label="Tracé" options={SNAP_OPTIONS} value={snap} onChange={setSnap} />
-      <Segmented label="Sport" options={SPORT_OPTIONS} value={sport} onChange={setSport} />
+      <Segmented label={t('Tracé')} options={snapOptions()} value={snap} onChange={setSnap} />
+      <Segmented label={t('Sport')} options={sportOptions()} value={sport} onChange={setSport} />
 
       {stats && (
         <section className="card">
           <div className="totals seg-totals">
-            <div><span>Distance</span><b>{fmtDist(stats.distance)} <small>{distUnit()}</small></b></div>
-            <div><span>Dénivelé</span><b>{stats.gain != null ? fmtElev(stats.gain) : '—'} <small>{elevUnit()}</small></b></div>
-            <div><span>Points</span><b>{waypoints.length}</b></div>
+            <div><span>{t('Distance')}</span><b>{fmtDist(stats.distance)} <small>{distUnit()}</small></b></div>
+            <div><span>{t('Dénivelé')}</span><b>{stats.gain != null ? fmtElev(stats.gain) : '—'} <small>{elevUnit()}</small></b></div>
+            <div><span>{t('Points')}</span><b>{waypoints.length}</b></div>
           </div>
           {stats.gain != null && <ProfileChart track={stats.track} hover={hover} />}
         </section>
@@ -124,20 +125,19 @@ function Builder({ saved, activities, onSave, onDelete }) {
       {saved && <OfflineCard route={saved} />}
 
       <section className="card edit">
-        <label>Nom<input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} /></label>
+        <label>{t('Nom')}<input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} /></label>
         <div className="row">
           <button type="button" onClick={save} disabled={busy || waypoints.length < 2 || missing.length > 0}>
-            {busy ? 'Enregistrement…' : 'Enregistrer l\'itinéraire'}
+            {t(busy ? 'Enregistrement…' : "Enregistrer l'itinéraire")}
           </button>
-          {saved && <a className="button ghost" href={`#/record/${saved.id}`}>Suivre</a>}
-          {points.length > 1 && <button type="button" className="ghost" onClick={exportGpx}>Exporter .gpx</button>}
-          {saved && <ConfirmButton onConfirm={() => { removeOffline(saved.id); onDelete(saved.id); }}>Supprimer</ConfirmButton>}
+          {saved && <a className="button ghost" href={`#/record/${saved.id}`}>{t('Suivre')}</a>}
+          {points.length > 1 && <button type="button" className="ghost" onClick={exportGpx}>{t('Exporter .gpx')}</button>}
+          {saved && <ConfirmButton onConfirm={() => { removeOffline(saved.id); onDelete(saved.id); }}>{t('Supprimer')}</ConfirmButton>}
         </div>
       </section>
     </main>
   );
 }
-
 
 /** Download a saved route's map (corridor tiles) so it can be followed without a network. */
 function OfflineCard({ route }) {
@@ -159,21 +159,21 @@ function OfflineCard({ route }) {
 
   return (
     <section className="card edit offline">
-      <h3>Hors ligne</h3>
+      <h3>{t('Hors ligne')}</h3>
       {progress != null ? (
         <>
-          <p className="muted">Téléchargement de la carte… {Math.round(progress * 100)} %</p>
+          <p className="muted">{t('Téléchargement de la carte… {n} %', { n: Math.round(progress * 100) })}</p>
           <div className="progress"><div style={{ width: `${progress * 100}%` }} /></div>
         </>
       ) : info ? (
         <>
-          <p className="muted">✓ Carte disponible sans réseau · {(info.bytes / 1e6).toFixed(1).replace('.', ',')} Mo</p>
-          <ConfirmButton onConfirm={remove}>Retirer la carte</ConfirmButton>
+          <p className="muted">{t('✓ Carte disponible sans réseau · {n} Mo', { n: (info.bytes / 1e6).toLocaleString(locale(), { maximumFractionDigits: 1, minimumFractionDigits: 1 }) })}</p>
+          <ConfirmButton onConfirm={remove}>{t('Retirer la carte')}</ConfirmButton>
         </>
       ) : (
         <>
-          <p className="muted">{error ? 'Téléchargement impossible, vérifie ta connexion.' : 'Enregistre la carte autour du parcours pour le suivre sans réseau.'}</p>
-          <button type="button" className="ghost" onClick={download} disabled={info === undefined}>Télécharger la carte</button>
+          <p className="muted">{t(error ? 'Téléchargement impossible, vérifie ta connexion.' : 'Enregistre la carte autour du parcours pour le suivre sans réseau.')}</p>
+          <button type="button" className="ghost" onClick={download} disabled={info === undefined}>{t('Télécharger la carte')}</button>
         </>
       )}
     </section>
@@ -193,7 +193,7 @@ function BuilderMap({ center, fit, waypoints, points, hover, onAdd, onMove }) {
 
   useEffect(() => {
     // No cooperativeGestures: the map is the editing surface, so one finger pans it.
-    const m = new MapLibre({ container: el.current, style: MAP_STYLE, locale: MAP_LOCALE, center, zoom: 13 });
+    const m = new MapLibre({ container: el.current, style: MAP_STYLE, locale: mapLocale(), center, zoom: 13 });
     if (fit?.length > 1) m.fitBounds(fit.reduce((b, c) => b.extend(c), new LngLatBounds(fit[0], fit[0])), { padding: 40, duration: 0 });
     m.addControl(new GeolocateControl({ positionOptions: { enableHighAccuracy: true } }), 'top-right');
     m.on('load', () => {

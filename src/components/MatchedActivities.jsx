@@ -1,3 +1,4 @@
+import { locale, t, tn } from '../lib/i18n.js';
 import { useMemo } from 'react';
 import { fmtDuration } from '../lib/format.js';
 import { matchedActivities } from '../lib/matched.js';
@@ -13,16 +14,16 @@ export default function MatchedActivities({ meta, activities }) {
 
   return (
     <section className="card">
-      <h3>Même parcours <span className="muted small-label">{matches.length} sorties</span></h3>
+      <h3>{t('Même parcours')} <span className="muted small-label">{tn(matches.length, '{n} sortie', '{n} sorties')}</span></h3>
       <p className="matched-sum">
-        {rank === 1 ? '🏆 Ta sortie la plus rapide' : `${rank}e plus rapide`} sur {matches.length}
+        {t(rank === 1 ? '🏆 Ta sortie la plus rapide sur {n}' : '{rank}e plus rapide sur {n}', { rank, n: matches.length })}
       </p>
       <ul className="matched">
         {[...matches].reverse().map((m, i) => {
           const e = effort(m.sport, m.avgPace);
           const row = (
             <>
-              <span className="matched-date">{new Date(m.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: '2-digit' })}</span>
+              <span className="matched-date">{new Date(m.date).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: '2-digit' })}</span>
               <span className="matched-bar"><span className="bar" style={{ width: `${(best / m.avgPace) * 100}%`, '--i': i }} /></span>
               <b>{fmtDuration(m.movingTime)}</b>
               <span className="muted">{e.value} {e.unit}</span>
