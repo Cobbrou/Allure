@@ -23,7 +23,7 @@ parity": every line must be covered before the app can claim it.
 | 3 | *Ayez l'esprit tranquille grâce à des fonctionnalités de sécurité* (peace of mind with safety features) | Live location sharing (Beacon-like), privacy zones, emergency contacts | 3 / 5 | Planned |
 | 4 | *Essayez des itinéraires créés rien que pour vous* (routes made for you) | Suggested routes from popular segments and personal preferences | 5 | Planned |
 | 5 | *Enregistrez des itinéraires pour les utiliser hors ligne* (save routes for offline use) | Offline routes + offline map tiles | 5 | Planned |
-| 6 | *Tracez vos propres itinéraires* (draw your own routes) | Route builder with road/trail snapping and elevation profile | 5 | Planned |
+| 6 | *Tracez vos propres itinéraires* (draw your own routes) | Route builder with road/trail snapping and elevation profile | 5 | Done (public BRouter server) |
 | 7 | *Consultez votre historique d'entraînement à un seul et même endroit* (all your training history in one place) | Feed, profile totals, calendar, training log | 1 / 5 | Done |
 | 8 | *Analysez vos entraînements grâce à des statistiques avancées* (advanced stats) | HR zones, GAP, intervals, matched activities, predictions, power | 5 | Partly done (splits, best efforts, HR zones, GAP, race predictions, matched activities, intervals) |
 | 9 | *Définissez des objectifs personnalisés et suivez vos progrès* (custom goals and progress) | Weekly / monthly / yearly goals per sport, progress rings | 5 | Done (in-app toast when reached; push notifications in phase 6) |
@@ -145,7 +145,8 @@ Segments (feature 10)
 - [ ] Local Legends (most efforts in 90 days)
 
 Maps & routes (features 4, 5, 6)
-- [ ] Route builder: draw, snap to roads/trails, elevation profile **(premium)**
+- [x] Route builder: draw, snap to roads/trails, elevation profile **(premium)**
+      (tap to add waypoints, drag to move, loop back, GPX export)
 - [ ] Suggested routes made for you (distance, elevation, surface, popularity) **(premium)**
 - [ ] Save routes for offline use: route + map tiles downloaded on the device **(premium)**
 - [x] Personal heatmap **(premium)**

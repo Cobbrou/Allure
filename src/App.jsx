@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import TabBar from './components/TabBar.jsx';
 import { createActivity } from './lib/activity.js';
-import { deleteSegment, getSetting, listActivities, listSegments, saveActivities, saveSegment, setSetting } from './lib/db.js';
+import { deleteRoute, deleteSegment, getSetting, listActivities, listRoutes, listSegments, saveActivities, saveRoute, saveSegment, setSetting } from './lib/db.js';
 import { demoHistory } from './lib/demo.js';
 import { goalLabel, newlyReached } from './lib/goals.js';
 import { importFiles } from './lib/importer.js';
@@ -20,6 +20,7 @@ const pages = {
   log: () => import('./pages/TrainingLogPage.jsx'),
   maps: () => import('./pages/MapsPage.jsx'),
   groups: () => import('./pages/GroupsPage.jsx'),
+  route: () => import('./pages/RoutePage.jsx'),
   segment: () => import('./pages/SegmentPage.jsx'),
 };
 const ActivityPage = lazy(pages.activity);
@@ -28,6 +29,7 @@ const ProfilePage = lazy(pages.profile);
 const TrainingLogPage = lazy(pages.log);
 const MapsPage = lazy(pages.maps);
 const GroupsPage = lazy(pages.groups);
+const RoutePage = lazy(pages.route);
 const SegmentPage = lazy(pages.segment);
 
 export default function App() {
@@ -60,6 +62,11 @@ export default function App() {
     await loadSegments();
     back('/profile');
   };
+  const [routes, setRoutes] = useState(null);
+  const loadRoutes = () => listRoutes().then(setRoutes, () => setRoutes([]));
+  useEffect(() => { loadRoutes(); }, []);
+  const addRoute = async (r) => { await saveRoute(r); await loadRoutes(); back('/maps'); };
+  const removeRoute = async (rid) => { await deleteRoute(rid); await loadRoutes(); back('/maps'); };
   const saveGoals = async (g) => { await setSetting('goals', g); setGoals(g); };
   const [gears, setGears] = useState([]);
   useEffect(() => { getSetting('gear').then((g) => g && setGears(g), () => {}); }, []);
@@ -108,7 +115,8 @@ ${cur.text}` } : summary));
   let content;
   if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} />;
   else if (page === 'log') content = <TrainingLogPage activities={activities} hr={hr} />;
-  else if (page === 'maps') content = <MapsPage activities={activities} />;
+  else if (page === 'maps') content = <MapsPage activities={activities} routes={routes} />;
+  else if (page === 'route') content = <RoutePage id={id} routes={routes} activities={activities} onSave={addRoute} onDelete={removeRoute} />;
   else if (page === 'groups') content = <GroupsPage />;
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
   else if (page === 'record') content = <RecordPage recording={recording} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
@@ -136,7 +144,7 @@ ${cur.text}` } : summary));
       <ErrorBoundary key={`${page}/${id ?? ''}`}>
         <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
       </ErrorBoundary>
-      <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'log' ? 'profile' : page} />
+      <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'log' ? 'profile' : page === 'route' ? 'maps' : page} />
     </div>
   );
 }

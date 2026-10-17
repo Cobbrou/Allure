@@ -39,13 +39,14 @@ Route changes run inside `document.startViewTransition` (slide or fade, see
 | `#/record`       | `RecordPage`: setup (sport, auto-pause, voice cues, GPS status), then live recording |
 | `#/log`          | `TrainingLogPage`: week-by-week bubbles, opened from the profile |
 | `#/segment/:id`  | `SegmentPage`: segment map, distance / grade, your efforts fastest first |
-| `#/maps`         | `MapsPage` (tab): personal heatmap, route ideas and route builder (placeholders) |
+| `#/maps`         | `MapsPage` (tab): personal heatmap and saved routes |
+| `#/route/:id`    | `RoutePage`: route builder (`new`) or a saved route, editable |
 | `#/groups`       | `GroupsPage` (tab): clubs and events (placeholders until accounts land) |
 | `#/profile`      | `ProfilePage`  |
 
 ## Storage (`lib/db.js`)
 
-IndexedDB database `allure`, version 5:
+IndexedDB database `allure`, version 6:
 
 - `activities` (keyPath `id`): **meta** records, small enough to list everything at once
 - `tracks` (key = activity id): raw **points** arrays, read only on the detail page
@@ -54,6 +55,7 @@ IndexedDB database `allure`, version 5:
   `goals` → `[{ id, sport, metric, period, target }]` (see `lib/goals.js`),
   `gear` → `[{ id, name, kind, initial, alert, isDefault, retired }]` (see `lib/gear.js`)
 - `segments` (keyPath `id`): user-created segments (see `lib/segments.js`)
+- `routes` (keyPath `id`): planned routes with waypoints, points and stats (see `lib/routes.js`)
 
 Schema changes bump `VERSION` and add an entry to `MIGRATIONS`, which run in order
 inside the upgrade transaction:
@@ -65,6 +67,7 @@ inside the upgrade transaction:
 | 3 | create `drafts` |
 | 4 | create `settings`, backfill `hrTime` on every meta from its track |
 | 5 | create `segments` |
+| 6 | create `routes` |
 
 Open connections close on `versionchange`, so a newer tab can upgrade. If an older tab
 still blocks the upgrade, `open()` rejects with a "close the other tab" message.

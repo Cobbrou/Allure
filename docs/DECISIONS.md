@@ -102,6 +102,19 @@ Vite's pre-bundled deps folder where the worker file does not exist. Result: a b
 `setWorkerUrl`.
 **Consequences**: works in dev and production builds. Re-check after MapLibre upgrades.
 
+## 2026-10-17: Route builder routes through the public BRouter server
+
+**Context**: the route builder needs legs snapped to roads and trails, with elevation,
+for both cycling and foot profiles, and there is no backend yet.
+**Decision**: fetch each leg (waypoint to waypoint) from `brouter.de` (OpenStreetMap,
+free, no API key, CORS enabled, elevation in every point). Profiles: `trekking` for rides,
+`hiking-mountain` otherwise. Legs are cached by waypoints + profile and saved with the
+route, so editing a saved route only fetches the legs that changed. A failed leg falls
+back to a straight line.
+**Consequences**: no infra, but a public server with no SLA. Before the store release,
+self-host BRouter or move to a hosted engine (GraphHopper, Valhalla); only
+`lib/routes.js` changes.
+
 ## Open questions
 
 - **Backend stack** (phase 3). Candidates: Supabase (Postgres + PostGIS + auth, fastest
@@ -109,6 +122,6 @@ Vite's pre-bundled deps folder where the worker file does not exist. Result: a b
   either way for segments, heatmaps and route matching.
 - **Map tiles in production**: Carto free tier vs. MapTiler / Stadia (paid) vs.
   self-hosted Protomaps (PMTiles).
-- **Routing engine** for the route builder: GraphHopper, Valhalla or OSRM (self-hosted
-  or hosted API).
+- **Routing engine in production**: self-hosted BRouter vs. GraphHopper / Valhalla
+  (see the 2026-10-17 entry).
 - **Monetization**: whether "premium" features stay free or sit behind a subscription.

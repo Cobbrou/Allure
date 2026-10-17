@@ -1,6 +1,6 @@
 // Local store (IndexedDB): `activities` holds light meta records for lists, `tracks` the
 // raw points by activity id (loaded only on the detail screen), plus `drafts`, `settings`
-// and `segments`.
+// `segments` and planned `routes`.
 // Platform module: a native storage plugin can replace it without touching components.
 
 import { analyze } from './analyze.js';
@@ -10,7 +10,7 @@ import { segmentEfforts } from './segments.js';
 import { hrTime } from './training.js';
 
 const DB_NAME = 'allure';
-const VERSION = 5;
+const VERSION = 6;
 let dbPromise;
 
 // Schema migrations, keyed by the version they upgrade to. They run inside the upgrade
@@ -31,6 +31,8 @@ const MIGRATIONS = {
   },
   // v5: `segments`; metas gain `efforts` when a segment matches (none exist before v5).
   5: (db) => db.createObjectStore('segments', { keyPath: 'id' }),
+  // v6: `routes` planned with the route builder.
+  6: (db) => db.createObjectStore('routes', { keyPath: 'id' }),
 };
 
 // Patch every meta accepted by `want` with fields computed from its track and the meta.
@@ -158,3 +160,9 @@ export const saveSegment = (seg) =>
 // ponytail: efforts of a deleted segment stay on metas; every reader goes through the
 // segment list, so they are dead weight only. Strip them with backfill if that grows.
 export const deleteSegment = (id) => tx(['segments'], 'readwrite', (s) => s.delete(id));
+
+// ponytail: routes keep their points inline, so listing loads every point. Split them into
+// their own store like tracks if athletes save hundreds of long routes.
+export const listRoutes = async () => (await tx(['routes'], 'readonly', (s) => s.getAll())).sort((a, b) => b.updated - a.updated);
+export const saveRoute = (route) => tx(['routes'], 'readwrite', (s) => s.put(route));
+export const deleteRoute = (id) => tx(['routes'], 'readwrite', (s) => s.delete(id));

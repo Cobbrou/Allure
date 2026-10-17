@@ -358,6 +358,13 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 .record-live .stat .value { font-size: 32px; }
 .map.live { height: 260px; }
 .map-wait { height: 260px; display: grid; place-items: center; }
+.map.builder { height: min(60vh, 520px); }
+.pin.via { background: #fff; width: 14px; height: 14px; }
+.pin.start, .pin.finish, .pin.via { cursor: grab; }
+.route-tools button { flex: 1; }
+.route-card { justify-content: flex-start; }
+.route-card .route-preview { flex: none; width: 72px; height: 36px; }
+.route-card > span:nth-child(2) { flex: 1; min-width: 0; display: grid; gap: 2px; font-size: 15px; color: var(--text); }
 .pin.me { background: #3b82f6; box-shadow: 0 0 0 2px #fff, 0 0 14px 4px rgba(59, 130, 246, 0.6); }
 .record-controls { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
 .record-controls > button:not(.record-button) { flex: 1 1 0; }
