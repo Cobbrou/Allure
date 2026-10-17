@@ -1,4 +1,5 @@
 import { analyze } from './analyze.js';
+import { powerStats } from './power.js';
 import { bestEfforts } from './records.js';
 import { hrTime } from './training.js';
 import { SPORTS } from './sports.js';
@@ -25,6 +26,7 @@ export function createActivity({ name, sport = 'run', points, source = 'gpx', la
     preview: preview(points),
     bestEfforts: bestEfforts(a.track),
     hrTime: hrTime(points),
+    ...powerStats(points), // avgPower, np, powerCurve: rides with a power meter
   };
   // Device laps (start times, ms); a single lap is the whole activity.
   if (laps?.length > 1) meta.laps = laps;

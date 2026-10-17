@@ -76,7 +76,7 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
 
 ```js
 // Point: one GPS fix as read from the source
-{ lat, lon, ele: number|null, time: msEpoch|null, hr: bpm|null }
+{ lat, lon, ele: number|null, time: msEpoch|null, hr: bpm|null, power?: watts }
 
 // ActivityMeta: stored in `activities`
 {
@@ -90,6 +90,8 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
   efforts,               // [{ seg, time, from, to }] segment efforts: segment id, elapsed s, point indices
   laps,                  // device lap start times (ms), from FIT / TCX; only when 2+ laps
   gear,                  // gear id (settings `gear`); `saveActivities` sets the sport's default
+  avgPower, np,          // W, rides with a power meter only (lib/power.js)
+  powerCurve,            // { [seconds]: best average W } for 5 s … 1 h
 }
 
 // Route: stored in `routes`

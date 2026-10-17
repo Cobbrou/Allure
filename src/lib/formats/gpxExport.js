@@ -3,13 +3,16 @@ const GPX_TYPES = { run: 'running', ride: 'cycling', hike: 'hiking', walk: 'walk
 const esc = (s) => String(s).replace(/[<>&"']/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' })[c]);
 const iso = (ms) => new Date(ms).toISOString();
 
-/** Serialize an activity to GPX 1.1 with Garmin TrackPointExtension heart rate. */
+/** Serialize an activity to GPX 1.1 with Garmin TrackPointExtension heart rate and Strava-style <power>. */
 export function toGpx(meta, points) {
   const pts = points.map((p) => {
     let inner = '';
     if (p.ele != null) inner += `<ele>${p.ele}</ele>`;
     if (p.time != null) inner += `<time>${iso(p.time)}</time>`;
-    if (p.hr != null) inner += `<extensions><gpxtpx:TrackPointExtension><gpxtpx:hr>${Math.round(p.hr)}</gpxtpx:hr></gpxtpx:TrackPointExtension></extensions>`;
+    let ext = '';
+    if (p.power != null) ext += `<power>${Math.round(p.power)}</power>`;
+    if (p.hr != null) ext += `<gpxtpx:TrackPointExtension><gpxtpx:hr>${Math.round(p.hr)}</gpxtpx:hr></gpxtpx:TrackPointExtension>`;
+    if (ext) inner += `<extensions>${ext}</extensions>`;
     return `<trkpt lat="${p.lat}" lon="${p.lon}">${inner}</trkpt>`;
   });
   return `<?xml version="1.0" encoding="UTF-8"?>

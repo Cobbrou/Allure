@@ -4,6 +4,7 @@ import ConfirmButton from '../components/ConfirmButton.jsx';
 import FitnessChart from '../components/FitnessChart.jsx';
 import Gear from '../components/Gear.jsx';
 import Goals from '../components/Goals.jsx';
+import PowerCurve from '../components/PowerCurve.jsx';
 import RacePredictions from '../components/RacePredictions.jsx';
 import RecordsList from '../components/RecordsList.jsx';
 import Segmented from '../components/Segmented.jsx';
@@ -22,7 +23,7 @@ const PERIODS = [
   { id: 'all', label: 'Total' },
 ];
 
-export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, goals, onSaveGoals, segments, gears, onSaveGears, onDemo, onChange }) {
+export default function ProfilePage({ activities, hr, ftp, hrSaved, onSaveHr, goals, onSaveGoals, segments, gears, onSaveGears, onDemo, onChange }) {
   const list = activities ?? [];
   const [sport, setSport] = useState('');
   const [period, setPeriod] = useState('week');
@@ -78,6 +79,7 @@ export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, goals, 
               <span aria-hidden="true">›</span>
             </a>
             <FitnessChart activities={list} hr={hr} />
+            <PowerCurve activities={list} ftp={ftp} />
             <ActivityCalendar activities={list} sport={sport || undefined} />
             <RecordsList records={records} />
             <SegmentsList segments={segments} activities={list} />

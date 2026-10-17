@@ -8,12 +8,14 @@ export function parseTcx(text) {
     .map((n) => {
       const ele = v(n, 'AltitudeMeters'), time = v(n, 'Time');
       const hr = n.getElementsByTagNameNS('*', 'HeartRateBpm')[0];
+      const watts = v(n, 'Watts'); // TPX extension
       return {
         lat: parseFloat(v(n, 'LatitudeDegrees')),
         lon: parseFloat(v(n, 'LongitudeDegrees')),
         ele: ele != null ? parseFloat(ele) : null,
         time: time ? Date.parse(time) : null,
         hr: hr ? parseFloat(v(hr, 'Value')) : null,
+        ...(watts != null && { power: parseFloat(watts) }),
       };
     })
     .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon));

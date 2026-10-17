@@ -17,7 +17,7 @@ function fitFile(n = 30, sport = 'cycling') {
     e.writeMesg({
       mesgNum: Profile.MesgNum.RECORD, timestamp: new Date(+t0 + i * 1000),
       positionLat: Math.round(((45.9 + i * 0.00005) / 180) * 2 ** 31), positionLong: Math.round((6.87 / 180) * 2 ** 31),
-      altitude: 1040 + i, heartRate: 130 + (i % 5),
+      altitude: 1040 + i, heartRate: 130 + (i % 5), power: 200 + i,
     });
   }
   for (const k of [0, Math.floor(n / 2)]) e.writeMesg({ mesgNum: Profile.MesgNum.LAP, timestamp: t0, startTime: new Date(+t0 + k * 1000) });
@@ -47,7 +47,7 @@ function zip(files) {
   return Buffer.concat([...locals, cd, eocd]);
 }
 
-test('parseFit converts semicircles, altitude, HR, sport and laps', () => {
+test('parseFit converts semicircles, altitude, HR, power, sport and laps', () => {
   const { type, points, laps } = parseFit(fitFile(10));
   assert.deepEqual(laps.map((t) => t - points[0].time), [0, 5000]);
   assert.equal(type, 'cycling');
@@ -55,6 +55,7 @@ test('parseFit converts semicircles, altitude, HR, sport and laps', () => {
   assert.ok(Math.abs(points[0].lat - 45.9) < 1e-6 && Math.abs(points[0].lon - 6.87) < 1e-6);
   assert.equal(points[3].ele, 1043);
   assert.equal(points[0].hr, 130);
+  assert.equal(points[2].power, 202);
   assert.equal(points[1].time - points[0].time, 1000);
 });
 

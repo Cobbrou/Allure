@@ -130,6 +130,8 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 .legend::before { content: ''; width: 12px; height: 3px; border-radius: 2px; }
 .legend.ele::before { background: #cbd5e1; }
 .legend.hr::before { background: var(--hr); }
+.legend.power::before { background: var(--accent); }
+.legend.best::before { background: repeating-linear-gradient(90deg, #64748b 0 4px, transparent 4px 7px); }
 .tip { background: #0b1222; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; display: grid; gap: 2px; font-size: 13px; }
 .tip .hr { color: #f87171; }
 /* Horizontal finger drag scrubs the chart, vertical drag still scrolls the page. */

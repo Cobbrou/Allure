@@ -5,6 +5,7 @@ import ConfirmButton from '../components/ConfirmButton.jsx';
 import HrZones from '../components/HrZones.jsx';
 import Intervals from '../components/Intervals.jsx';
 import MatchedActivities from '../components/MatchedActivities.jsx';
+import PowerCurve from '../components/PowerCurve.jsx';
 import ProfileChart from '../components/ProfileChart.jsx';
 import SegmentEfforts from '../components/SegmentEfforts.jsx';
 import SplitsTable from '../components/SplitsTable.jsx';
@@ -19,7 +20,7 @@ import { safeName, shareFile } from '../lib/share.js';
 import { exportStory } from '../lib/story.js';
 import { go } from '../router.js';
 
-export default function ActivityPage({ id, activities, hr, segments, onSegment, gears, onChange }) {
+export default function ActivityPage({ id, activities, hr, ftp, segments, onSegment, gears, onChange }) {
   const [data, setData] = useState(); // undefined: loading, null: not found
   const [editing, setEditing] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -89,6 +90,7 @@ export default function ActivityPage({ id, activities, hr, segments, onSegment, 
           <ProfileChart track={act.track} hover={hover} />
         </section>
         <HrZones hist={data.meta.hrTime} hr={hr} />
+        {data.meta.powerCurve && <PowerCurve meta={data.meta} activities={activities} ftp={ftp} />}
         <SplitsTable splits={splits} sport={act.sport} size={splitSize} />
         <BestEfforts meta={data.meta} activities={activities} />
         <MatchedActivities meta={data.meta} activities={activities} />

@@ -66,12 +66,14 @@ export function demoTrack({ place = PLACES[0], sport = 'run', km = 10, start = D
   let t = start;
   let hr = prof.hr - 25;
   return xy.map(({ lat, lon }, i) => {
+    let power = 0;
     if (i > 0) {
       const d = dist[i] - dist[i - 1];
       const slope = (base[i] - base[i - 1]) / d; // noise-free: vertex gaps can be under 1 m
       const f = workout ? workoutFactor((t - start) / 1000) : 1;
       const v = Math.min(1.4 * prof.speed, Math.max(0.45 * prof.speed, f * prof.speed * Math.exp(-prof.k * slope)));
       t += (d / (v * (0.97 + rand() * 0.06))) * 1000;
+      power = ridePower(v, slope) * (0.92 + rand() * 0.16);
       const target = Math.min(prof.hr + 45, prof.hr + 260 * slope + 18 * (i / dist.length) + (f - 1) * 120);
       hr += (target - hr) * 0.04 + (rand() - 0.5) * 1.5;
     }
@@ -81,9 +83,13 @@ export function demoTrack({ place = PLACES[0], sport = 'run', km = 10, start = D
       ele: Math.round((base[i] + rand() - 0.5) * 10) / 10,
       time: Math.round(t),
       hr: Math.round(hr),
+      ...(sport === 'ride' && { power: Math.round(power) }),
     };
   });
 }
+
+/** Watts to ride at v m/s up `slope`: 80 kg rider + bike, rolling resistance and drag. */
+const ridePower = (v, slope) => Math.max(0, (80 * 9.81 * v * (slope + 0.005) + 0.5 * 1.2 * 0.32 * v ** 3) / 0.97);
 /** `count` varied activities spread over the last 60 days, newest first. The second is an interval session. */
 export function demoHistory(now = Date.now(), count = 20, rand = Math.random) {
   return Array.from({ length: count }, (_, i) => {

@@ -25,7 +25,7 @@ parity": every line must be covered before the app can claim it.
 | 5 | *Enregistrez des itinéraires pour les utiliser hors ligne* (save routes for offline use) | Offline routes + offline map tiles | 5 | Planned |
 | 6 | *Tracez vos propres itinéraires* (draw your own routes) | Route builder with road/trail snapping and elevation profile | 5 | Done (public BRouter server) |
 | 7 | *Consultez votre historique d'entraînement à un seul et même endroit* (all your training history in one place) | Feed, profile totals, calendar, training log | 1 / 5 | Done |
-| 8 | *Analysez vos entraînements grâce à des statistiques avancées* (advanced stats) | HR zones, GAP, intervals, matched activities, predictions, power | 5 | Partly done (splits, best efforts, HR zones, GAP, race predictions, matched activities, intervals) |
+| 8 | *Analysez vos entraînements grâce à des statistiques avancées* (advanced stats) | HR zones, GAP, intervals, matched activities, predictions, power | 5 | Done (splits, best efforts, HR zones, GAP, race predictions, matched activities, intervals, power) |
 | 9 | *Définissez des objectifs personnalisés et suivez vos progrès* (custom goals and progress) | Weekly / monthly / yearly goals per sport, progress rings | 5 | Done (in-app toast when reached; push notifications in phase 6) |
 | 10 | *Mesurez-vous aux autres dans les classements sur les segments* (segment leaderboards) | Segments, auto-matching, leaderboards, live segments | 5 | Partly done (segments and personal efforts ranking; shared leaderboards need accounts) |
 | 11 | *Rejoignez et créez des challenges avec des amis* (join and create challenges with friends) | Platform challenges + user-created group challenges | 4 / 5 | Planned |
@@ -129,7 +129,8 @@ Analysis & training (features 7, 8, 12, 13)
 - [x] Matched activities (same route, progress over time) **(premium)**
 - [x] Race time predictions **(premium)**
 - [x] Workout / interval analysis (laps, auto-detected efforts) **(premium)**
-- [ ] Power curve, FTP, cycling power analysis **(premium)**
+- [x] Power curve, FTP, cycling power analysis **(premium)** (power read from FIT / TCX /
+      GPX; FTP estimated from the best 20 min, no manual override yet)
 
 Goals (feature 9)
 - [x] Custom goals per sport: distance, time, elevation, activity count, per

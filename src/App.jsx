@@ -6,6 +6,7 @@ import { deleteRoute, deleteSegment, getSetting, listActivities, listRoutes, lis
 import { demoHistory } from './lib/demo.js';
 import { goalLabel, newlyReached } from './lib/goals.js';
 import { importFiles } from './lib/importer.js';
+import { estimateFtp } from './lib/power.js';
 import { DEFAULT_REST_HR, estimateMaxHr } from './lib/training.js';
 import FeedPage from './pages/FeedPage.jsx';
 import { useRecording } from './recording.js';
@@ -49,6 +50,7 @@ export default function App() {
     () => ({ max: hrSaved?.max || estimateMaxHr(activities ?? []), rest: hrSaved?.rest || DEFAULT_REST_HR }),
     [hrSaved, activities],
   );
+  const ftp = useMemo(() => estimateFtp(activities ?? []), [activities]);
   const saveHr = async (v) => { await setSetting('hr', v); setHrSaved(v); };
   const [goals, setGoals] = useState([]);
   useEffect(() => { getSetting('goals').then((g) => g && setGoals(g), () => {}); }, []);
@@ -113,14 +115,14 @@ ${cur.text}` } : summary));
   };
 
   let content;
-  if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} />;
+  if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} ftp={ftp} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} />;
   else if (page === 'log') content = <TrainingLogPage activities={activities} hr={hr} />;
   else if (page === 'maps') content = <MapsPage activities={activities} routes={routes} />;
   else if (page === 'route') content = <RoutePage id={id} routes={routes} activities={activities} onSave={addRoute} onDelete={removeRoute} />;
   else if (page === 'groups') content = <GroupsPage />;
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
   else if (page === 'record') content = <RecordPage recording={recording} routes={routes} routeId={id} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
-  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} onDemo={addDemo} onChange={reload} />;
+  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} onDemo={addDemo} onChange={reload} />;
   else content = <FeedPage activities={activities} onImport={onImport} onDemo={addDemo} />;
 
   return (
