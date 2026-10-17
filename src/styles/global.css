@@ -243,6 +243,9 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 .log-n { position: absolute; top: 0; right: 2px; font-size: 10px; font-weight: 700; background: var(--text); color: var(--bg); border-radius: 8px; padding: 0 4px; }
 @keyframes pop { from { transform: scale(0); } }
 
+/* Heatmap: as much map as the screen allows, under the top bar and above the tab bar */
+.map.heatmap, .skeleton.heatmap { height: calc(100vh - 56px - var(--safe-top) - var(--tabbar-h) - var(--safe-bottom) - 120px); min-height: 320px; }
+
 /* Profile dashboard */
 .segmented { display: flex; gap: 4px; padding: 4px; background: #0b1222; border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; scrollbar-width: none; }
 .segmented button { flex: 1 0 auto; min-height: 36px; padding: 0 12px; font-size: 13px; background: transparent; border-color: transparent; color: var(--muted); border-radius: 9px; }

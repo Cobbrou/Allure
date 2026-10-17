@@ -119,3 +119,12 @@ export const clearDraft = () => tx(['drafts'], 'readwrite', (s) => s.delete('cur
 /** User preferences, e.g. getSetting('hr') -> { max, rest }. */
 export const getSetting = (key) => tx(['settings'], 'readonly', (s) => s.get(key));
 export const setSetting = (key, value) => tx(['settings'], 'readwrite', (s) => s.put(value, key));
+
+/** Call fn(id, points) for every stored track, one at a time, without loading them all in memory. */
+export const forEachTrack = (fn) =>
+  tx(['tracks'], 'readonly', (s) => {
+    s.openCursor().onsuccess = (e) => {
+      const c = e.target.result;
+      if (c) { fn(c.key, c.value); c.continue(); }
+    };
+  });

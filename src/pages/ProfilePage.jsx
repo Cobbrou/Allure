@@ -75,6 +75,10 @@ export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, goals, 
               <span><b>Journal d'entraînement</b><span className="muted">Toutes tes semaines, jour par jour</span></span>
               <span aria-hidden="true">›</span>
             </a>
+            <a className="card link-card" href="#/heatmap">
+              <span><b>Carte de chaleur</b><span className="muted">Tous tes tracés sur une seule carte</span></span>
+              <span aria-hidden="true">›</span>
+            </a>
             <FitnessChart activities={list} hr={hr} />
             <ActivityCalendar activities={list} sport={sport || undefined} />
             <RecordsList records={records} />

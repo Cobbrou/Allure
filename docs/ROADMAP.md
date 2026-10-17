@@ -146,7 +146,7 @@ Maps & routes (features 4, 5, 6)
 - [ ] Route builder: draw, snap to roads/trails, elevation profile **(premium)**
 - [ ] Suggested routes made for you (distance, elevation, surface, popularity) **(premium)**
 - [ ] Save routes for offline use: route + map tiles downloaded on the device **(premium)**
-- [ ] Personal heatmap **(premium)**
+- [x] Personal heatmap **(premium)**
 - [ ] Global heatmap (aggregated, anonymized)
 - [ ] 3D terrain view
 

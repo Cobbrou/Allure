@@ -18,11 +18,13 @@ const pages = {
   record: () => import('./pages/RecordPage.jsx'),
   profile: () => import('./pages/ProfilePage.jsx'),
   log: () => import('./pages/TrainingLogPage.jsx'),
+  heatmap: () => import('./pages/HeatmapPage.jsx'),
 };
 const ActivityPage = lazy(pages.activity);
 const RecordPage = lazy(pages.record);
 const ProfilePage = lazy(pages.profile);
 const TrainingLogPage = lazy(pages.log);
+const HeatmapPage = lazy(pages.heatmap);
 
 export default function App() {
   const [page, id] = useRoute();
@@ -89,6 +91,7 @@ ${cur.text}` } : summary));
   let content;
   if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} onChange={reload} />;
   else if (page === 'log') content = <TrainingLogPage activities={activities} hr={hr} />;
+  else if (page === 'heatmap') content = <HeatmapPage activities={activities} />;
   else if (page === 'record') content = <RecordPage recording={recording} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
   else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} onDemo={addDemo} onChange={reload} />;
   else content = <FeedPage activities={activities} onImport={onImport} onDemo={addDemo} />;
@@ -114,7 +117,7 @@ ${cur.text}` } : summary));
       <ErrorBoundary key={`${page}/${id ?? ''}`}>
         <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
       </ErrorBoundary>
-      <TabBar active={page === 'activity' ? '' : page === 'log' ? 'profile' : page} />
+      <TabBar active={page === 'activity' ? '' : page === 'log' || page === 'heatmap' ? 'profile' : page} />
     </div>
   );
 }

@@ -38,6 +38,7 @@ Route changes run inside `document.startViewTransition` (slide or fade, see
 | `#/activity/:id` | `ActivityPage` |
 | `#/record`       | `RecordPage`: setup (sport, auto-pause, voice cues, GPS status), then live recording |
 | `#/log`          | `TrainingLogPage`: week-by-week bubbles, opened from the profile |
+| `#/heatmap`      | `HeatmapPage`: every track faintly drawn on one map, opened from the profile |
 | `#/profile`      | `ProfilePage`  |
 
 ## Storage (`lib/db.js`)
