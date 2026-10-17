@@ -1,22 +1,27 @@
 import { useEffect, useState } from 'react';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import LiveMap from '../components/LiveMap.jsx';
+import { followRoute } from '../lib/follow.js';
 import { fmtDuration } from '../lib/format.js';
 import { speak, watchPosition } from '../lib/location.js';
 import { currentPace, elapsed } from '../lib/recorder.js';
+import { joinLegs } from '../lib/routes.js';
 import { effort, SPORTS } from '../lib/sports.js';
 
-export default function RecordPage({ recording, onSaved }) {
+/** routeId: route to preselect (from "#/record/<id>"). */
+export default function RecordPage({ recording, routes, routeId, onSaved }) {
   return (
     <>
       <header className="topbar"><h1>Enregistrer</h1></header>
-      {recording.rec ? <Live recording={recording} onSaved={onSaved} /> : <Setup recording={recording} />}
+      {recording.rec ? <Live recording={recording} onSaved={onSaved} /> : <Setup recording={recording} routes={routes} routeId={routeId} />}
     </>
   );
 }
 
-function Setup({ recording }) {
-  const [sport, setSport] = useState('run');
+function Setup({ recording, routes, routeId }) {
+  const [routeSel, setRouteSel] = useState(routeId ?? '');
+  const route = routes?.find((r) => r.id === routeSel);
+  const [sport, setSport] = useState(route?.sport ?? 'run');
   const [autoPause, setAutoPause] = useState(true);
   const [audio, setAudio] = useState(true);
   const [gps, setGps] = useState(null); // { accuracy } | { error }
@@ -26,7 +31,7 @@ function Setup({ recording }) {
 
   const go = () => {
     if (audio) speak('Enregistrement démarré.'); // also unlocks speech on iOS, which needs a user gesture
-    recording.start({ sport, autoPause, audio });
+    recording.start({ sport, autoPause, audio, route: route && followRoute(route, joinLegs(route.legs)) });
   };
 
   return (
@@ -39,6 +44,15 @@ function Setup({ recording }) {
           </label>
         ))}
       </div>
+      {routes?.length > 0 && (
+        <label className="route-select">
+          Itinéraire à suivre
+          <select value={routeSel} onChange={(e) => { setRouteSel(e.target.value); const r = routes.find((x) => x.id === e.target.value); if (r) setSport(r.sport); }}>
+            <option value="">Aucun</option>
+            {routes.map((r) => <option key={r.id} value={r.id}>{r.name} · {(r.distance / 1000).toFixed(1)} km</option>)}
+          </select>
+        </label>
+      )}
       <label className="switch"><input type="checkbox" checked={autoPause} onChange={(e) => setAutoPause(e.target.checked)} />Pause automatique</label>
       <label className="switch"><input type="checkbox" checked={audio} onChange={(e) => setAudio(e.target.checked)} />Annonces vocales</label>
       <p className={`gps ${gps?.error ? 'bad' : gps?.accuracy <= 20 ? 'good' : ''}`} role="status">
@@ -61,7 +75,7 @@ function Live({ recording, onSaved }) {
   const time = elapsed(rec, now);
   const cur = effort(rec.sport, currentPace(rec));
   const avg = effort(rec.sport, rec.distance > 10 ? time / (rec.distance / 1000) : null);
-  const status = rec.paused ? 'En pause' : rec.autoPaused ? 'Pause auto' : gpsError;
+  const status = rec.paused ? 'En pause' : rec.autoPaused ? 'Pause auto' : gpsError ?? (rec.follow?.off ? "Hors de l'itinéraire" : null);
 
   const finish = async () => {
     const id = await recording.finish();
@@ -77,9 +91,15 @@ function Live({ recording, onSaved }) {
         <div className="card stat"><div className="label">{cur.short} actuelle</div><div className="value">{cur.value}<small>{cur.unit}</small></div></div>
         <div className="card stat"><div className="label">{avg.short} moyenne</div><div className="value">{avg.value}<small>{avg.unit}</small></div></div>
       </div>
-      {status && <p className={`record-status ${gpsError && !rec.paused ? 'bad' : ''}`} role="status">{status}</p>}
+      {status && <p className={`record-status ${(gpsError || rec.follow?.off) && !rec.paused ? 'bad' : ''}`} role="status">{status}</p>}
+      {rec.route && (
+        <p className="follow-bar">
+          <span>🧭 {rec.route.name}</span>
+          <b>{rec.follow?.done ? 'Terminé' : `${(Math.max(0, rec.route.distance - (rec.follow?.along ?? 0)) / 1000).toFixed(2)} km restants`}</b>
+        </p>
+      )}
       <section className="card map-card">
-        {rec.pos ? <LiveMap points={rec.points} pos={rec.pos} /> : <p className="map-wait muted">Recherche du GPS…</p>}
+        {rec.pos ? <LiveMap points={rec.points} pos={rec.pos} route={rec.route?.coords} /> : <p className="map-wait muted">Recherche du GPS…</p>}
       </section>
       {tooShort && <p className="record-status bad" role="alert">Trop court pour être enregistré.</p>}
       <div className="record-controls">

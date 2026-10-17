@@ -36,7 +36,7 @@ Route changes run inside `document.startViewTransition` (slide or fade, see
 |------------------|----------------|
 | `#/`             | `FeedPage` (Home tab) |
 | `#/activity/:id` | `ActivityPage` |
-| `#/record`       | `RecordPage`: setup (sport, auto-pause, voice cues, GPS status), then live recording |
+| `#/record`       | `RecordPage`: setup (sport, route to follow, auto-pause, voice cues, GPS status), then live recording. `#/record/:routeId` preselects a route |
 | `#/log`          | `TrainingLogPage`: week-by-week bubbles, opened from the profile |
 | `#/segment/:id`  | `SegmentPage`: segment map, distance / grade, your efforts fastest first |
 | `#/maps`         | `MapsPage` (tab): personal heatmap and saved routes |
@@ -91,6 +91,9 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
   laps,                  // device lap start times (ms), from FIT / TCX; only when 2+ laps
   gear,                  // gear id (settings `gear`); `saveActivities` sets the sport's default
 }
+
+// Route: stored in `routes`
+{ id, name, sport, snap, waypoints /* [lon, lat] */, legs /* Point[] per waypoint pair */, distance, gain, preview, created, updated }
 
 // Segment: stored in `segments`
 { id, name, sport, points /* [lon, lat] every ~10 m */, distance, gain, grade /* avg % */, created }

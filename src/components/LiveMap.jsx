@@ -9,8 +9,8 @@ setWorkerUrl(workerUrl);
 
 const line = (points) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: points.map((p) => [p.lon, p.lat]) } });
 
-/** Map following the athlete while recording. pos: last fix { lat, lon }. */
-export default function LiveMap({ points, pos }) {
+/** Map following the athlete while recording. pos: last fix { lat, lon }; route: [lon, lat] coords to follow. */
+export default function LiveMap({ points, pos, route }) {
   const el = useRef();
   const map = useRef();
   const me = useRef();
@@ -19,6 +19,11 @@ export default function LiveMap({ points, pos }) {
     const m = new MapLibre({ container: el.current, style: MAP_STYLE, center: [pos.lon, pos.lat], zoom: 16, cooperativeGestures: true });
     m.on('load', () => {
       el.current?.classList.add('ready');
+      if (route) {
+        m.addSource('planned', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: route } } });
+        m.addLayer({ id: 'planned', type: 'line', source: 'planned', layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: { 'line-color': '#60a5fa', 'line-width': 6, 'line-opacity': 0.6 } });
+      }
       m.addSource('route', { type: 'geojson', data: line(points) });
       m.addLayer({ id: 'route', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: { 'line-color': ACCENT, 'line-width': 5 } });

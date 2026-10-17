@@ -1,3 +1,4 @@
+import { progress } from './follow.js';
 import { haversine } from './geo.js';
 import { SPORTS } from './sports.js';
 
@@ -13,8 +14,9 @@ const STOP_SPEED = { ride: 1.5 }; // m/s under which the athlete counts as stopp
 const STOP_DELAY = 5000; // ms of being stopped before auto-pause kicks in
 const PACE_WINDOW = 30000; // ms of track used for the current pace
 
-export function startRecording({ sport = 'run', autoPause = true, audio = true }, now) {
-  return { sport, autoPause, audio, start: now, points: [], distance: 0, active: 0, runningSince: now, paused: false, autoPaused: false, lastMove: now, pos: null };
+/** route: optional route to follow, from followRoute(). */
+export function startRecording({ sport = 'run', autoPause = true, audio = true, route = null }, now) {
+  return { sport, autoPause, audio, route, follow: null, start: now, points: [], distance: 0, active: 0, runningSince: now, paused: false, autoPaused: false, lastMove: now, pos: null };
 }
 
 /** Running time in seconds. */
@@ -35,6 +37,7 @@ export const recover = (rec) => ({ ...stopClock(rec, rec.points.at(-1)?.time ?? 
 export function addFix(rec, fix) {
   if ((fix.accuracy ?? 0) > MAX_ACCURACY) return rec;
   if (rec.paused) return { ...rec, pos: fix };
+  if (rec.route) rec = { ...rec, follow: progress(rec.route, fix, rec.follow) };
   const prev = rec.points.at(-1);
   const d = prev ? haversine(prev, fix) : 0;
   if (prev && d < MIN_STEP) return tick({ ...rec, pos: fix }, fix.time);

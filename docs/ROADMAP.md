@@ -147,6 +147,8 @@ Segments (feature 10)
 Maps & routes (features 4, 5, 6)
 - [x] Route builder: draw, snap to roads/trails, elevation profile **(premium)**
       (tap to add waypoints, drag to move, loop back, GPX export)
+- [x] Follow a route while recording: route on the live map, distance left, spoken
+      off-route / back-on-route / finished cues
 - [ ] Suggested routes made for you (distance, elevation, surface, popularity) **(premium)**
 - [ ] Save routes for offline use: route + map tiles downloaded on the device **(premium)**
 - [x] Personal heatmap **(premium)**

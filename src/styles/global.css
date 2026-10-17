@@ -154,7 +154,7 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 /* Edit form */
 .edit { display: grid; gap: 16px; }
 .edit label { display: grid; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 500; }
-.edit input:not([type='radio']), .edit select {
+.edit input:not([type='radio']), .edit select, .route-select select {
   font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--border);
   border-radius: 10px; min-height: 44px; padding: 0 12px;
 }
@@ -353,6 +353,10 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 .gps.good { color: #4ade80; }
 .gps.bad, .record-status.bad { color: #fca5a5; }
 .record-status { font-weight: 700; color: var(--accent); }
+.route-select { display: grid; gap: 6px; width: min(100%, 340px); font-size: 13px; color: var(--muted); font-weight: 500; }
+.follow-bar { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.follow-bar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.follow-bar b { flex: none; font-variant-numeric: tabular-nums; }
 .record-live { display: flex; flex-direction: column; gap: 12px; padding-bottom: 16px; }
 .record-live .stat:first-child { grid-column: auto; }
 .record-live .stat .value { font-size: 32px; }

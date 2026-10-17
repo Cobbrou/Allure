@@ -122,6 +122,7 @@ function Builder({ saved, activities, onSave, onDelete }) {
           <button type="button" onClick={save} disabled={busy || waypoints.length < 2 || missing.length > 0}>
             {busy ? 'Enregistrement…' : 'Enregistrer l\'itinéraire'}
           </button>
+          {saved && <a className="button ghost" href={`#/record/${saved.id}`}>Suivre</a>}
           {points.length > 1 && <button type="button" className="ghost" onClick={exportGpx}>Exporter .gpx</button>}
           {saved && <ConfirmButton onConfirm={() => onDelete(saved.id)}>Supprimer</ConfirmButton>}
         </div>
