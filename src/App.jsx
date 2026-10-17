@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import TabBar from './components/TabBar.jsx';
 import { createActivity } from './lib/activity.js';
 import { getSetting, listActivities, saveActivities, setSetting } from './lib/db.js';
@@ -6,13 +6,22 @@ import { demoHistory } from './lib/demo.js';
 import { goalLabel, newlyReached } from './lib/goals.js';
 import { importFiles } from './lib/importer.js';
 import { DEFAULT_REST_HR, estimateMaxHr } from './lib/training.js';
-import ActivityPage from './pages/ActivityPage.jsx';
 import FeedPage from './pages/FeedPage.jsx';
-import ProfilePage from './pages/ProfilePage.jsx';
-import TrainingLogPage from './pages/TrainingLogPage.jsx';
-import RecordPage from './pages/RecordPage.jsx';
 import { useRecording } from './recording.js';
 import { go, useRoute } from './router.js';
+
+// The feed is the start screen and ships in the main chunk. The other pages pull in
+// MapLibre and Recharts, so they load as separate chunks, fetched once the app is idle.
+const pages = {
+  activity: () => import('./pages/ActivityPage.jsx'),
+  record: () => import('./pages/RecordPage.jsx'),
+  profile: () => import('./pages/ProfilePage.jsx'),
+  log: () => import('./pages/TrainingLogPage.jsx'),
+};
+const ActivityPage = lazy(pages.activity);
+const RecordPage = lazy(pages.record);
+const ProfilePage = lazy(pages.profile);
+const TrainingLogPage = lazy(pages.log);
 
 export default function App() {
   const [page, id] = useRoute();
@@ -21,6 +30,10 @@ export default function App() {
   const [progress, setProgress] = useState(null); // { done, total }
   const [dragging, setDragging] = useState(false);
   const recording = useRecording();
+  useEffect(() => {
+    const t = setTimeout(() => Object.values(pages).forEach((load) => load()), 1500);
+    return () => clearTimeout(t);
+  }, []);
   const [hrSaved, setHrSaved] = useState(null); // { max?, rest? } set by the athlete
   useEffect(() => { getSetting('hr').then(setHrSaved, () => {}); }, []);
   const hr = useMemo(
@@ -97,7 +110,7 @@ ${cur.text}` } : summary));
           {toast.text}
         </div>
       )}
-      {content}
+      <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
       <TabBar active={page === 'activity' ? '' : page === 'log' ? 'profile' : page} />
     </div>
   );
