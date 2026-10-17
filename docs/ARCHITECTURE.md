@@ -74,6 +74,11 @@ inside the upgrade transaction:
 | 5 | create `segments` |
 | 6 | create `routes` |
 
+Full backups (`lib/backup.js`, Profile → Mes données) dump every store except `drafts`
+and the map caches to one JSON file tagged with `schema` = `VERSION`. Restore puts the
+records back as they are, so a backup from a newer schema is refused. A migration that
+backfills metas must also be applied to older backups on restore.
+
 Open connections close on `versionchange`, so a newer tab can upgrade. If an older tab
 still blocks the upgrade, `open()` rejects with a "close the other tab" message.
 

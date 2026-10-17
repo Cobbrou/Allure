@@ -107,7 +107,8 @@ Motion & polish
 - [ ] Activity visibility (public / followers / only me), once activities are shared
 - [x] Gear tracking (shoe / bike mileage, default gear per sport, wear alert; local
       until accounts land)
-- [ ] Data export & account deletion
+- [x] Data export & deletion (local: full JSON backup, restore on another device, erase
+      everything; server-side account deletion with the backend)
 
 ## Phase 4: Social
 

@@ -99,3 +99,9 @@ export async function offlineInfo(routeId) {
 }
 
 export const removeOffline = (routeId) => (typeof caches !== 'undefined' ? caches.delete(cacheName(routeId)) : Promise.resolve(false));
+
+/** Drop every downloaded route map. */
+export const removeAllOffline = async () => {
+  if (typeof caches === 'undefined') return;
+  await Promise.all((await caches.keys()).filter((k) => k.startsWith(cacheName(''))).map((k) => caches.delete(k)));
+};

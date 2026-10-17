@@ -10,7 +10,7 @@ import { segmentEfforts } from './segments.js';
 import { hrTime } from './training.js';
 
 const DB_NAME = 'allure';
-const VERSION = 6;
+export const VERSION = 6;
 let dbPromise;
 
 // Schema migrations, keyed by the version they upgrade to. They run inside the upgrade
@@ -166,3 +166,47 @@ export const deleteSegment = (id) => tx(['segments'], 'readwrite', (s) => s.dele
 export const listRoutes = async () => (await tx(['routes'], 'readonly', (s) => s.getAll())).sort((a, b) => b.updated - a.updated);
 export const saveRoute = (route) => tx(['routes'], 'readwrite', (s) => s.put(route));
 export const deleteRoute = (id) => tx(['routes'], 'readwrite', (s) => s.delete(id));
+
+/** Every store's contents, for a full backup (see lib/backup.js). */
+export async function exportAll() {
+  const [metas, keys, values, segments, routes] = await Promise.all([
+    tx(['activities'], 'readonly', (s) => s.getAll()),
+    tx(['settings'], 'readonly', (s) => s.getAllKeys()),
+    tx(['settings'], 'readonly', (s) => s.getAll()),
+    listSegments(),
+    tx(['routes'], 'readonly', (s) => s.getAll()),
+  ]);
+  const points = new Map();
+  await forEachTrack((id, pts) => points.set(id, pts));
+  return {
+    schema: VERSION,
+    activities: metas.map((meta) => ({ meta, points: points.get(meta.id) ?? [] })),
+    settings: Object.fromEntries(keys.map((k, i) => [k, values[i]])),
+    segments,
+    routes,
+  };
+}
+
+/** Write a parsed backup over the local data (same ids are replaced, others kept). */
+export const restoreAll = ({ activities, settings, segments, routes }) =>
+  tx(['activities', 'tracks', 'settings', 'segments', 'routes'], 'readwrite', (acts, tracks, sets, segs, rts) => {
+    for (const { meta, points } of activities) {
+      acts.put(meta);
+      tracks.put(points, meta.id);
+    }
+    for (const [key, value] of Object.entries(settings)) sets.put(value, key);
+    for (const seg of segments) segs.put(seg);
+    for (const route of routes) rts.put(route);
+  });
+
+/** Erase the whole local database. The app must reload afterwards. */
+export async function deleteAllData() {
+  (await open()).close();
+  dbPromise = null;
+  await new Promise((resolve, reject) => {
+    const req = indexedDB.deleteDatabase(DB_NAME);
+    req.onsuccess = resolve;
+    req.onerror = () => reject(req.error);
+    req.onblocked = () => reject(new Error('Allure est ouvert dans un autre onglet : ferme-le puis réessaie.'));
+  });
+}

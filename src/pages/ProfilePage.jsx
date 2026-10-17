@@ -5,6 +5,7 @@ import FitnessChart from '../components/FitnessChart.jsx';
 import Gear from '../components/Gear.jsx';
 import Goals from '../components/Goals.jsx';
 import EmergencyContacts from '../components/EmergencyContacts.jsx';
+import MyData from '../components/MyData.jsx';
 import PrivacyZones from '../components/PrivacyZones.jsx';
 import PowerCurve from '../components/PowerCurve.jsx';
 import RacePredictions from '../components/RacePredictions.jsx';
@@ -93,6 +94,7 @@ export default function ProfilePage({ activities, hr, ftp, zones, onSaveZones, c
         <HrSettings hr={hr} saved={hrSaved} onSave={onSaveHr} />
         <PrivacyZones zones={zones} activities={list} onSave={onSaveZones} />
         <EmergencyContacts contacts={contacts} onSave={onSaveContacts} />
+        <MyData count={list.length} />
 
         <section className="card">
           <h3>Données de démo</h3>
