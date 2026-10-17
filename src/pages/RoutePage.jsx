@@ -6,6 +6,7 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import ProfileChart from '../components/ProfileChart.jsx';
 import Segmented from '../components/Segmented.jsx';
+import Terrain3D from '../components/Terrain3D.js';
 import { analyze } from '../lib/analyze.js';
 import { toGpx } from '../lib/formats/gpxExport.js';
 import { createRoute, fetchLeg, joinLegs, legKey, straightLeg } from '../lib/routes.js';
@@ -201,6 +202,7 @@ function BuilderMap({ center, fit, waypoints, points, hover, onAdd, onMove }) {
         paint: { 'line-color': ACCENT, 'line-width': 12, 'line-blur': 8, 'line-opacity': 0.5 } });
       m.addLayer({ id: 'route', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: { 'line-color': ACCENT, 'line-width': 4 } });
+      m.addControl(new Terrain3D(), 'top-right');
       m.fire('routedata');
     });
     m.on('click', (e) => cb.current.onAdd([round(e.lngLat.lng), round(e.lngLat.lat)]));
