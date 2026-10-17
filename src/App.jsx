@@ -9,6 +9,7 @@ import { DEFAULT_REST_HR, estimateMaxHr } from './lib/training.js';
 import ActivityPage from './pages/ActivityPage.jsx';
 import FeedPage from './pages/FeedPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
+import TrainingLogPage from './pages/TrainingLogPage.jsx';
 import RecordPage from './pages/RecordPage.jsx';
 import { useRecording } from './recording.js';
 import { go, useRoute } from './router.js';
@@ -73,6 +74,7 @@ ${cur.text}` } : summary));
 
   let content;
   if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} onChange={reload} />;
+  else if (page === 'log') content = <TrainingLogPage activities={activities} hr={hr} />;
   else if (page === 'record') content = <RecordPage recording={recording} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
   else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} onDemo={addDemo} onChange={reload} />;
   else content = <FeedPage activities={activities} onImport={onImport} onDemo={addDemo} />;
@@ -96,7 +98,7 @@ ${cur.text}` } : summary));
         </div>
       )}
       {content}
-      <TabBar active={page === 'activity' ? '' : page} />
+      <TabBar active={page === 'activity' ? '' : page === 'log' ? 'profile' : page} />
     </div>
   );
 }

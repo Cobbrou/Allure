@@ -33,3 +33,9 @@ export function effort(sport, sPerKm) {
 
 /** Grade Adjusted Pace only makes sense on foot. */
 export const usesGap = (sport) => SPORTS[sport]?.display === 'pace';
+
+/** Segmented options for a sport filter: "Tous" plus the sports present in `metas`. */
+export function sportOptions(metas) {
+  const present = new Set(metas.map((a) => a.sport));
+  return [{ id: '', label: 'Tous' }, ...Object.entries(SPORTS).filter(([id]) => present.has(id)).map(([id, s]) => ({ id, label: `${s.icon} ${s.label}` }))];
+}

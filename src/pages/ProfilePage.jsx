@@ -10,7 +10,7 @@ import WeeklyChart from '../components/WeeklyChart.jsx';
 import { deleteActivities } from '../lib/db.js';
 import { fmtDuration } from '../lib/format.js';
 import { personalRecords, predictRaces } from '../lib/records.js';
-import { SPORTS } from '../lib/sports.js';
+import { sportOptions as sportOptionsOf } from '../lib/sports.js';
 import { periodStart, totals, weeklyDistance } from '../lib/stats.js';
 
 const PERIODS = [
@@ -27,10 +27,7 @@ export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, goals, 
   const [busy, setBusy] = useState(false);
 
   // Only offer sports the athlete actually has.
-  const sportOptions = useMemo(() => {
-    const present = new Set(list.map((a) => a.sport));
-    return [{ id: '', label: 'Tous' }, ...Object.entries(SPORTS).filter(([id]) => present.has(id)).map(([id, s]) => ({ id, label: `${s.icon} ${s.label}` }))];
-  }, [list]);
+  const sportOptions = useMemo(() => sportOptionsOf(list), [list]);
   const t = useMemo(() => totals(list, { from: periodStart(period), sport: sport || undefined }), [list, period, sport]);
   const weeks = useMemo(() => weeklyDistance(list, Date.now(), 12, sport || undefined), [list, sport]);
   const records = useMemo(() => personalRecords(list), [list]);
@@ -74,6 +71,10 @@ export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, goals, 
               </div>
             </section>
             <WeeklyChart weeks={weeks} />
+            <a className="card link-card" href="#/log">
+              <span><b>Journal d'entraînement</b><span className="muted">Toutes tes semaines, jour par jour</span></span>
+              <span aria-hidden="true">›</span>
+            </a>
             <FitnessChart activities={list} hr={hr} />
             <ActivityCalendar activities={list} sport={sport || undefined} />
             <RecordsList records={records} />

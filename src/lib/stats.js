@@ -72,3 +72,24 @@ export function byDay(metas, sport) {
   return map;
 }
 
+
+/**
+ * Training log rows, newest week first: [{ start, days, totals }], where `days` holds the
+ * 7 day lists of activities (Monday first) and `totals` the week's totals().
+ */
+export function trainingWeeks(metas, weeks, now = Date.now(), sport) {
+  const days = byDay(metas, sport);
+  const out = [];
+  let start = startOfWeek(now);
+  for (let i = 0; i < weeks; i++) {
+    // setDate keeps local midnight across DST changes, unlike adding 86400e3.
+    const day = (k) => { const d = new Date(start); d.setDate(d.getDate() + k); return d.getTime(); };
+    out.push({
+      start,
+      days: Array.from({ length: 7 }, (_, k) => days.get(day(k)) ?? []),
+      totals: totals(metas, { from: start, to: day(7), sport }),
+    });
+    start = day(-7);
+  }
+  return out;
+}

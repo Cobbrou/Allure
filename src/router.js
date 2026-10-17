@@ -6,7 +6,7 @@ import { flushSync } from 'react-dom';
 const parse = () => location.hash.replace(/^#\/?/, '').split('/');
 
 // Detail pages sit one level below tabs: going deeper slides forward, coming back slides back.
-const depth = (route) => (route[0] === 'activity' ? 1 : 0);
+const depth = (route) => (route[0] === 'activity' || route[0] === 'log' ? 1 : 0);
 const scrolls = new Map(); // hash -> scrollY, so going back to the feed keeps its position
 
 export function useRoute() {

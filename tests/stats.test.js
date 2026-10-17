@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { analyze } from '../src/lib/analyze.js';
 import { bestEfforts, personalRecords } from '../src/lib/records.js';
-import { byDay, monthGrid, periodStart, startOfWeek, totals, weeklyDistance } from '../src/lib/stats.js';
+import { byDay, monthGrid, periodStart, startOfWeek, totals, trainingWeeks, weeklyDistance } from '../src/lib/stats.js';
 
 /** Straight track at constant speed: `km` long, `pace` s/km, one point every 10 m. */
 const steadyRun = (km, pace) =>
@@ -85,4 +85,19 @@ test('predictRaces: Riegel from recent runs, ignoring short efforts for long rac
   assert.equal(p.half.from.activity.id, 'a');
   assert.equal(p.marathon.time, undefined); // nothing recent covers a quarter of a marathon
   assert.equal(predictRaces([], now)[0].time, undefined);
+});
+
+test('trainingWeeks puts activities on their weekday, newest week first', () => {
+  const now = new Date(2026, 9, 14, 18).getTime(); // Wednesday
+  const metas = [
+    { id: 'a', sport: 'run', date: new Date(2026, 9, 13, 8).getTime(), distance: 10000, movingTime: 3000, gain: 0 },
+    { id: 'b', sport: 'ride', date: new Date(2026, 9, 13, 18).getTime(), distance: 40000, movingTime: 5000, gain: 0 },
+    { id: 'c', sport: 'run', date: new Date(2026, 9, 11, 8).getTime(), distance: 8000, movingTime: 2400, gain: 0 },
+  ];
+  const [w0, w1] = trainingWeeks(metas, 2, now);
+  assert.equal(w0.start, new Date(2026, 9, 12).getTime());
+  assert.deepEqual(w0.days.map((d) => d.map((a) => a.id)), [[], ['a', 'b'], [], [], [], [], []]);
+  assert.equal(w0.totals.distance, 50000);
+  assert.deepEqual(w1.days[6].map((a) => a.id), ['c']); // Sunday 11 Oct
+  assert.equal(trainingWeeks(metas, 1, now, 'run')[0].totals.count, 1);
 });
