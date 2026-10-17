@@ -82,6 +82,9 @@ export default function App() {
   const [zones, setZones] = useState([]); // privacy zones
   useEffect(() => { getSetting('privacy').then((z) => z && setZones(z), () => {}); }, []);
   const saveZones = async (z) => { await setSetting('privacy', z); setZones(z); };
+  const [contacts, setContacts] = useState([]); // emergency contacts
+  useEffect(() => { getSetting('contacts').then((c) => c && setContacts(c), () => {}); }, []);
+  const saveContacts = async (c) => { await setSetting('contacts', c); setContacts(c); };
   const [gears, setGears] = useState([]);
   useEffect(() => { getSetting('gear').then((g) => g && setGears(g), () => {}); }, []);
   const saveGears = async (g) => { await setSetting('gear', g); setGears(g); };
@@ -134,8 +137,8 @@ ${cur.text}` } : summary));
   else if (page === 'route') content = <RoutePage id={id} routes={routes} activities={activities} onSave={addRoute} onDelete={removeRoute} />;
   else if (page === 'groups') content = <GroupsPage />;
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
-  else if (page === 'record') content = <RecordPage recording={recording} routes={routes} routeId={id} segments={segments ?? []} activities={activities ?? []} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
-  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} zones={zones} onSaveZones={saveZones} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} onDemo={addDemo} onChange={reload} />;
+  else if (page === 'record') content = <RecordPage recording={recording} contacts={contacts} routes={routes} routeId={id} segments={segments ?? []} activities={activities ?? []} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
+  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} onDemo={addDemo} onChange={reload} />;
   else content = <FeedPage activities={activities} zones={zones} onRefresh={reload} onImport={onImport} onDemo={addDemo} />;
 
   return (

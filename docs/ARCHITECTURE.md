@@ -56,6 +56,7 @@ IndexedDB database `allure`, version 6:
   `goals` → `[{ id, sport, metric, period, target }]` (see `lib/goals.js`),
   `gear` → `[{ id, name, kind, initial, alert, isDefault, retired }]` (see `lib/gear.js`),
   `privacy` → `[{ id, name, lat, lon, radius }]` privacy zones (see `lib/privacy.js`)
+  `contacts` → `[{ id, name, phone }]` emergency contacts (see `lib/safety.js`)
 - `segments` (keyPath `id`): user-created segments (see `lib/segments.js`)
 - `routes` (keyPath `id`): planned routes with waypoints, points and stats (see `lib/routes.js`)
 - Cache Storage (not IndexedDB): offline map downloads, one cache per route

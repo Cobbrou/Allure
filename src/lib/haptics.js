@@ -7,6 +7,7 @@ const PATTERNS = {
   pause: 25,
   lap: [15, 40, 15],
   success: [20, 70, 50], // a record, a goal reached, an activity saved
+  alarm: [400, 200, 400, 200, 400, 200, 800], // safety check-in
 };
 
 export function haptic(kind = 'tap') {

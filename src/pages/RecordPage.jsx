@@ -5,28 +5,31 @@ import StatMetric from '../components/StatMetric.jsx';
 import { followRoute } from '../lib/follow.js';
 import { liveSegments } from '../lib/liveSegments.js';
 import { fmtDuration } from '../lib/format.js';
+import { haptic } from '../lib/haptics.js';
 import { speak, watchPosition } from '../lib/location.js';
 import { currentPace, elapsed, lapStatus } from '../lib/recorder.js';
 import { joinLegs } from '../lib/routes.js';
+import { alertText, checkIn, smsUrl } from '../lib/safety.js';
 import { hasBluetooth } from '../lib/sensors.js';
 import { effort, SPORTS } from '../lib/sports.js';
 
 /** routeId: route to preselect (from "#/record/<id>"). */
-export default function RecordPage({ recording, routes, routeId, segments, activities, onSaved }) {
+export default function RecordPage({ recording, contacts, routes, routeId, segments, activities, onSaved }) {
   return (
     <>
       <header className="topbar"><h1>Enregistrer</h1></header>
-      {recording.rec ? <Live recording={recording} onSaved={onSaved} /> : <Setup recording={recording} routes={routes} routeId={routeId} segments={segments} activities={activities} />}
+      {recording.rec ? <Live recording={recording} contacts={contacts} onSaved={onSaved} /> : <Setup recording={recording} contacts={contacts} routes={routes} routeId={routeId} segments={segments} activities={activities} />}
     </>
   );
 }
 
-function Setup({ recording, routes, routeId, segments, activities }) {
+function Setup({ recording, contacts, routes, routeId, segments, activities }) {
   const [routeSel, setRouteSel] = useState(routeId ?? '');
   const route = routes?.find((r) => r.id === routeSel);
   const [sport, setSport] = useState(route?.sport ?? 'run');
   const [autoPause, setAutoPause] = useState(true);
   const [audio, setAudio] = useState(true);
+  const [safety, setSafety] = useState(true);
   const [gps, setGps] = useState(null); // { accuracy } | { error }
 
   // Warm up the GPS so the first recorded fix is precise.
@@ -34,7 +37,7 @@ function Setup({ recording, routes, routeId, segments, activities }) {
 
   const go = () => {
     if (audio) speak('Enregistrement démarré.'); // also unlocks speech on iOS, which needs a user gesture
-    recording.start({ sport, autoPause, audio, route: route && followRoute(route, joinLegs(route.legs)), liveSegs: liveSegments(segments, sport, activities) });
+    recording.start({ sport, autoPause, audio, safety: safety && contacts.length > 0, route: route && followRoute(route, joinLegs(route.legs)), liveSegs: liveSegments(segments, sport, activities) });
   };
 
   return (
@@ -59,6 +62,9 @@ function Setup({ recording, routes, routeId, segments, activities }) {
       {hasBluetooth() && <StrapButton recording={recording} />}
       <label className="switch"><input type="checkbox" checked={autoPause} onChange={(e) => setAutoPause(e.target.checked)} />Pause automatique</label>
       <label className="switch"><input type="checkbox" checked={audio} onChange={(e) => setAudio(e.target.checked)} />Annonces vocales</label>
+      {contacts.length > 0
+        ? <label className="switch"><input type="checkbox" checked={safety} onChange={(e) => setSafety(e.target.checked)} />Alerte si je reste immobile</label>
+        : <p className="muted small-label">🛟 Ajoute un contact d'urgence dans ton <a href="#/profile">profil</a> pour être alerté si tu restes immobile.</p>}
       <p className={`gps ${gps?.error ? 'bad' : gps?.accuracy <= 20 ? 'good' : ''}`} role="status">
         {gps?.error ?? (gps ? `GPS : précision ${Math.round(gps.accuracy)} m` : 'Recherche du GPS…')}
       </p>
@@ -67,7 +73,7 @@ function Setup({ recording, routes, routeId, segments, activities }) {
   );
 }
 
-function Live({ recording, onSaved }) {
+function Live({ recording, contacts, onSaved }) {
   const { rec, gpsError } = recording;
   const [now, setNow] = useState(Date.now);
   const [tooShort, setTooShort] = useState(false);
@@ -110,6 +116,7 @@ function Live({ recording, onSaved }) {
             <span className="chip follow">🧭 <b>{rec.follow?.done ? 'Terminé' : `${(Math.max(0, rec.route.distance - (rec.follow?.along ?? 0)) / 1000).toFixed(2)} km`}</b></span>
           )}
         </div>
+        {contacts.length > 0 && <a className="sos" href={smsUrl(contacts, alertText(rec, now, true))} aria-label="Envoyer ma position à mes contacts d'urgence">SOS</a>}
       </section>
       <div className="dock">
         {rec.paused ? (
@@ -130,7 +137,42 @@ function Live({ recording, onSaved }) {
           </>
         )}
       </div>
+      {rec.safety && contacts.length > 0 && <CheckIn rec={rec} now={now} contacts={contacts} />}
     </main>
+  );
+}
+
+/**
+ * Safety check-in: after a long stillness, ask whether all is well, with an alarm; with no
+ * answer, open the alert SMS (last position) to the emergency contacts. Moving again or
+ * answering "Je vais bien" closes it.
+ */
+function CheckIn({ rec, now, contacts }) {
+  const [okAt, setOkAt] = useState(0);
+  const check = checkIn(rec, now, okAt);
+  const url = check && smsUrl(contacts, alertText(rec, now));
+  useEffect(() => {
+    if (!check) return;
+    haptic('alarm');
+    if (check.stage === 'ask') speak("Tout va bien ? Touche l'écran pour confirmer.");
+    else {
+      speak("Alerte. Envoie le message à tes contacts d'urgence.");
+      window.location.href = url; // opens the SMS app where allowed without a tap; the button stays as a fallback
+    }
+  }, [check?.stage]); // eslint-disable-line react-hooks/exhaustive-deps -- fire once per stage
+  if (!check) return null;
+  const min = Math.floor((now - rec.lastMove) / 60000);
+  return (
+    <div className="checkin" role="alertdialog" aria-labelledby="checkin-title" aria-describedby="checkin-text">
+      <h2 id="checkin-title">{check.stage === 'ask' ? 'Tout va bien ?' : 'Alerte prête'}</h2>
+      <p id="checkin-text">
+        {check.stage === 'ask'
+          ? <>Tu ne bouges plus depuis {min} min. Sans réponse, tes contacts d'urgence seront alertés dans <b>{check.left} s</b>.</>
+          : `Envoie le SMS avec ta position à ${contacts.map((c) => c.name).join(', ')}.`}
+      </p>
+      <button type="button" className="checkin-ok" onClick={() => { haptic('tap'); setOkAt(Date.now()); }}>Je vais bien</button>
+      <a className={`button ${check.stage === 'ask' ? 'ghost' : 'danger armed'}`} href={url}>{check.stage === 'ask' ? 'Alerter maintenant' : "Envoyer l'alerte SMS"}</a>
+    </div>
   );
 }
 

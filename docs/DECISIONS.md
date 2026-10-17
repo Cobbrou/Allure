@@ -164,6 +164,18 @@ caching. Downloaded tiles never refresh until the route is downloaded again. Car
 tier forbids bulk caching at scale: moving to self-hosted or paid tiles (open question
 below) is required before the store release.
 
+## 2026-10-17: Safety alerts go out as a pre-filled SMS
+
+**Context**: an unanswered check-in (athlete still for 5 min while recording) must reach
+emergency contacts, but there is no backend and the web can't send an SMS by itself.
+**Decision**: `lib/safety.js` decides when to ask and builds the message (stillness, last
+position as an OpenStreetMap link); the page opens an `sms:` link to every contact. The
+link opens on its own when the alert fires (the Android WebView hands it to the SMS app),
+and stays as a big button. A manual pause never triggers a check-in.
+**Consequences**: someone still has to press send in the SMS app, which is weak when the
+athlete is hurt. Truly automatic alerts need either a native SMS plugin (Android only) or
+the phase 3 backend sending them, which also unlocks live location sharing (Beacon).
+
 ## Open questions
 
 - **Backend stack** (phase 3). Candidates: Supabase (Postgres + PostGIS + auth, fastest

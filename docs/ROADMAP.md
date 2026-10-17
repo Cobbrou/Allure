@@ -20,7 +20,7 @@ parity": every line must be covered before the app can claim it.
 |---|---|---|---|---|
 | 1 | *Enregistrez vos activités* (record your activities) | Live GPS recording, auto-pause, audio cues, sensors | 2 | Partly done (web recording; background GPS and sensors need the native shell) |
 | 2 | *Rejoignez une communauté d'un grand soutien* (join a supportive community) | Follow, feed, kudos, comments, clubs | 4 | Planned |
-| 3 | *Ayez l'esprit tranquille grâce à des fonctionnalités de sécurité* (peace of mind with safety features) | Live location sharing (Beacon-like), privacy zones, emergency contacts | 3 / 5 | Partly done (privacy zones on shared stories) |
+| 3 | *Ayez l'esprit tranquille grâce à des fonctionnalités de sécurité* (peace of mind with safety features) | Live location sharing (Beacon-like), privacy zones, emergency contacts | 3 / 5 | Partly done (privacy zones on shared stories, emergency contacts, stillness check-in with an SMS alert, SOS button; live sharing needs accounts) |
 | 4 | *Essayez des itinéraires créés rien que pour vous* (routes made for you) | Suggested routes from popular segments and personal preferences | 5 | Partly done (loops ranked on distance, terrain, surface, novelty vs your heatmap; global popularity needs accounts) |
 | 5 | *Enregistrez des itinéraires pour les utiliser hors ligne* (save routes for offline use) | Offline routes + offline map tiles | 5 | Done (corridor of vector tiles + style, sprite, glyphs in Cache Storage, per route) |
 | 6 | *Tracez vos propres itinéraires* (draw your own routes) | Route builder with road/trail snapping and elevation profile | 5 | Done (public BRouter server) |
@@ -171,7 +171,10 @@ Maps & routes (features 4, 5, 6)
 
 Safety (feature 3)
 - [ ] Live location sharing with chosen contacts (Strava calls it "Beacon") **(premium)**
-- [ ] Emergency contacts and safety check-in when an activity stops unexpectedly
+- [x] Emergency contacts and safety check-in when an activity stops unexpectedly
+      (5 min still: alarm + "Tout va bien ?", 60 s later the alert SMS with the last position
+      opens for the contacts; SOS button on the live screen. Sending without a tap needs a
+      native SMS plugin or a backend)
 
 ## Phase 6: Store release & integrations
 

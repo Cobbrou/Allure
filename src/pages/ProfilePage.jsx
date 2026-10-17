@@ -4,6 +4,7 @@ import ConfirmButton from '../components/ConfirmButton.jsx';
 import FitnessChart from '../components/FitnessChart.jsx';
 import Gear from '../components/Gear.jsx';
 import Goals from '../components/Goals.jsx';
+import EmergencyContacts from '../components/EmergencyContacts.jsx';
 import PrivacyZones from '../components/PrivacyZones.jsx';
 import PowerCurve from '../components/PowerCurve.jsx';
 import RacePredictions from '../components/RacePredictions.jsx';
@@ -24,7 +25,7 @@ const PERIODS = [
   { id: 'all', label: 'Total' },
 ];
 
-export default function ProfilePage({ activities, hr, ftp, zones, onSaveZones, hrSaved, onSaveHr, goals, onSaveGoals, segments, gears, onSaveGears, onDemo, onChange }) {
+export default function ProfilePage({ activities, hr, ftp, zones, onSaveZones, contacts, onSaveContacts, hrSaved, onSaveHr, goals, onSaveGoals, segments, gears, onSaveGears, onDemo, onChange }) {
   const list = activities ?? [];
   const [sport, setSport] = useState('');
   const [period, setPeriod] = useState('week');
@@ -91,6 +92,7 @@ export default function ProfilePage({ activities, hr, ftp, zones, onSaveZones, h
         <Gear gears={gears} activities={list} onSave={onSaveGears} />
         <HrSettings hr={hr} saved={hrSaved} onSave={onSaveHr} />
         <PrivacyZones zones={zones} activities={list} onSave={onSaveZones} />
+        <EmergencyContacts contacts={contacts} onSave={onSaveContacts} />
 
         <section className="card">
           <h3>Données de démo</h3>
