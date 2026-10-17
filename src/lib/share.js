@@ -1,7 +1,11 @@
-// Platform module: hand a generated file to the user. A native share plugin can replace it.
+// Platform module: hand a generated file to the user. In the native shell the file goes
+// through the app cache and the system share sheet (Capacitor Share + Filesystem plugins).
+
+import { Capacitor } from '@capacitor/core';
 
 /** Opens the system share sheet on touch devices when supported, otherwise downloads the file. */
 export async function shareFile(blob, filename) {
+  if (Capacitor.isNativePlatform()) return shareNative(blob, filename);
   const file = new File([blob], filename, { type: blob.type });
   if (matchMedia('(pointer: coarse)').matches && navigator.canShare?.({ files: [file] })) {
     try {
@@ -20,3 +24,20 @@ export async function shareFile(blob, filename) {
 
 /** File-system-safe base name from an activity title. */
 export const safeName = (name) => name.replace(/[^\p{L}\p{N}\- ]+/gu, '').trim().replace(/\s+/g, '-') || 'activite';
+
+/** Native shell: write the file to the app cache, then share its file:// URI. */
+async function shareNative(blob, filename) {
+  const [{ Filesystem, Directory }, { Share }] = await Promise.all([import('@capacitor/filesystem'), import('@capacitor/share')]);
+  const data = await new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(',')[1]); // base64 without the data: prefix
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(blob);
+  });
+  const { uri } = await Filesystem.writeFile({ path: filename, data, directory: Directory.Cache });
+  try {
+    await Share.share({ title: filename, files: [uri] });
+  } catch (e) {
+    if (!/cancel/i.test(e.message)) throw e; // the athlete closed the sheet
+  }
+}

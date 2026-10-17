@@ -40,11 +40,10 @@ backends:
 - **Storage durability**: WebView IndexedDB can be evicted under storage pressure, and
   activities only live on the device until sync ships. Move `db.js` to
   `@capacitor-community/sqlite`, or ship server sync (phase 3) first.
-- **Android back button**: listen to `@capacitor/app` `backButton` and call
-  `history.back()`. Without it the back button closes the app.
-- **Web APIs the Android WebView lacks**: Web Share (story / GPX sharing falls back to a
-  download link that does nothing in the shell: needs `@capacitor/share` +
-  `@capacitor/filesystem`), Web Bluetooth (the strap button hides itself), Media Session
+- **Android back button**: done with `@capacitor/app` in `lib/shell.js` (closes an open
+  sheet, else `history.back()`, else minimizes the app).
+- **Web APIs the Android WebView lacks**: Web Share (done: `share.js` writes the file to
+  the app cache with `@capacitor/filesystem` and opens `@capacitor/share`), Web Bluetooth (the strap button hides itself), Media Session
   notifications, and likely `speechSynthesis`. Each sits behind its platform module.
 - **Safe areas**: Capacitor 8's SystemBars plugin exposes `--safe-area-inset-*` CSS
   variables on Android; `--safe-top` / `--safe-bottom` read them before `env()`.
