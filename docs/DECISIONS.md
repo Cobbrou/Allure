@@ -102,6 +102,17 @@ Vite's pre-bundled deps folder where the worker file does not exist. Result: a b
 `setWorkerUrl`.
 **Consequences**: works in dev and production builds. Re-check after MapLibre upgrades.
 
+## 2026-10-17: Web stand-ins for native recording features
+
+**Context**: the native shell is deferred, but HR straps, lock-screen controls and haptics
+are part of phase 2.
+**Decision**: ship them on web APIs behind platform modules: Web Bluetooth
+(`lib/sensors.js`), Media Session with a silent looping audio track (`lib/lockscreen.js`;
+browsers only show media controls while audio plays), Vibration API (`lib/haptics.js`).
+**Consequences**: Android Chrome gets all three; iOS Safari gets none of them (no Web
+Bluetooth, no vibration, limited Media Session). Each module is the seam where a
+Capacitor plugin replaces the web version. Background GPS still needs the shell.
+
 ## 2026-10-17: UI redesign, neutral dark palette
 
 **Context**: the slate-blue theme competed with the GPS tracks and charts, and metrics

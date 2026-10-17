@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import ActivityCard from '../components/ActivityCard.jsx';
 import ImportButton from '../components/ImportButton.jsx';
+import { usePullToRefresh } from '../gestures.js';
 import { analyze } from '../lib/analyze.js';
 import { getActivity } from '../lib/db.js';
 import { exportStory } from '../lib/story.js';
@@ -11,8 +12,9 @@ async function share(id, zones) {
   if (d) await exportStory({ ...analyze(d.points), ...d.meta }, zones);
 }
 
-export default function FeedPage({ activities, zones, onImport, onDemo }) {
+export default function FeedPage({ activities, zones, onRefresh, onImport, onDemo }) {
   const [busy, setBusy] = useState(false);
+  const ptr = usePullToRefresh(onRefresh);
   const demo = async () => {
     setBusy(true);
     try { await onDemo(); } finally { setBusy(false); }
@@ -35,6 +37,9 @@ export default function FeedPage({ activities, zones, onImport, onDemo }) {
           </button>
         </div>
       )}
+      <div className={`ptr ${ptr.ready ? 'ready' : ''} ${ptr.busy ? 'busy' : ''}`} style={{ height: ptr.pull }} aria-hidden={!ptr.busy}>
+        <span className="ptr-icon" style={{ '--r': `${ptr.pull * 3}deg` }}>↻</span>
+      </div>
       {activities?.length > 0 && (
         <main className="feed">
           {activities.map((a, i) => <ActivityCard key={a.id} a={a} i={i} onShare={(aid) => share(aid, zones)} />)}

@@ -8,6 +8,7 @@ import { goalLabel, newlyReached } from './lib/goals.js';
 import { importFiles } from './lib/importer.js';
 import { estimateFtp } from './lib/power.js';
 import { DEFAULT_REST_HR, estimateMaxHr } from './lib/training.js';
+import { useEdgeSwipeBack } from './gestures.js';
 import FeedPage from './pages/FeedPage.jsx';
 import { useRecording } from './recording.js';
 import { back, go, useRoute } from './router.js';
@@ -35,8 +36,13 @@ const RoutePage = lazy(pages.route);
 const SuggestPage = lazy(pages.suggest);
 const SegmentPage = lazy(pages.segment);
 
+// Detail pages and where "back" lands when the app was opened on them (deep link).
+const BACK_TO = { activity: '/', log: '/profile', segment: '/profile', route: '/maps', suggest: '/maps' };
+
 export default function App() {
   const [page, id] = useRoute();
+  const swipeBack = useCallback(() => back(BACK_TO[page]), [page]);
+  useEdgeSwipeBack(page in BACK_TO, swipeBack);
   const [activities, setActivities] = useState(null);
   const [toast, setToast] = useState(null); // { kind: 'error' | 'notice', text }
   const [progress, setProgress] = useState(null); // { done, total }
@@ -130,7 +136,7 @@ ${cur.text}` } : summary));
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
   else if (page === 'record') content = <RecordPage recording={recording} routes={routes} routeId={id} segments={segments ?? []} activities={activities ?? []} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
   else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} zones={zones} onSaveZones={saveZones} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} onDemo={addDemo} onChange={reload} />;
-  else content = <FeedPage activities={activities} zones={zones} onImport={onImport} onDemo={addDemo} />;
+  else content = <FeedPage activities={activities} zones={zones} onRefresh={reload} onImport={onImport} onDemo={addDemo} />;
 
   return (
     <div

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fmtDate } from '../components/ActivityCard.jsx';
 import BestEfforts from '../components/BestEfforts.jsx';
+import BottomSheet from '../components/BottomSheet.jsx';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import HrZones from '../components/HrZones.jsx';
 import Intervals from '../components/Intervals.jsx';
@@ -22,7 +23,7 @@ import { go } from '../router.js';
 
 export default function ActivityPage({ id, activities, hr, ftp, zones, segments, onSegment, gears, onChange }) {
   const [data, setData] = useState(); // undefined: loading, null: not found
-  const [editing, setEditing] = useState(false);
+  const [sheet, setSheet] = useState(null); // null | 'edit' | 'share'
   const [exporting, setExporting] = useState(false);
   const hover = useRef(() => {});
   const range = useRef(() => {});
@@ -45,7 +46,7 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
     const meta = { ...data.meta, ...patch };
     await updateActivity(meta);
     setData({ ...data, meta });
-    setEditing(false);
+    setSheet(null);
     onChange();
   };
   const remove = async () => {
@@ -53,31 +54,38 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
     await onChange();
     go('/');
   };
-  const exportGpx = () =>
-    shareFile(new Blob([toGpx(data.meta, data.points)], { type: 'application/gpx+xml' }), `${safeName(act.name)}.gpx`);
+  const exportGpx = async () => {
+    await shareFile(new Blob([toGpx(data.meta, data.points)], { type: 'application/gpx+xml' }), `${safeName(act.name)}.gpx`);
+    setSheet(null);
+  };
   const story = async () => {
     setExporting(true);
-    try { await exportStory(act, zones); } finally { setExporting(false); }
+    try { await exportStory(act, zones); setSheet(null); } finally { setExporting(false); }
   };
 
   return (
     <>
       <TopBar>
-        <button className="ghost small" onClick={() => setEditing(!editing)}>{editing ? 'Fermer' : 'Modifier'}</button>
-        <button className="small" onClick={story} disabled={exporting}>{exporting ? '…' : 'Story'}</button>
+        <button className="ghost small" onClick={() => setSheet('edit')}>Modifier</button>
+        <button className="small" onClick={() => setSheet('share')}>Partager</button>
       </TopBar>
+      <BottomSheet open={sheet === 'edit'} onClose={() => setSheet(null)} title="Modifier l'activité">
+        <EditForm meta={data.meta} gears={gears} onSave={save} onDelete={remove} />
+      </BottomSheet>
+      <BottomSheet open={sheet === 'share'} onClose={() => setSheet(null)} title="Partager">
+        <div className="sheet-actions">
+          <button type="button" onClick={story} disabled={exporting}>{exporting ? 'Préparation…' : 'Story (image)'}</button>
+          <button type="button" className="ghost" onClick={exportGpx}>Fichier GPX</button>
+        </div>
+      </BottomSheet>
       <main className="detail">
-        {editing ? (
-          <EditForm meta={data.meta} gears={gears} onSave={save} onDelete={remove} onExport={exportGpx} />
-        ) : (
-          <div className="title">
-            <span className="sport-icon">{SPORTS[act.sport]?.icon}</span>
-            <div>
-              <h1>{act.name}</h1>
-              <p>{SPORTS[act.sport]?.label} · {fmtDate(act.date)}{gear && ` · ${GEAR_KINDS[gear.kind].icon} ${gear.name}`}</p>
-            </div>
+        <div className="title">
+          <span className="sport-icon">{SPORTS[act.sport]?.icon}</span>
+          <div>
+            <h1>{act.name}</h1>
+            <p>{SPORTS[act.sport]?.label} · {fmtDate(act.date)}{gear && ` · ${GEAR_KINDS[gear.kind].icon} ${gear.name}`}</p>
           </div>
-        )}
+        </div>
         <StatsGrid act={act} />
         <section className="card map-card">
           <TrackMap track={act.track} hover={hover} range={range} />
@@ -108,7 +116,7 @@ function TopBar({ children }) {
   );
 }
 
-function EditForm({ meta, gears, onSave, onDelete, onExport }) {
+function EditForm({ meta, gears, onSave, onDelete }) {
   const [name, setName] = useState(meta.name);
   const [sport, setSport] = useState(meta.sport);
   const [gear, setGear] = useState(meta.gear ?? '');
@@ -145,7 +153,6 @@ function EditForm({ meta, gears, onSave, onDelete, onExport }) {
       )}
       <div className="edit-actions">
         <ConfirmButton onConfirm={onDelete} confirmLabel="Confirmer">Supprimer</ConfirmButton>
-        <button type="button" className="ghost" onClick={onExport}>Exporter .gpx</button>
         <button type="submit">Enregistrer</button>
       </div>
     </form>

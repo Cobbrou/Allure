@@ -8,6 +8,7 @@ import { fmtDuration } from '../lib/format.js';
 import { speak, watchPosition } from '../lib/location.js';
 import { currentPace, elapsed, lapStatus } from '../lib/recorder.js';
 import { joinLegs } from '../lib/routes.js';
+import { hasBluetooth } from '../lib/sensors.js';
 import { effort, SPORTS } from '../lib/sports.js';
 
 /** routeId: route to preselect (from "#/record/<id>"). */
@@ -55,6 +56,7 @@ function Setup({ recording, routes, routeId, segments, activities }) {
           </select>
         </label>
       )}
+      {hasBluetooth() && <StrapButton recording={recording} />}
       <label className="switch"><input type="checkbox" checked={autoPause} onChange={(e) => setAutoPause(e.target.checked)} />Pause automatique</label>
       <label className="switch"><input type="checkbox" checked={audio} onChange={(e) => setAudio(e.target.checked)} />Annonces vocales</label>
       <p className={`gps ${gps?.error ? 'bad' : gps?.accuracy <= 20 ? 'good' : ''}`} role="status">
@@ -101,6 +103,7 @@ function Live({ recording, onSaved }) {
         {rec.pos ? <LiveMap points={rec.points} pos={rec.pos} route={rec.route?.coords} /> : <p className="map-wait muted">Recherche du GPS…</p>}
         <div className="live-chips">
           <span className="chip">{avg.short} moy. <b>{avg.value}</b></span>
+          {recording.strap && <span className="chip hr">♥ <b>{recording.strap.bpm ?? '…'}</b></span>}
           {rec.laps?.length > 0 && <span key={rec.laps.length} className="chip lap">Tour {lapNow.n} <b>{fmtDuration(lapNow.time)}</b></span>}
           <SegmentChip rec={rec} now={now} />
           {rec.route && (
@@ -144,4 +147,31 @@ function SegmentChip({ rec, now }) {
   if (!last || now - last.at > RECENT) return null;
   const pr = last.pr != null && last.time < last.pr;
   return <span className={`chip seg ${pr ? 'pr' : ''}`}>⚡ {seg(last.id).name} <b>{fmtDuration(last.time)}</b>{pr && ' Record !'}</span>;
+}
+
+/** Pair or drop a Bluetooth heart rate strap; its bpm is recorded with each GPS fix. */
+function StrapButton({ recording }) {
+  const [state, setState] = useState(null); // null | 'busy' | error message
+  const { strap } = recording;
+  const connect = async () => {
+    setState('busy');
+    try { await recording.connectStrap(); setState(null); } catch (e) {
+      setState(e.name === 'NotFoundError' ? null : 'Connexion impossible.'); // NotFoundError: picker closed
+    }
+  };
+  if (strap) {
+    return (
+      <p className="strap">♥ {strap.name} · <b>{strap.bpm ?? '…'}</b> bpm
+        <button type="button" className="ghost small" onClick={recording.disconnectStrap}>Déconnecter</button>
+      </p>
+    );
+  }
+  return (
+    <>
+      <button type="button" className="ghost" onClick={connect} disabled={state === 'busy'}>
+        {state === 'busy' ? 'Recherche…' : '♥ Connecter une ceinture cardio'}
+      </button>
+      {state && state !== 'busy' && <p className="gps bad" role="alert">{state}</p>}
+    </>
+  );
 }

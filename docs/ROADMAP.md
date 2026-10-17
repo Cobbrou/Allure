@@ -67,11 +67,12 @@ Motion & polish
 - [x] Staggered card entrances, route thumbnails drawn on appear, bars grow in
 - [x] Loading skeleton on the detail page, map fades in once tiles are ready
 - [x] `prefers-reduced-motion` disables all motion
-- [ ] Animated route drawing on the detail map
-- [ ] Stat count-up on the detail page
-- [ ] Edge swipe to go back (iOS-style), pull to refresh on the feed
-- [ ] Haptic feedback on key actions (native shell)
-- [ ] Bottom sheets for edit / share actions
+- [x] Animated route drawing on the detail map
+- [x] Stat count-up on the detail page
+- [x] Edge swipe to go back (iOS-style), pull to refresh on the feed
+- [x] Haptic feedback on key actions (Vibration API on Android; native haptics plugin for
+      iOS with the shell)
+- [x] Bottom sheets for edit / share actions
 - [x] UI redesign: neutral dark palette, `StatMetric` metrics, feed cards with action bar,
       bento stats, split bars, full-screen live tracker with a thumb dock
 
@@ -89,8 +90,10 @@ Motion & polish
 - [x] Auto-pause
 - [x] Audio cues per km (`speechSynthesis`)
 - [x] Screen Wake Lock while recording, crash-safe autosave of the in-progress track
-- [ ] Bluetooth HR strap (native BLE plugin)
-- [ ] Lock-screen / notification controls while recording
+- [x] Bluetooth HR strap (Web Bluetooth: Chrome on Android and desktop; native BLE plugin
+      for iOS with the shell)
+- [x] Lock-screen / notification controls while recording (Media Session API; a native
+      foreground-service notification with the shell)
 
 ## Phase 3: Accounts & sync
 

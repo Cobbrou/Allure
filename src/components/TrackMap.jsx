@@ -7,6 +7,8 @@ import { ACCENT, MAP_STYLE } from '../theme.js';
 
 setWorkerUrl(workerUrl);
 
+const DRAW_MS = 1200; // route drawing animation
+
 /**
  * Route map. Sets `hover.current(index | null)` to move a cursor imperatively (no re-render),
  * and `range.current([from, to] | null)` to highlight a stretch (segment creation).
@@ -19,9 +21,23 @@ export default function TrackMap({ track, hover, range }) {
     // cooperativeGestures: one finger scrolls the page, two fingers move the map (ctrl+wheel on desktop).
     const map = new MapLibre({ container: el.current, style: MAP_STYLE, bounds, fitBoundsOptions: { padding: 40 }, cooperativeGestures: true });
 
+    const line = (c) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: c } });
+    let frame;
     map.on('load', () => {
       el.current?.classList.add('ready');
-      map.addSource('route', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } } });
+      const animate = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      map.addSource('route', { type: 'geojson', data: line(animate ? coords.slice(0, 2) : coords) });
+      // The route draws itself from start to finish once the map is in.
+      if (animate) {
+        const t0 = performance.now();
+        const step = (t) => {
+          const k = Math.min(1, (t - t0) / DRAW_MS);
+          const n = Math.max(2, Math.ceil(coords.length * (1 - (1 - k) ** 3)));
+          map.getSource('route')?.setData(line(coords.slice(0, n)));
+          if (k < 1) frame = requestAnimationFrame(step);
+        };
+        frame = requestAnimationFrame(step);
+      }
       map.addLayer({ id: 'route-glow', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: { 'line-color': ACCENT, 'line-width': 14, 'line-blur': 10, 'line-opacity': 0.55 } });
       map.addLayer({ id: 'route', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' },
@@ -40,7 +56,7 @@ export default function TrackMap({ track, hover, range }) {
 
     hover.current = (i) => (i == null ? cursor.remove() : cursor.setLngLat(coords[i]).addTo(map));
     if (range) range.current = (r) => { selected = r; map.getSource('range')?.setData(rangeData()); };
-    return () => { hover.current = () => {}; if (range) range.current = () => {}; map.remove(); };
+    return () => { cancelAnimationFrame(frame); hover.current = () => {}; if (range) range.current = () => {}; map.remove(); };
   }, [track, hover, range]);
   return <div ref={el} className="map" />;
 }

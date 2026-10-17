@@ -29,6 +29,8 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); }
+/* The app handles pull-to-refresh itself: no browser reload or bounce on overscroll. */
+html, body { overscroll-behavior-y: none; }
 h1, h2, h3, p { margin: 0; }
 a { color: inherit; text-decoration: none; }
 .muted { color: var(--muted); }
@@ -375,6 +377,32 @@ button.suggestion.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px 
 .metric.lg .metric-value { font-size: 26px; }
 .metric.xl .metric-value { font-size: clamp(48px, 15vw, 72px); letter-spacing: -0.04em; }
 
+/* Bottom sheet */
+dialog.sheet {
+  width: 100%; max-width: 640px; max-height: 90vh; margin: auto auto 0; padding: 0; border: 0; background: transparent; color: var(--text); overflow: visible;
+}
+dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.55); }
+.sheet-body {
+  background: var(--card); border: 1px solid var(--border); border-bottom: 0; border-radius: 22px 22px 0 0;
+  padding: 0 16px calc(20px + var(--safe-bottom)); max-height: 90vh; overflow-y: auto; transition: transform 0.2s var(--ease-out);
+}
+.sheet-top { position: sticky; top: 0; z-index: 1; background: var(--card); padding: 10px 0 12px; display: grid; justify-items: center; gap: 10px; touch-action: none; }
+.sheet-top:focus { outline: none; }
+.sheet-handle { width: 40px; height: 5px; border-radius: 3px; background: var(--border-strong); }
+.sheet-top h2 { font-size: 17px; justify-self: start; }
+.sheet .card { background: transparent; border: 0; padding: 0; }
+.sheet-actions { display: grid; gap: 10px; }
+dialog.sheet[open] .sheet-body { animation: sheet-up 0.3s var(--ease-out) backwards; }
+dialog.sheet[open]::backdrop { animation: fade-in 0.2s ease backwards; }
+@keyframes sheet-up { from { transform: translateY(100%); } }
+
+/* Pull to refresh */
+.ptr { display: grid; place-items: center; overflow: hidden; }
+.ptr-icon { font-size: 22px; color: var(--muted); transform: rotate(var(--r)); }
+.ptr.ready .ptr-icon { color: var(--accent); }
+.ptr.busy .ptr-icon { animation: spin 0.8s linear infinite; color: var(--accent); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* Feed card */
 .activity-card { position: relative; display: grid; gap: 14px; padding: 16px 16px 6px; transition: border-color 0.15s; }
 .activity-card:hover { border-color: var(--border-strong); }
@@ -441,6 +469,9 @@ ol.splits li.best .split-gap { color: #fff; }
 }
 .chip b { color: var(--text); font-size: 15px; }
 .chip.lap { border-color: var(--accent); animation: pop 0.35s var(--ease-out) backwards; }
+.chip.hr b { color: #f87171; }
+.strap { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.strap b { color: #f87171; }
 .chip.seg { border-color: #f5b301; color: var(--text); animation: pop 0.35s var(--ease-out) backwards; }
 .chip.seg.pr { background: var(--accent); border-color: var(--accent); color: #fff; }
 .dock {
