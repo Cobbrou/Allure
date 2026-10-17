@@ -7,7 +7,7 @@ import { demoHistory } from './lib/demo.js';
 import { setUnits } from './lib/format.js';
 import { newlyCompleted } from './lib/challenges.js';
 import { goalLabel, newlyReached } from './lib/goals.js';
-import { importFiles } from './lib/importer.js';
+import { healthTasks, importFiles, importTasks } from './lib/importer.js';
 import { estimateFtp } from './lib/power.js';
 import { DEFAULT_REST_HR, estimateMaxHr } from './lib/training.js';
 import { useEdgeSwipeBack } from './gestures.js';
@@ -125,12 +125,21 @@ export default function App() {
   }, []);
   useEffect(() => { reload(); }, [reload]);
 
-  const onImport = async (files) => {
-    if (!files.length || progress) return;
+  const onImport = (files) => files.length && runImport((existing, onProgress) => importFiles(files, existing, onProgress));
+  const onHealthImport = () => runImport(async (existing, onProgress) => {
+    const { readWorkouts } = await import('./lib/health.js');
+    const workouts = await readWorkouts();
+    const tasks = healthTasks(workouts);
+    if (!tasks.length) throw new Error(workouts.length ? 'Aucune séance avec trace GPS dans Health Connect.' : 'Aucune séance trouvée dans Health Connect.');
+    return importTasks(tasks, existing, onProgress);
+  });
+  // run(existing, onProgress) imports and returns importTasks' result.
+  const runImport = async (run) => {
+    if (progress) return;
     setToast(null);
-    setProgress({ done: 0, total: files.length });
+    setProgress({ done: 0, total: 1 });
     try {
-      const r = await importFiles(files, activities ?? [], (done, total) => setProgress({ done, total }));
+      const r = await run(activities ?? [], (done, total) => setProgress({ done, total }));
       await reload();
       if (r.total === 1 && r.ids.length === 1) return go(`/activity/${r.ids[0]}`);
       const summary = importSummary(r);
@@ -158,7 +167,7 @@ ${cur.text}` } : summary));
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
   else if (page === 'record') content = <RecordPage recording={recording} contacts={contacts} routes={routes} routeId={id} segments={segments ?? []} activities={activities ?? []} prefs={prefs} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
   else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} name={prefs.name} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} />;
-  else if (page === 'settings') content = <SettingsPage activities={activities} hr={hr} hrSaved={hrSaved} ftpEstimate={ftpEstimate} onSaveHr={saveHr} units={units} onSaveUnits={saveUnits} prefs={prefs} onSavePrefs={savePrefs} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} onDemo={addDemo} onChange={reload} />;
+  else if (page === 'settings') content = <SettingsPage activities={activities} hr={hr} hrSaved={hrSaved} ftpEstimate={ftpEstimate} onSaveHr={saveHr} units={units} onSaveUnits={saveUnits} prefs={prefs} onSavePrefs={savePrefs} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} onDemo={addDemo} onHealthImport={onHealthImport} onChange={reload} />;
   else if (page === 'legal') content = <LegalPage id={id} />;
   else content = <FeedPage activities={activities} zones={zones} onRefresh={reload} onImport={onImport} onDemo={addDemo} />;
 

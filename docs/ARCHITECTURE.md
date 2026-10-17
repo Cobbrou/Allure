@@ -172,6 +172,9 @@ and `lib/sports.js` (`effort()` picks km/h, min/km or min/100 m by sport).
   `Blob.slice`, so multi-GB Strava archives never load fully into memory. No ZIP64.
 - `.gz`: platform `DecompressionStream`.
 - Strava archive: `activities.csv` provides names and sport types, matched by `Filename`.
+- Health Connect (Android): `lib/health.js` reads workouts through `capacitor-health`;
+  `healthTasks` keeps outdoor sports with a route and `fromHealthWorkout` matches each
+  route point to the nearest heart rate sample (≤ 10 s). Both feed `importTasks`, like files.
 
 ## UI structure
 

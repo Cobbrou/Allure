@@ -190,6 +190,23 @@ watcher asks for it; the GPS warm-up on the setup screen stays on the WebView AP
 granted; asking for it needs another plugin (`@capacitor/local-notifications`), not added
 yet. The paid Transistorsoft plugin (motion detection, better battery) stays an option.
 
+## 2026-10-17: Health Connect import through capacitor-health
+
+**Context**: Pixel Watch and Fitbit workouts land in Health Connect, not in files the user
+can pick.
+**Decision**: `capacitor-health` (MIT, Capacitor 8) reads exercise sessions with their
+route and heart rate samples; `@capgo/capacitor-health` has no workout routes. Settings →
+Données runs the import on demand. Sessions go through the same `importTasks` path as
+files (dedupe by `dupKey`, so re-importing is safe). Only outdoor sports with a GPS route
+are kept, because an activity is built from a track. The app manifest strips the plugin's
+unused health permissions (steps, weight, nutrition…) so the consent screen asks for
+exercise, route and heart rate only.
+**Consequences**: Android `minSdkVersion` goes from 24 to 26 (Health Connect client).
+Without `READ_HEALTH_DATA_HISTORY`, Health Connect only returns the 30 days before the
+first grant. The plugin has no write method, so Allure activities aren't written back
+yet. Its permission rationale screen loads `privacy_policy_url` (the policy source on
+GitHub for now), which needs a hosted page before the store release.
+
 ## 2026-10-17: Display units as module state in format.js
 
 **Context**: imperial units touch ~30 components and the pure lib code that builds labels

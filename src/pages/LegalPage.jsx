@@ -31,6 +31,9 @@ const DOCS = {
             (une notification reste affichée tant que l'enregistrement tourne), et pour proposer
             des boucles autour de toi.</li>
           <li><b>Bluetooth</b> : pour lire une ceinture cardio que tu choisis. Les mesures restent sur le téléphone.</li>
+          <li><b>Health Connect</b> (Android) : lecture des séances d'exercice, de leur trace GPS et de
+            la fréquence cardiaque, seulement quand tu lances un import. Allure n'écrit rien dans
+            Health Connect et ces données restent sur le téléphone.</li>
         </ul>
         <h3>Services externes</h3>
         <p>Certaines fonctions interrogent des services tiers. Ils reçoivent ton adresse IP et les informations listées :</p>

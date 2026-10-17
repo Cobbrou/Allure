@@ -23,13 +23,15 @@ const PERMISSION = {
   prompt: 'Demandée au premier enregistrement.',
 };
 
-export default function SettingsPage({ activities, hr, hrSaved, ftpEstimate, onSaveHr, units, onSaveUnits, prefs, onSavePrefs, zones, onSaveZones, contacts, onSaveContacts, onDemo, onChange }) {
+export default function SettingsPage({ activities, hr, hrSaved, ftpEstimate, onSaveHr, units, onSaveUnits, prefs, onSavePrefs, zones, onSaveZones, contacts, onSaveContacts, onDemo, onHealthImport, onChange }) {
   const list = activities ?? [];
   const [name, setName] = useState(prefs.name ?? '');
   const [location, setLocation] = useState(null);
   const [busy, setBusy] = useState(false);
   useEffect(() => { setName(prefs.name ?? ''); }, [prefs.name]);
   useEffect(() => { locationPermission().then(setLocation); }, []);
+  const [health, setHealth] = useState('unsupported');
+  useEffect(() => { import('../lib/health.js').then((m) => m.healthStatus()).then(setHealth); }, []);
 
   const savePref = (patch) => onSavePrefs({ ...prefs, ...patch });
   const demoIds = list.filter((a) => a.source === 'demo').map((a) => a.id);
@@ -83,6 +85,15 @@ export default function SettingsPage({ activities, hr, hrSaved, ftpEstimate, onS
 
         <h2 className="settings-group">Données</h2>
         <MyData count={list.length} />
+        {health !== 'unsupported' && (
+          <section className="card">
+            <h3>Health Connect</h3>
+            <p className="muted">Importe les sorties enregistrées par ta montre (Pixel Watch, Fitbit…) : course, vélo, rando, marche et nage en eau libre avec trace GPS et fréquence cardiaque. Les séances déjà importées sont ignorées.</p>
+            {health === 'missing'
+              ? <button onClick={async () => { const { installHealthConnect } = await import('../lib/health.js'); installHealthConnect(); }}>Installer Health Connect</button>
+              : <button onClick={onHealthImport}>Importer depuis Health Connect</button>}
+          </section>
+        )}
         <section className="card">
           <h3>Données de démo</h3>
           <p className="muted">Ajoute 20 sorties variées (course, vélo, rando) sur les 60 derniers jours pour tester l'app.</p>

@@ -57,10 +57,14 @@ export async function collectTasks(files) {
 
 /**
  * Import files into the store, skipping duplicates of `existing` metas.
- * Returns { ids, duplicates, failed: [{ label, error }] }.
+ * Returns { ids, duplicates, failed: [{ label, error }], total }.
  */
 export async function importFiles(files, existing, onProgress = () => {}) {
-  const tasks = await collectTasks(files);
+  return importTasks(await collectTasks(files), existing, onProgress);
+}
+
+/** Run import tasks (see collectTasks, healthTasks) into the store. Same result as importFiles. */
+export async function importTasks(tasks, existing, onProgress = () => {}) {
   const seen = new Set(existing.map(dupKey));
   const result = { ids: [], duplicates: 0, failed: [], total: tasks.length };
   let batch = [];
@@ -68,8 +72,8 @@ export async function importFiles(files, existing, onProgress = () => {}) {
     onProgress(i, tasks.length);
     await new Promise((r) => setTimeout(r)); // let the progress paint between files
     try {
-      const { name, type, points, laps } = await task.read();
-      const item = createActivity({ name, sport: sportFromGpxType(type), points, laps });
+      const { name, type, points, laps, source } = await task.read();
+      const item = createActivity({ name, sport: sportFromGpxType(type), points, laps, source });
       const key = dupKey(item.meta);
       if (seen.has(key)) { result.duplicates++; continue; }
       seen.add(key);
@@ -82,4 +86,31 @@ export async function importFiles(files, existing, onProgress = () => {}) {
   }
   if (batch.length) await saveActivities(batch);
   return result;
+}
+
+// Health Connect exercise types Allure has a sport for (sportFromGpxType maps them).
+const HEALTH_SPORTS = /^(RUNNING|BIKING|HIKING|WALKING|SWIMMING_OPEN_WATER)$/;
+
+/**
+ * Health Connect workouts (capacitor-health queryWorkouts) to import tasks. Only outdoor
+ * sports with a GPS route are kept: Allure activities are built from a track.
+ */
+export function healthTasks(workouts) {
+  return workouts
+    .filter((w) => HEALTH_SPORTS.test(w.workoutType) && w.route?.length >= 2)
+    .map((w) => ({ label: w.title || w.workoutType, read: async () => fromHealthWorkout(w) }));
+}
+
+/** One workout to { name, type, points, source }; each point takes the nearest heart rate sample within 10 s. */
+export function fromHealthWorkout(w) {
+  const hrs = (w.heartRate ?? []).map((s) => ({ t: Date.parse(s.timestamp), bpm: s.bpm })).sort((a, b) => a.t - b.t);
+  let j = 0;
+  const points = w.route
+    .map((r) => ({ lat: r.lat, lon: r.lng, ele: r.alt ?? null, time: Date.parse(r.timestamp) }))
+    .sort((a, b) => a.time - b.time)
+    .map((p) => {
+      while (j + 1 < hrs.length && Math.abs(hrs[j + 1].t - p.time) <= Math.abs(hrs[j].t - p.time)) j++;
+      return { ...p, hr: hrs[j] && Math.abs(hrs[j].t - p.time) <= 10000 ? hrs[j].bpm : null };
+    });
+  return { name: w.title || undefined, type: w.workoutType, points, source: 'healthconnect' };
 }

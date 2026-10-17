@@ -6,7 +6,7 @@ import { dupKey } from '../src/lib/activity.js';
 import { parseCsv } from '../src/lib/formats/csv.js';
 import { parseFit } from '../src/lib/formats/fit.js';
 import { readZip } from '../src/lib/formats/zip.js';
-import { collectTasks } from '../src/lib/importer.js';
+import { collectTasks, fromHealthWorkout, healthTasks } from '../src/lib/importer.js';
 
 /** Small FIT activity: `n` records 1 s apart heading north from Chamonix, two laps. */
 function fitFile(n = 30, sport = 'cycling') {
@@ -86,4 +86,32 @@ test('Strava archive: zip + activities.csv + gzipped FIT', async () => {
 test('dupKey matches same start and distance', () => {
   assert.equal(dupKey({ date: 1000_400, distance: 5003 }), dupKey({ date: 1000_100, distance: 5001 }));
   assert.notEqual(dupKey({ date: 1000_000, distance: 5000 }), dupKey({ date: 1000_000, distance: 5100 }));
+});
+
+test('healthTasks keeps outdoor workouts with a route', () => {
+  const route = [{ timestamp: '2026-10-01T08:00:00Z', lat: 45.9, lng: 6.87 }, { timestamp: '2026-10-01T08:00:05Z', lat: 45.9001, lng: 6.87 }];
+  const tasks = healthTasks([
+    { workoutType: 'RUNNING', title: 'Footing', route },
+    { workoutType: 'RUNNING_TREADMILL', route },
+    { workoutType: 'BIKING' },
+    { workoutType: 'YOGA', route },
+  ]);
+  assert.deepEqual(tasks.map((t) => t.label), ['Footing']);
+});
+
+test('fromHealthWorkout maps the route and takes the nearest heart rate within 10 s', () => {
+  const w = {
+    workoutType: 'BIKING', title: '',
+    route: [
+      { timestamp: '2026-10-01T08:00:10Z', lat: 45.9002, lng: 6.87, alt: 1042 },
+      { timestamp: '2026-10-01T08:00:00Z', lat: 45.9, lng: 6.87 },
+      { timestamp: '2026-10-01T08:01:00Z', lat: 45.9004, lng: 6.87, alt: 1045 },
+    ],
+    heartRate: [{ timestamp: '2026-10-01T08:00:09Z', bpm: 140 }, { timestamp: '2026-10-01T08:00:01Z', bpm: 120 }],
+  };
+  const r = fromHealthWorkout(w);
+  assert.equal(r.name, undefined);
+  assert.equal(r.source, 'healthconnect');
+  assert.deepEqual(r.points.map((p) => [p.lat, p.ele, p.hr]), [[45.9, null, 120], [45.9002, 1042, 140], [45.9004, 1045, null]]);
+  assert.equal(r.points[0].time, Date.parse('2026-10-01T08:00:00Z'));
 });

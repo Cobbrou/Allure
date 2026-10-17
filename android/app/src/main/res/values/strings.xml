@@ -7,4 +7,6 @@
     <!-- Background geolocation plugin: the recording notification (foreground service). -->
     <string name="capacitor_background_geolocation_notification_channel_name">Enregistrement d'activité</string>
     <string name="capacitor_background_geolocation_notification_color">#ff5500</string>
+    <!-- Health Connect permission screen links here. TODO: a hosted policy page before the store release. -->
+    <string name="privacy_policy_url">https://github.com/Cobbrou/Allure/blob/main/src/pages/LegalPage.jsx</string>
 </resources>

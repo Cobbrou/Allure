@@ -195,6 +195,8 @@ Safety (feature 3)
 Pixel Watch / Google
 - [ ] Health Connect (Android, native plugin): import exercise sessions recorded by
       the Pixel Watch (route, heart rate, calories); write Allure activities back
+      (import wired via `capacitor-health`: Settings → Données, outdoor sessions with a
+      GPS route + heart rate; to verify on a device. Write-back: the plugin can't yet)
 - [ ] Google Health API (cloud REST, OAuth): pull Pixel Watch / Fitbit workouts and
       daily metrics (resting HR, sleep) without the native shell
 - [ ] Use resting HR and max HR from the watch for HR zones and Relative Effort
