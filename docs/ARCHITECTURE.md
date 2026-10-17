@@ -46,7 +46,8 @@ IndexedDB database `allure`, version 4:
 - `activities` (keyPath `id`): **meta** records, small enough to list everything at once
 - `tracks` (key = activity id): raw **points** arrays, read only on the detail page
 - `drafts` (key `current`): the in-progress live recording, autosaved every 5 s
-- `settings` (key = setting name): user preferences, e.g. `hr` → `{ max, rest }`
+- `settings` (key = setting name): user preferences, e.g. `hr` → `{ max, rest }`,
+  `goals` → `[{ id, sport, metric, period, target }]` (see `lib/goals.js`)
 
 Schema changes bump `VERSION` and add an entry to `MIGRATIONS`, which run in order
 inside the upgrade transaction:

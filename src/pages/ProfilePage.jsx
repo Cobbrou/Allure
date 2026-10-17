@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import ActivityCalendar from '../components/ActivityCalendar.jsx';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import FitnessChart from '../components/FitnessChart.jsx';
+import Goals from '../components/Goals.jsx';
 import RacePredictions from '../components/RacePredictions.jsx';
 import RecordsList from '../components/RecordsList.jsx';
 import Segmented from '../components/Segmented.jsx';
@@ -19,7 +20,7 @@ const PERIODS = [
   { id: 'all', label: 'Total' },
 ];
 
-export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, onDemo, onChange }) {
+export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, goals, onSaveGoals, onDemo, onChange }) {
   const list = activities ?? [];
   const [sport, setSport] = useState('');
   const [period, setPeriod] = useState('week');
@@ -57,6 +58,8 @@ export default function ProfilePage({ activities, hr, hrSaved, onSaveHr, onDemo,
             <p className="muted">{list.length} activités · {allKm.toFixed(0)} km au total</p>
           </div>
         </section>
+
+        <Goals goals={goals} activities={list} onSave={onSaveGoals} />
 
         {list.length > 0 && (
           <>

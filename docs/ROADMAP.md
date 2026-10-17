@@ -26,7 +26,7 @@ parity": every line must be covered before the app can claim it.
 | 6 | *Tracez vos propres itinéraires* (draw your own routes) | Route builder with road/trail snapping and elevation profile | 5 | Planned |
 | 7 | *Consultez votre historique d'entraînement à un seul et même endroit* (all your training history in one place) | Feed, profile totals, calendar, training log | 1 / 5 | Partly done (feed, totals, calendar). Training log in phase 5 |
 | 8 | *Analysez vos entraînements grâce à des statistiques avancées* (advanced stats) | HR zones, GAP, intervals, matched activities, predictions, power | 5 | Partly done (splits, best efforts, HR zones, GAP, race predictions) |
-| 9 | *Définissez des objectifs personnalisés et suivez vos progrès* (custom goals and progress) | Weekly / monthly / yearly goals per sport, progress rings | 5 | Planned |
+| 9 | *Définissez des objectifs personnalisés et suivez vos progrès* (custom goals and progress) | Weekly / monthly / yearly goals per sport, progress rings | 5 | Done (in-app toast when reached; push notifications in phase 6) |
 | 10 | *Mesurez-vous aux autres dans les classements sur les segments* (segment leaderboards) | Segments, auto-matching, leaderboards, live segments | 5 | Planned |
 | 11 | *Rejoignez et créez des challenges avec des amis* (join and create challenges with friends) | Platform challenges + user-created group challenges | 4 / 5 | Planned |
 | 12 | *Mesurez vos efforts dans différentes activités* (measure effort across sports) | Relative Effort: HR-based load comparable across sports | 5 | Done (Banister TRIMP) |
@@ -125,9 +125,10 @@ Analysis & training (features 7, 8, 12, 13)
 - [ ] Power curve, FTP, cycling power analysis **(premium)**
 
 Goals (feature 9)
-- [ ] Custom goals per sport: distance, time, elevation, activity count, per
+- [x] Custom goals per sport: distance, time, elevation, activity count, per
       week / month / year **(premium)**
-- [ ] Progress rings on the profile and notifications when a goal is reached **(premium)**
+- [x] Progress rings on the profile and notifications when a goal is reached **(premium)**
+      (in-app toast; push in phase 6)
 
 Segments (feature 10)
 - [ ] Segments: create, auto-match on upload, segment efforts

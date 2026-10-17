@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import TabBar from './components/TabBar.jsx';
 import { createActivity } from './lib/activity.js';
 import { getSetting, listActivities, saveActivities, setSetting } from './lib/db.js';
 import { demoHistory } from './lib/demo.js';
+import { goalLabel, newlyReached } from './lib/goals.js';
 import { importFiles } from './lib/importer.js';
 import { DEFAULT_REST_HR, estimateMaxHr } from './lib/training.js';
 import ActivityPage from './pages/ActivityPage.jsx';
@@ -26,11 +27,25 @@ export default function App() {
     [hrSaved, activities],
   );
   const saveHr = async (v) => { await setSetting('hr', v); setHrSaved(v); };
+  const [goals, setGoals] = useState([]);
+  useEffect(() => { getSetting('goals').then((g) => g && setGoals(g), () => {}); }, []);
+  const saveGoals = async (g) => { await setSetting('goals', g); setGoals(g); };
 
-  const reload = useCallback(
-    () => listActivities().then(setActivities, (e) => setToast({ kind: 'error', text: `Stockage indisponible : ${e.message}` })),
-    [],
-  );
+  // Reloading after a save, import or demo is when a goal can be crossed: celebrate it.
+  const goalsRef = useRef(goals);
+  goalsRef.current = goals;
+  const prevList = useRef(null);
+  const reload = useCallback(async () => {
+    try {
+      const list = await listActivities();
+      const won = prevList.current ? newlyReached(goalsRef.current, prevList.current, list) : [];
+      prevList.current = list;
+      setActivities(list);
+      if (won.length) setToast({ kind: 'notice', goal: true, text: `🎉 Objectif atteint : ${won.map(goalLabel).join(' · ')}` });
+    } catch (e) {
+      setToast({ kind: 'error', text: `Stockage indisponible : ${e.message}` });
+    }
+  }, []);
   useEffect(() => { reload(); }, [reload]);
 
   const onImport = async (files) => {
@@ -41,7 +56,9 @@ export default function App() {
       const r = await importFiles(files, activities ?? [], (done, total) => setProgress({ done, total }));
       await reload();
       if (r.total === 1 && r.ids.length === 1) return go(`/activity/${r.ids[0]}`);
-      setToast(importSummary(r));
+      const summary = importSummary(r);
+      setToast((cur) => (cur?.goal ? { ...summary, text: `${summary.text}
+${cur.text}` } : summary));
     } catch (e) {
       setToast({ kind: 'error', text: e.message });
     } finally {
@@ -57,7 +74,7 @@ export default function App() {
   let content;
   if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} onChange={reload} />;
   else if (page === 'record') content = <RecordPage recording={recording} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
-  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} hrSaved={hrSaved} onSaveHr={saveHr} onDemo={addDemo} onChange={reload} />;
+  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} onDemo={addDemo} onChange={reload} />;
   else content = <FeedPage activities={activities} onImport={onImport} onDemo={addDemo} />;
 
   return (
