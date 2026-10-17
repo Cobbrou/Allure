@@ -11,8 +11,8 @@ import { ACCENT, MAP_STYLE } from '../theme.js';
 
 setWorkerUrl(workerUrl);
 
-/** Personal heatmap: every track drawn faintly, so the routes you repeat glow brighter. */
-export default function HeatmapPage({ activities }) {
+/** Maps tab: personal heatmap (every track drawn faintly, so the routes you repeat glow brighter) and routes. */
+export default function MapsPage({ activities }) {
   const list = activities ?? [];
   const [lines, setLines] = useState(null); // [{ sport, coords }]
   const [sport, setSport] = useState('');
@@ -31,17 +31,17 @@ export default function HeatmapPage({ activities }) {
 
   return (
     <>
-      <header className="topbar">
-        <a className="back" href="#/profile" aria-label="Retour au profil">‹</a>
-        <h1>Carte de chaleur</h1>
-        <span className="back" aria-hidden="true" />
-      </header>
+      <header className="topbar"><h1>Cartes</h1></header>
       <main className="detail">
+        <h2 className="section-title">Carte de chaleur</h2>
         {options.length > 2 && <Segmented label="Sport" options={options} value={sport} onChange={setSport} />}
         {shown === undefined ? <div className="skeleton heatmap" />
           : shown.length ? <section className="card map-card"><HeatMap lines={shown} /></section>
           : <p className="empty">Aucun tracé GPS à afficher.</p>}
         {shown?.length > 0 && <p className="muted small-label">{shown.length} activités · deux doigts pour zoomer</p>}
+        <h2 className="section-title">Itinéraires</h2>
+        <Soon title="Idées d'itinéraires" text="Des parcours proposés selon ta distance et ton dénivelé" />
+        <Soon title="Créer un itinéraire" text="Trace ton parcours, collé aux routes et sentiers" />
       </main>
     </>
   );
@@ -83,4 +83,14 @@ function HeatMap({ lines }) {
   }, [data, bounds]);
 
   return <div ref={el} className="map heatmap" />;
+}
+
+// ponytail: static placeholders until the route builder and suggestions ship (roadmap phase 5).
+export function Soon({ title, text }) {
+  return (
+    <div className="card link-card">
+      <span><b>{title}</b><span className="muted">{text}</span></span>
+      <span className="pill">Bientôt</span>
+    </div>
+  );
 }

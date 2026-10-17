@@ -46,7 +46,7 @@ parity": every line must be covered before the app can claim it.
 
 - [x] Mobile-first layout of the existing screens (phone portrait, safe areas, touch
       scrubbing on the chart)
-- [x] App shell with bottom tab bar (Feed · Record · Profile)
+- [x] App shell with bottom tab bar (Home · Maps · Record · Groups · Profile)
 - [x] Persist activities in IndexedDB (with schema migrations)
 - [x] Activity list / personal feed, activity detail page (routing)
 - [x] Rename, delete, set sport type (run, ride, hike, walk, swim)

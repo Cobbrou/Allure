@@ -18,14 +18,16 @@ const pages = {
   record: () => import('./pages/RecordPage.jsx'),
   profile: () => import('./pages/ProfilePage.jsx'),
   log: () => import('./pages/TrainingLogPage.jsx'),
-  heatmap: () => import('./pages/HeatmapPage.jsx'),
+  maps: () => import('./pages/MapsPage.jsx'),
+  groups: () => import('./pages/GroupsPage.jsx'),
   segment: () => import('./pages/SegmentPage.jsx'),
 };
 const ActivityPage = lazy(pages.activity);
 const RecordPage = lazy(pages.record);
 const ProfilePage = lazy(pages.profile);
 const TrainingLogPage = lazy(pages.log);
-const HeatmapPage = lazy(pages.heatmap);
+const MapsPage = lazy(pages.maps);
+const GroupsPage = lazy(pages.groups);
 const SegmentPage = lazy(pages.segment);
 
 export default function App() {
@@ -106,7 +108,8 @@ ${cur.text}` } : summary));
   let content;
   if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} />;
   else if (page === 'log') content = <TrainingLogPage activities={activities} hr={hr} />;
-  else if (page === 'heatmap') content = <HeatmapPage activities={activities} />;
+  else if (page === 'maps') content = <MapsPage activities={activities} />;
+  else if (page === 'groups') content = <GroupsPage />;
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
   else if (page === 'record') content = <RecordPage recording={recording} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
   else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} hrSaved={hrSaved} onSaveHr={saveHr} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} onDemo={addDemo} onChange={reload} />;
@@ -133,7 +136,7 @@ ${cur.text}` } : summary));
       <ErrorBoundary key={`${page}/${id ?? ''}`}>
         <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
       </ErrorBoundary>
-      <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'log' || page === 'heatmap' ? 'profile' : page} />
+      <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'log' ? 'profile' : page} />
     </div>
   );
 }

@@ -34,12 +34,13 @@ Route changes run inside `document.startViewTransition` (slide or fade, see
 
 | Hash             | Page           |
 |------------------|----------------|
-| `#/`             | `FeedPage`     |
+| `#/`             | `FeedPage` (Home tab) |
 | `#/activity/:id` | `ActivityPage` |
 | `#/record`       | `RecordPage`: setup (sport, auto-pause, voice cues, GPS status), then live recording |
 | `#/log`          | `TrainingLogPage`: week-by-week bubbles, opened from the profile |
 | `#/segment/:id`  | `SegmentPage`: segment map, distance / grade, your efforts fastest first |
-| `#/heatmap`      | `HeatmapPage`: every track faintly drawn on one map, opened from the profile |
+| `#/maps`         | `MapsPage` (tab): personal heatmap, route ideas and route builder (placeholders) |
+| `#/groups`       | `GroupsPage` (tab): clubs and events (placeholders until accounts land) |
 | `#/profile`      | `ProfilePage`  |
 
 ## Storage (`lib/db.js`)
