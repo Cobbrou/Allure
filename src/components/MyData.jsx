@@ -38,7 +38,7 @@ export default function MyData({ count }) {
     <section className="card">
       <h3>Mes données</h3>
       <p className="muted">
-        Tout est stocké sur cet appareil. La sauvegarde regroupe tes {count} activités avec leurs traces,
+        Tout est stocké sur cet appareil. La sauvegarde regroupe tes {count} activités avec leurs traces et photos,
         réglages, segments et itinéraires dans un fichier à garder ou à restaurer sur un autre téléphone.
       </p>
       <div className="row">

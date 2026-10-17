@@ -51,6 +51,18 @@ export function drawStory(canvas, act, { template = 'track', bg = 'dark', photo,
   ({ track: drawTrackTemplate, sticker: drawSticker, profile: drawProfile, splits: drawSplits })[template](s, act);
 }
 
+/** A picked image file shrunk to a JPEG of at most `max` px on its long side, for storage. */
+export async function shrinkPhoto(file, max = 1600) {
+  const img = await createImageBitmap(file);
+  const k = Math.min(1, max / Math.max(img.width, img.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(img.width * k);
+  c.height = Math.round(img.height * k);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  img.close();
+  return new Promise((resolve, reject) => c.toBlob((b) => (b ? resolve(b) : reject(new Error('Image illisible'))), 'image/jpeg', 0.85));
+}
+
 /** Share the story currently drawn on `canvas` as a PNG (alpha kept for transparent ones). */
 export async function shareStory(canvas, act) {
   const blob = await new Promise((r) => canvas.toBlob(r, 'image/png'));

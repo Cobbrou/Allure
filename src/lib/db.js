@@ -1,6 +1,6 @@
 // Local store (IndexedDB): `activities` holds light meta records for lists, `tracks` the
 // raw points by activity id (loaded only on the detail screen), plus `drafts`, `settings`
-// `segments` and planned `routes`.
+// `segments`, planned `routes` and activity `photos`.
 // Platform module: a native storage plugin can replace it without touching components.
 
 import { analyze } from './analyze.js';
@@ -10,7 +10,7 @@ import { segmentEfforts } from './segments.js';
 import { hrTime } from './training.js';
 
 const DB_NAME = 'allure';
-export const VERSION = 6;
+export const VERSION = 7;
 let dbPromise;
 
 // Schema migrations, keyed by the version they upgrade to. They run inside the upgrade
@@ -33,6 +33,8 @@ const MIGRATIONS = {
   5: (db) => db.createObjectStore('segments', { keyPath: 'id' }),
   // v6: `routes` planned with the route builder.
   6: (db) => db.createObjectStore('routes', { keyPath: 'id' }),
+  // v7: `photos` holds each activity's pictures (array of JPEG Blobs) by activity id.
+  7: (db) => db.createObjectStore('photos'),
 };
 
 // Patch every meta accepted by `want` with fields computed from its track and the meta.
@@ -120,10 +122,11 @@ export function updateActivity(meta) {
 }
 
 export function deleteActivities(ids) {
-  return tx(['activities', 'tracks'], 'readwrite', (acts, tracks) => {
+  return tx(['activities', 'tracks', 'photos'], 'readwrite', (acts, tracks, photos) => {
     for (const id of ids) {
       acts.delete(id);
       tracks.delete(id);
+      photos.delete(id);
     }
   });
 }
@@ -132,6 +135,10 @@ export function deleteActivities(ids) {
 export const saveDraft = (rec) => tx(['drafts'], 'readwrite', (s) => s.put(rec, 'current'));
 export const loadDraft = () => tx(['drafts'], 'readonly', (s) => s.get('current'));
 export const clearDraft = () => tx(['drafts'], 'readwrite', (s) => s.delete('current'));
+
+/** An activity's photos (Blobs, oldest first); [] when it has none. */
+export const getPhotos = async (id) => (await tx(['photos'], 'readonly', (s) => s.get(id))) ?? [];
+export const setPhotos = (id, blobs) => tx(['photos'], 'readwrite', (s) => (blobs.length ? s.put(blobs, id) : s.delete(id)));
 
 /** User preferences, e.g. getSetting('hr') -> { max, rest }. */
 export const getSetting = (key) => tx(['settings'], 'readonly', (s) => s.get(key));
@@ -169,35 +176,49 @@ export const deleteRoute = (id) => tx(['routes'], 'readwrite', (s) => s.delete(i
 
 /** Every store's contents, for a full backup (see lib/backup.js). */
 export async function exportAll() {
-  const [metas, keys, values, segments, routes] = await Promise.all([
+  const [metas, keys, values, segments, routes, photoKeys, photoValues] = await Promise.all([
     tx(['activities'], 'readonly', (s) => s.getAll()),
     tx(['settings'], 'readonly', (s) => s.getAllKeys()),
     tx(['settings'], 'readonly', (s) => s.getAll()),
     listSegments(),
     tx(['routes'], 'readonly', (s) => s.getAll()),
+    tx(['photos'], 'readonly', (s) => s.getAllKeys()),
+    tx(['photos'], 'readonly', (s) => s.getAll()),
   ]);
+  const photos = new Map(await Promise.all(photoKeys.map(async (k, i) => [k, await Promise.all(photoValues[i].map(toDataUrl))])));
   const points = new Map();
   await forEachTrack((id, pts) => points.set(id, pts));
   return {
     schema: VERSION,
-    activities: metas.map((meta) => ({ meta, points: points.get(meta.id) ?? [] })),
+    activities: metas.map((meta) => ({ meta, points: points.get(meta.id) ?? [], ...(photos.has(meta.id) && { photos: photos.get(meta.id) }) })),
     settings: Object.fromEntries(keys.map((k, i) => [k, values[i]])),
     segments,
     routes,
   };
 }
 
+const toDataUrl = (blob) => new Promise((resolve, reject) => {
+  const r = new FileReader();
+  r.onload = () => resolve(r.result);
+  r.onerror = () => reject(r.error);
+  r.readAsDataURL(blob);
+});
+
 /** Write a parsed backup over the local data (same ids are replaced, others kept). */
-export const restoreAll = ({ activities, settings, segments, routes }) =>
-  tx(['activities', 'tracks', 'settings', 'segments', 'routes'], 'readwrite', (acts, tracks, sets, segs, rts) => {
-    for (const { meta, points } of activities) {
+export async function restoreAll({ activities, settings, segments, routes }) {
+  // Decoded before the transaction: an await inside it would let it auto-commit.
+  const photos = await Promise.all(activities.map((a) => Promise.all((a.photos ?? []).map(async (u) => (await fetch(u)).blob()))));
+  return tx(['activities', 'tracks', 'settings', 'segments', 'routes', 'photos'], 'readwrite', (acts, tracks, sets, segs, rts, pics) => {
+    activities.forEach(({ meta, points }, i) => {
       acts.put(meta);
       tracks.put(points, meta.id);
-    }
+      if (photos[i].length) pics.put(photos[i], meta.id);
+    });
     for (const [key, value] of Object.entries(settings)) sets.put(value, key);
     for (const seg of segments) segs.put(seg);
     for (const route of routes) rts.put(route);
   });
+}
 
 /** Erase the whole local database. The app must reload afterwards. */
 export async function deleteAllData() {

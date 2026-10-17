@@ -122,7 +122,9 @@ Sharing
 - [x] Transparent story background (PNG sticker to lay over a photo in another app)
 
 - [ ] Follow athletes, home feed
-- [ ] Kudos, comments, photos on activities
+- [x] Photos on activities (local: added from the camera roll, gallery on the detail page,
+      default story background, included in backups)
+- [ ] Kudos, comments on activities
 - [ ] Clubs, club feed and leaderboards
 - [x] Monthly platform challenges and badges (8 challenges a month derived from your
       activities, trophy case on the Groups tab, toast on completion; local until accounts)

@@ -6,8 +6,9 @@ import Segmented from './Segmented.jsx';
 /**
  * Share sheet with a live story preview: swipe (or tap a tab) between templates, pick a
  * dark, transparent or photo background, then share the image. children: extra actions.
+ * photos: the activity's photo Blobs; the first one is the default background.
  */
-export default function ShareSheet({ act, zones, open, onClose, children }) {
+export default function ShareSheet({ act, zones, photos, open, onClose, children }) {
   const [bg, setBg] = useState('dark');
   const [photo, setPhoto] = useState();
   const [index, setIndex] = useState(0);
@@ -27,6 +28,10 @@ export default function ShareSheet({ act, zones, open, onClose, children }) {
     return () => { live = false; };
   }, [open, act, list, bg, photo, zones]);
   useEffect(() => { if (!open) setIndex(0); }, [open]);
+  useEffect(() => {
+    if (!open || photo || !photos?.length) return;
+    createImageBitmap(photos[0]).then((b) => { setPhoto(b); setBg('photo'); }, () => {});
+  }, [open, photos]);
 
   const step = () => strip.current.firstChild.offsetWidth + 12; // slide width + gap
   const goTo = (id) => strip.current.scrollTo({ left: list.findIndex((t) => t.id === id) * step(), behavior: 'smooth' });

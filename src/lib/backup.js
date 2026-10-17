@@ -1,5 +1,6 @@
-// Full local backup: every activity with its track, settings, segments and routes in one
-// JSON file the athlete keeps, restores on another phone, or reads elsewhere.
+// Full local backup: every activity with its track and photos (as data URLs), settings,
+// segments and routes in one JSON file the athlete keeps, restores on another phone, or
+// reads elsewhere.
 
 /** Backup object from the stores' contents. `schema` is the db VERSION it was taken at. */
 export const makeBackup = ({ schema, activities, settings, segments, routes }, now = Date.now()) => ({
@@ -18,7 +19,10 @@ export function parseBackup(text, schema) {
   try { data = JSON.parse(text); } catch { throw new Error("Ce fichier n'est pas une sauvegarde Allure."); }
   if (data?.app !== 'allure' || !Array.isArray(data.activities)) throw new Error("Ce fichier n'est pas une sauvegarde Allure.");
   if (data.schema > schema) throw new Error("Sauvegarde faite avec une version plus récente d'Allure : mets l'app à jour.");
-  const valid = data.activities.filter((a) => a?.meta?.id && Array.isArray(a.points));
+  const valid = data.activities.filter((a) => a?.meta?.id && Array.isArray(a.points)).map(({ meta, points, photos }) => {
+    const pics = Array.isArray(photos) ? photos.filter((u) => typeof u === 'string' && u.startsWith('data:image/')) : [];
+    return pics.length ? { meta, points, photos: pics } : { meta, points };
+  });
   return {
     activities: valid,
     settings: data.settings && typeof data.settings === 'object' ? data.settings : {},

@@ -18,6 +18,12 @@ test('parseBackup round-trips a backup and drops malformed entries', () => {
   assert.deepEqual(out.routes, [{ id: 'r1' }]);
 });
 
+test('parseBackup keeps image data URLs only', () => {
+  const acts = [{ meta: { id: 'a1' }, points: [], photos: ['data:image/jpeg;base64,AAAA', 'https://x/y.jpg', 3] }, { meta: { id: 'a2' }, points: [], photos: 'no' }];
+  const out = parseBackup(JSON.stringify(makeBackup({ ...data, activities: acts })), 6);
+  assert.deepEqual(out.activities, [{ meta: { id: 'a1' }, points: [], photos: ['data:image/jpeg;base64,AAAA'] }, { meta: { id: 'a2' }, points: [] }]);
+});
+
 test('parseBackup rejects other files and newer schemas', () => {
   assert.throws(() => parseBackup('not json', 6), /sauvegarde Allure/);
   assert.throws(() => parseBackup('{"activities":[]}', 6), /sauvegarde Allure/);

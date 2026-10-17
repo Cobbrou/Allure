@@ -47,12 +47,12 @@ Route changes run inside `document.startViewTransition` (slide or fade, see
 
 ## Storage (`lib/db.js`)
 
-IndexedDB database `allure`, version 6:
+IndexedDB database `allure`, version 7:
 
 - `activities` (keyPath `id`): **meta** records, small enough to list everything at once
 - `tracks` (key = activity id): raw **points** arrays, read only on the detail page
 - `drafts` (key `current`): the in-progress live recording, autosaved every 5 s
-- `settings` (key = setting name): user preferences, e.g. `hr` → `{ max, rest }`,
+- `settings` (key = setting name): user preferences, e.g. `hr` → `{ max, rest, ftp }`,
   `goals` → `[{ id, sport, metric, period, target }]` (see `lib/goals.js`),
   `gear` → `[{ id, name, kind, initial, alert, isDefault, retired }]` (see `lib/gear.js`),
   `privacy` → `[{ id, name, lat, lon, radius }]` privacy zones (see `lib/privacy.js`)
@@ -61,6 +61,9 @@ IndexedDB database `allure`, version 6:
   `prefs` → `{ name, autoPause, audio }` display name and recording defaults (Settings page)
 - `segments` (keyPath `id`): user-created segments (see `lib/segments.js`)
 - `routes` (keyPath `id`): planned routes with waypoints, points and stats (see `lib/routes.js`)
+- `photos` (key = activity id): the activity's pictures, an array of JPEG Blobs shrunk to
+  1600 px on import (`shrinkPhoto` in `lib/story.js`); the first one is the default story
+  background. Deleted with the activity
 - Cache Storage (not IndexedDB): offline map downloads, one cache per route
   (`allure-route-<id>`, see `lib/offline.js`)
 
@@ -75,9 +78,10 @@ inside the upgrade transaction:
 | 4 | create `settings`, backfill `hrTime` on every meta from its track |
 | 5 | create `segments` |
 | 6 | create `routes` |
+| 7 | create `photos` |
 
 Full backups (`lib/backup.js`, Profile → Mes données) dump every store except `drafts`
-and the map caches to one JSON file tagged with `schema` = `VERSION`. Restore puts the
+and the map caches to one JSON file (photos inlined as data URLs on their activity) tagged with `schema` = `VERSION`. Restore puts the
 records back as they are, so a backup from a newer schema is refused. A migration that
 backfills metas must also be applied to older backups on restore.
 

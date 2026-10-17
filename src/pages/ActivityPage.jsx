@@ -6,6 +6,7 @@ import ConfirmButton from '../components/ConfirmButton.jsx';
 import HrZones from '../components/HrZones.jsx';
 import Intervals from '../components/Intervals.jsx';
 import MatchedActivities from '../components/MatchedActivities.jsx';
+import Photos from '../components/Photos.jsx';
 import PowerCurve from '../components/PowerCurve.jsx';
 import ProfileChart from '../components/ProfileChart.jsx';
 import SegmentEfforts from '../components/SegmentEfforts.jsx';
@@ -14,7 +15,7 @@ import SplitsTable from '../components/SplitsTable.jsx';
 import StatsGrid from '../components/StatsGrid.jsx';
 import TrackMap from '../components/TrackMap.jsx';
 import { analyze, computeSplits } from '../lib/analyze.js';
-import { deleteActivities, getActivity, updateActivity } from '../lib/db.js';
+import { deleteActivities, getActivity, getPhotos, setPhotos, updateActivity } from '../lib/db.js';
 import { defaultGear, GEAR_KINDS, gearFor } from '../lib/gear.js';
 import { SPORTS, splitSize as splitSizeOf } from '../lib/sports.js';
 import { toGpx } from '../lib/formats/gpxExport.js';
@@ -24,11 +25,13 @@ import { go } from '../router.js';
 export default function ActivityPage({ id, activities, hr, ftp, zones, segments, onSegment, gears, onChange }) {
   const [data, setData] = useState(); // undefined: loading, null: not found
   const [sheet, setSheet] = useState(null); // null | 'edit' | 'share'
+  const [photos, setPhotoList] = useState([]);
   const hover = useRef(() => {});
   const range = useRef(() => {});
 
   useEffect(() => {
     getActivity(id).then((d) => setData(d ?? null), () => setData(null));
+    getPhotos(id).then(setPhotoList, () => setPhotoList([]));
   }, [id]);
   // Keyed on points only, so renaming doesn't rebuild the map and chart.
   const analysis = useMemo(() => data && analyze(data.points), [data?.points]);
@@ -53,6 +56,7 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
     await onChange();
     go('/');
   };
+  const savePhotos = async (blobs) => { await setPhotos(id, blobs); setPhotoList(blobs); };
   const exportGpx = async () => {
     await shareFile(new Blob([toGpx(data.meta, data.points)], { type: 'application/gpx+xml' }), `${safeName(act.name)}.gpx`);
     setSheet(null);
@@ -67,7 +71,7 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
       <BottomSheet open={sheet === 'edit'} onClose={() => setSheet(null)} title="Modifier l'activité">
         <EditForm meta={data.meta} gears={gears} onSave={save} onDelete={remove} />
       </BottomSheet>
-      <ShareSheet act={act} zones={zones} open={sheet === 'share'} onClose={() => setSheet(null)}>
+      <ShareSheet act={act} zones={zones} photos={photos} open={sheet === 'share'} onClose={() => setSheet(null)}>
         <button type="button" className="ghost" onClick={exportGpx}>Fichier GPX</button>
       </ShareSheet>
       <main className="detail">
@@ -82,6 +86,7 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
         <section className="card map-card">
           <TrackMap track={act.track} hover={hover} range={range} />
         </section>
+        <Photos photos={photos} onChange={savePhotos} />
         <Intervals meta={data.meta} track={act.track} range={range} />
         <SegmentEfforts meta={activities?.find((a) => a.id === id) ?? data.meta} track={act.track} segments={segments}
           activities={activities} range={range} onCreate={onSegment} />
