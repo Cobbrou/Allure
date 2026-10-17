@@ -1,5 +1,6 @@
 import { progress } from './follow.js';
 import { haversine } from './geo.js';
+import { segmentStep } from './liveSegments.js';
 import { SPORTS } from './sports.js';
 
 // Live recording as a pure state machine: every function takes a recording and returns
@@ -14,9 +15,9 @@ const STOP_SPEED = { ride: 1.5 }; // m/s under which the athlete counts as stopp
 const STOP_DELAY = 5000; // ms of being stopped before auto-pause kicks in
 const PACE_WINDOW = 30000; // ms of track used for the current pace
 
-/** route: optional route to follow, from followRoute(). */
-export function startRecording({ sport = 'run', autoPause = true, audio = true, route = null }, now) {
-  return { sport, autoPause, audio, route, follow: null, laps: [], start: now, points: [], distance: 0, active: 0, runningSince: now, paused: false, autoPaused: false, lastMove: now, pos: null };
+/** route: optional route to follow, from followRoute(). liveSegs: from liveSegments(). */
+export function startRecording({ sport = 'run', autoPause = true, audio = true, route = null, liveSegs = [] }, now) {
+  return { sport, autoPause, audio, route, follow: null, liveSegs, seg: null, laps: [], start: now, points: [], distance: 0, active: 0, runningSince: now, paused: false, autoPaused: false, lastMove: now, pos: null };
 }
 
 /** Running time in seconds. */
@@ -56,6 +57,7 @@ export function addFix(rec, fix) {
   if ((fix.accuracy ?? 0) > MAX_ACCURACY) return rec;
   if (rec.paused) return { ...rec, pos: fix };
   if (rec.route) rec = { ...rec, follow: progress(rec.route, fix, rec.follow) };
+  if (rec.liveSegs?.length) rec = { ...rec, seg: segmentStep(rec.seg, rec.liveSegs, fix) };
   const prev = rec.points.at(-1);
   const d = prev ? haversine(prev, fix) : 0;
   if (prev && d < MIN_STEP) return tick({ ...rec, pos: fix }, fix.time);

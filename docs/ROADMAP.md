@@ -145,7 +145,8 @@ Segments (feature 10)
 - [x] Segments: create from an activity, auto-match on save, segment efforts ranked
       against your own (local; shared segments wait for phase 3)
 - [ ] Segment leaderboards (filters: age, weight, friends, clubs) **(premium)**
-- [ ] Live segments during recording **(premium)**
+- [x] Live segments during recording **(premium)** (start / finish detection, time left,
+      spoken result vs your record)
 - [ ] Local Legends (most efforts in 90 days)
 
 Maps & routes (features 4, 5, 6)

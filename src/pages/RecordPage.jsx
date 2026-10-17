@@ -3,6 +3,7 @@ import ConfirmButton from '../components/ConfirmButton.jsx';
 import LiveMap from '../components/LiveMap.jsx';
 import StatMetric from '../components/StatMetric.jsx';
 import { followRoute } from '../lib/follow.js';
+import { liveSegments } from '../lib/liveSegments.js';
 import { fmtDuration } from '../lib/format.js';
 import { speak, watchPosition } from '../lib/location.js';
 import { currentPace, elapsed, lapStatus } from '../lib/recorder.js';
@@ -10,16 +11,16 @@ import { joinLegs } from '../lib/routes.js';
 import { effort, SPORTS } from '../lib/sports.js';
 
 /** routeId: route to preselect (from "#/record/<id>"). */
-export default function RecordPage({ recording, routes, routeId, onSaved }) {
+export default function RecordPage({ recording, routes, routeId, segments, activities, onSaved }) {
   return (
     <>
       <header className="topbar"><h1>Enregistrer</h1></header>
-      {recording.rec ? <Live recording={recording} onSaved={onSaved} /> : <Setup recording={recording} routes={routes} routeId={routeId} />}
+      {recording.rec ? <Live recording={recording} onSaved={onSaved} /> : <Setup recording={recording} routes={routes} routeId={routeId} segments={segments} activities={activities} />}
     </>
   );
 }
 
-function Setup({ recording, routes, routeId }) {
+function Setup({ recording, routes, routeId, segments, activities }) {
   const [routeSel, setRouteSel] = useState(routeId ?? '');
   const route = routes?.find((r) => r.id === routeSel);
   const [sport, setSport] = useState(route?.sport ?? 'run');
@@ -32,7 +33,7 @@ function Setup({ recording, routes, routeId }) {
 
   const go = () => {
     if (audio) speak('Enregistrement démarré.'); // also unlocks speech on iOS, which needs a user gesture
-    recording.start({ sport, autoPause, audio, route: route && followRoute(route, joinLegs(route.legs)) });
+    recording.start({ sport, autoPause, audio, route: route && followRoute(route, joinLegs(route.legs)), liveSegs: liveSegments(segments, sport, activities) });
   };
 
   return (
@@ -101,6 +102,7 @@ function Live({ recording, onSaved }) {
         <div className="live-chips">
           <span className="chip">{avg.short} moy. <b>{avg.value}</b></span>
           {rec.laps?.length > 0 && <span key={rec.laps.length} className="chip lap">Tour {lapNow.n} <b>{fmtDuration(lapNow.time)}</b></span>}
+          <SegmentChip rec={rec} now={now} />
           {rec.route && (
             <span className="chip follow">🧭 <b>{rec.follow?.done ? 'Terminé' : `${(Math.max(0, rec.route.distance - (rec.follow?.along ?? 0)) / 1000).toFixed(2)} km`}</b></span>
           )}
@@ -127,4 +129,19 @@ function Live({ recording, onSaved }) {
       </div>
     </main>
   );
+}
+
+const RECENT = 30000; // ms a finished segment stays on screen
+
+/** Live segment in progress (time and distance left), or the one just finished. */
+function SegmentChip({ rec, now }) {
+  const { active, last } = rec.seg ?? {};
+  const seg = (id) => rec.liveSegs.find((s) => s.id === id);
+  if (active) {
+    const left = seg(active.id).line.distance - (active.follow?.along ?? 0);
+    return <span className="chip seg">⚡ {seg(active.id).name} <b>{fmtDuration((now - active.start) / 1000)}</b> {Math.round(Math.max(0, left))} m</span>;
+  }
+  if (!last || now - last.at > RECENT) return null;
+  const pr = last.pr != null && last.time < last.pr;
+  return <span className={`chip seg ${pr ? 'pr' : ''}`}>⚡ {seg(last.id).name} <b>{fmtDuration(last.time)}</b>{pr && ' Record !'}</span>;
 }

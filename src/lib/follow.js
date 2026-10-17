@@ -7,7 +7,7 @@ import { thin } from './heatmap.js';
 const OFF = 50; // m from the route line to count as off route
 const BACK = 30; // m to count as back on it (hysteresis, so GPS noise doesn't flap)
 const AHEAD = 1000; // m of route searched past the last known position
-const END = 30; // m before the end of the route to count it as done
+const END = 30; // m before the end of the route to count it as done (route.end overrides)
 const CLOSER = 5; // m a later stretch must be closer by to win over an earlier one (overlapping passes)
 
 /** The light copy of a route kept in a recording: [lon, lat] coords and cumulative meters. */
@@ -55,7 +55,7 @@ export function progress(route, pos, prev) {
   // Off route, keep the last progress: the athlete has not covered the stretch they skipped.
   if (off) return { ...(prev ?? { i: 0, along: 0, done: false }), off, gap: best.gap };
   const along = cum[best.i] + best.t * (cum[best.i + 1] - cum[best.i]);
-  return { i: best.i, along, off, gap: best.gap, done: prev?.done || along >= route.distance - END };
+  return { i: best.i, along, off, gap: best.gap, done: prev?.done || along >= route.distance - (route.end ?? END) };
 }
 
 /** Spoken message when following state changes between two recordings, else null. */

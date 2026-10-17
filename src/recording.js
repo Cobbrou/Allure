@@ -3,6 +3,7 @@ import { createActivity } from './lib/activity.js';
 import { clearDraft, loadDraft, saveActivities, saveDraft } from './lib/db.js';
 import { keepAwake, speak, watchPosition } from './lib/location.js';
 import { followCue } from './lib/follow.js';
+import { segmentCue } from './lib/liveSegments.js';
 import { addFix, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, splitCue, startRecording, tick } from './lib/recorder.js';
 
 const SAVE_EVERY = 5000; // ms between draft autosaves
@@ -22,7 +23,7 @@ export function useRecording() {
     const next = prev && fn(prev);
     if (!next || next === prev) return;
     if (next.audio) {
-      const cue = followCue(prev, next) ?? splitCue(prev, next, Date.now());
+      const cue = followCue(prev, next) ?? segmentCue(prev, next) ?? splitCue(prev, next, Date.now());
       if (cue) speak(cue);
     }
     ref.current = next;
