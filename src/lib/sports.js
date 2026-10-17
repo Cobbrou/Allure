@@ -30,3 +30,6 @@ export function effort(sport, sPerKm) {
       return { label: 'Allure moyenne', short: 'Allure', value: fmtPace(sPerKm), unit: '/km' };
   }
 }
+
+/** Grade Adjusted Pace only makes sense on foot. */
+export const usesGap = (sport) => SPORTS[sport]?.display === 'pace';

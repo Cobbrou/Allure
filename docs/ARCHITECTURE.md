@@ -80,9 +80,10 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
 
 // analyze(points): computed on demand, never stored
 {
-  track: Point & { dist /* cumulative m */, ele /* smoothed */ }[],
+  track: Point & { dist /* cumulative m */, ele /* smoothed */, gdist /* grade-adjusted m, with ele */ }[],
   distance, movingTime, avgPace, gain, avgHr, date,
-  splits,                // per km; the detail page uses computeSplits(track, sport.split)
+  gap,                   // grade adjusted pace, s/km (lib/gap.js, Minetti cost, downhill halved)
+  splits,                // per km, each with pace and gap; the detail page uses computeSplits(track, sport.split)
 }
 ```
 
@@ -126,7 +127,7 @@ src/
   components/    reusable UI (TabBar, ActivityCard, RoutePreview, StatsGrid, TrackMap,
                  ProfileChart, SplitsTable, BestEfforts, ImportButton, ConfirmButton,
                  Segmented, WeeklyChart, ActivityCalendar, RecordsList, LiveMap, HrZones, FitnessChart)
-  lib/           pure logic (analyze, records, stats, sports, format, activity, demo, recorder, training)
+  lib/           pure logic (analyze, gap, records, stats, sports, format, activity, demo, recorder, training)
                  + platform modules (db, share, story, location, formats/)
 ```
 

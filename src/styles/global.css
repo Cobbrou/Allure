@@ -139,6 +139,8 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 .splits th { text-align: left; color: var(--muted); font-size: 12px; font-weight: 500; padding: 6px 4px; border-bottom: 1px solid var(--border); }
 .splits td { padding: 7px 4px; font-size: 14px; border-bottom: 1px solid rgba(30, 41, 59, 0.5); }
 .splits .pace { font-weight: 600; width: 56px; }
+.splits .gap { color: var(--muted); width: 48px; }
+.stat .sub { color: var(--muted); font-size: 13px; margin-top: 2px; font-variant-numeric: tabular-nums; }
 .splits .bar-col { width: 40%; }
 .bar { height: 12px; border-radius: 4px; background: linear-gradient(90deg, rgba(252, 76, 2, 0.35), var(--accent)); }
 .splits tr.best .bar { box-shadow: 0 0 12px rgba(252, 76, 2, 0.6); }
