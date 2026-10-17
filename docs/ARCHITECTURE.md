@@ -145,7 +145,8 @@ and `lib/sports.js` (`effort()` picks km/h, min/km or min/100 m by sport).
   each pace fills ≥ 10 % of moving samples, and there are 2+ fast bouts. Bouts under
   20 s fold into their neighbours. Fixes under half the median speed (stops) keep the
   current label, so red lights don't make a workout.
-- **Challenges** (`lib/challenges.js`): monthly challenges are computed from metas on the  fly (nothing stored); a badge is a challenge completed within its calendar month.
+- **Challenges** (`lib/challenges.js`): monthly challenges are computed from metas on the
+  fly (nothing stored); a badge is a challenge completed within its calendar month.
 - **Heatmap** (`lib/heatmap.js`): tracks are streamed with `forEachTrack`, thinned to a
   point every 15 m, and drawn as one faint line per activity so overlaps add up. The map
   opens on the ~50 km cell holding the most starts.
