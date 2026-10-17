@@ -4,4 +4,7 @@
     <string name="title_activity_main">Allure</string>
     <string name="package_name">app.allure</string>
     <string name="custom_url_scheme">app.allure</string>
+    <!-- Background geolocation plugin: the recording notification (foreground service). -->
+    <string name="capacitor_background_geolocation_notification_channel_name">Enregistrement d'activité</string>
+    <string name="capacitor_background_geolocation_notification_color">#ff5500</string>
 </resources>

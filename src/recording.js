@@ -68,7 +68,7 @@ export function useRecording() {
       const s = sensor.current;
       const hr = s?.bpm && Date.now() - s.at < HR_FRESH ? s.bpm : null;
       update((r) => addFix(r, hr ? { ...fix, hr } : fix));
-    }, setGpsError);
+    }, setGpsError, { background: true });
     const timer = setInterval(() => {
       update((r) => tick(r, Date.now()));
       const r = ref.current;

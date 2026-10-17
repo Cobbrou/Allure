@@ -176,6 +176,20 @@ and stays as a big button. A manual pause never triggers a check-in.
 athlete is hurt. Truly automatic alerts need either a native SMS plugin (Android only) or
 the phase 3 backend sending them, which also unlocks live location sharing (Beacon).
 
+## 2026-10-17: Background GPS through @capacitor-community/background-geolocation
+
+**Context**: the WebView's `navigator.geolocation` stops when the screen turns off, so a
+native recording loses the track.
+**Decision**: in the native shell, `lib/location.watchPosition(…, { background: true })`
+uses the community background geolocation plugin (free, MIT, a location foreground
+service with a persistent "Enregistrement en cours" notification). Only the recording
+watcher asks for it; the GPS warm-up on the setup screen stays on the WebView API.
+`android.useLegacyBridge` is on, as the plugin requires, so updates don't stop after
+5 minutes in the background.
+**Consequences**: Android 13+ hides the notification unless `POST_NOTIFICATIONS` is
+granted; asking for it needs another plugin (`@capacitor/local-notifications`), not added
+yet. The paid Transistorsoft plugin (motion detection, better battery) stays an option.
+
 ## Open questions
 
 - **Backend stack** (phase 3). Candidates: Supabase (Postgres + PostGIS + auth, fastest

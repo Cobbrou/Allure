@@ -1,16 +1,20 @@
 // Platform module for live recording: GPS, screen wake lock, spoken cues.
-// Web APIs in development; native plugins (background location, BLE) can replace it.
+// Web APIs in development; in the native shell, recording uses the background
+// geolocation plugin (a foreground service keeps the GPS on with the screen off).
 
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { demoTrack } from './demo.js';
 
 /**
  * Watch the position. Calls onFix({ lat, lon, ele, time, accuracy, speed }) and
- * onError(message). Returns a stop function.
+ * onError(message). Returns a stop function. background: keep receiving fixes with the
+ * screen off (native shell only; shows the "recording" notification on Android).
  * Dev only: `?sim=5` in the URL replays a demo run at 5× speed instead of the real GPS.
  */
-export function watchPosition(onFix, onError) {
+export function watchPosition(onFix, onError, { background = false } = {}) {
   const sim = import.meta.env?.DEV && Number(new URLSearchParams(location.search).get('sim'));
   if (sim) return simulate(sim, onFix);
+  if (background && Capacitor.isNativePlatform()) return watchNative(onFix, onError);
   if (!navigator.geolocation) {
     onError('GPS indisponible sur cet appareil.');
     return () => {};
@@ -22,6 +26,27 @@ export function watchPosition(onFix, onError) {
     { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 },
   );
   return () => navigator.geolocation.clearWatch(id);
+}
+
+let BackgroundGeolocation;
+
+/** Native shell: @capacitor-community/background-geolocation watcher. */
+function watchNative(onFix, onError) {
+  BackgroundGeolocation ??= registerPlugin('BackgroundGeolocation');
+  let stopped = false;
+  const id = BackgroundGeolocation.addWatcher(
+    { backgroundTitle: 'Enregistrement en cours', backgroundMessage: 'Allure suit ta position pour ton activité.', requestPermissions: true, stale: false, distanceFilter: 0 },
+    (loc, err) => {
+      if (err) return onError(err.code === 'NOT_AUTHORIZED' ? 'Accès à la position refusé.' : 'Signal GPS perdu.');
+      onFix({ lat: loc.latitude, lon: loc.longitude, ele: loc.altitude, time: loc.time, accuracy: loc.accuracy, speed: loc.speed });
+    },
+  );
+  id.catch(() => onError('GPS indisponible sur cet appareil.'));
+  return () => {
+    if (stopped) return;
+    stopped = true;
+    id.then((watcherId) => BackgroundGeolocation.removeWatcher({ id: watcherId }), () => {});
+  };
 }
 
 function simulate(speedup, onFix) {

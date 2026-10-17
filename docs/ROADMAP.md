@@ -84,6 +84,8 @@ Motion & polish
       running the web code. Android project set up (Capacitor 8, `app.allure`); first
       device build and the iOS project to do
 - [ ] Background location plugin: records with the screen off
+      (`@capacitor-community/background-geolocation` wired on Android: foreground-service
+      notification, legacy bridge; to verify on a device, iOS later)
 - [x] Record screen: start / pause / resume / finish (web `watchPosition` in dev,
       native plugin on device)
 - [x] Live stats: time, distance, current & average pace, live map
