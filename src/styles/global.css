@@ -77,6 +77,9 @@ button, .button {
 button:hover, .button:hover { filter: brightness(1.12); }
 button:disabled { opacity: 0.6; cursor: default; }
 button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+/* Keyboard-operable chart and map: ring drawn inside, cards clip overflow. Mouse/touch focus shows none. */
+.recharts-surface:focus, .maplibregl-canvas:focus { outline: none; }
+.recharts-surface:focus-visible, .maplibregl-canvas:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
 .ghost { background: transparent; color: var(--text); border-color: var(--border); }
 .ghost:hover { background: var(--border); }
 .small { min-height: 38px; padding: 0 14px; font-size: 14px; }

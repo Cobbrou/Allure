@@ -207,6 +207,9 @@ Pixel Watch / Google
 - [x] Imperial units (Profile → Unités: mi, ft, /mi, mi/h, /100 yd, mile splits and
       spoken cues; named race distances and monthly challenges stay metric)
 - [ ] Accessibility pass (keyboard navigation of chart and map, contrast)
+      (done: elevation/HR chart scrubs with ←/→ and drives the map cursor, maps keyboard-
+      pannable with French labels and hints, focus rings. Left: white button text on the
+      accent is 3.2:1, under WCAG AA 4.5:1 for 15 px text)
 - [ ] Self-hosted or paid map tiles for production. The free Carto basemap has
       usage limits.
 - [x] Settings screen (account name, units, recording defaults, HR, permissions, privacy

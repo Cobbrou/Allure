@@ -10,7 +10,7 @@ import { distUnit, elevUnit, fmtDist, fmtElev } from '../lib/format.js';
 import { homeLines, thin } from '../lib/heatmap.js';
 import { sportOptions, SPORTS } from '../lib/sports.js';
 import { MAP_STYLE } from '../lib/offline.js';
-import { ACCENT } from '../theme.js';
+import { ACCENT, MAP_LOCALE } from '../theme.js';
 
 setWorkerUrl(workerUrl);
 
@@ -80,7 +80,7 @@ function HeatMap({ lines }) {
   }, [lines]);
 
   useEffect(() => {
-    const m = new MapLibre({ container: el.current, style: MAP_STYLE, bounds, fitBoundsOptions: { padding: 30 }, cooperativeGestures: true });
+    const m = new MapLibre({ container: el.current, style: MAP_STYLE, locale: MAP_LOCALE, bounds, fitBoundsOptions: { padding: 30 }, cooperativeGestures: true });
     m.on('load', () => {
       el.current?.classList.add('ready');
       m.addSource('heat', { type: 'geojson', data });

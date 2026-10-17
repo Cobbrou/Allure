@@ -18,32 +18,38 @@ const ProfileChart = memo(function ProfileChart({ track, hover }) {
   }, [track]);
 
   if (!hasEle && !hasHr) return <p className="muted">Ni altitude ni fréquence cardiaque dans ce fichier.</p>;
+  const title = `Profil${hasEle ? " d'altitude" : ''}${hasHr ? `${hasEle ? ' et' : ''} de fréquence cardiaque` : ''}`;
+  // accessibilityLayer: the chart takes focus and ←/→ move the cursor (Recharts spoofs onMouseMove).
   return (
-    <ResponsiveContainer width="100%" height={280}>
-      <ComposedChart
-        data={data}
-        margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
-        onMouseMove={(s) => hover.current(s?.activePayload?.[0]?.payload.i ?? null)}
-        onMouseLeave={() => hover.current(null)}
-      >
-        <defs>
-          <linearGradient id="eleFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={TICK} stopOpacity={0.45} />
-            <stop offset="100%" stopColor={TICK} stopOpacity={0.02} />
-          </linearGradient>
-        </defs>
-        <CartesianGrid stroke={GRID} vertical={false} />
-        <XAxis dataKey="km" type="number" domain={[0, 'dataMax']} tickFormatter={(v) => `${v.toFixed(1)} ${distUnit()}`}
-          stroke={AXIS} tick={{ fill: TICK, fontSize: 12 }} tickCount={8} />
-        {hasEle && <YAxis yAxisId="ele" domain={[(v) => Math.floor((v - 10) / 50) * 50, (v) => Math.ceil((v + 10) / 50) * 50]}
-          tickFormatter={(v) => `${Math.round(v)} ${elevUnit()}`} stroke={AXIS} tick={{ fill: TICK, fontSize: 12 }} width={60} />}
-        {hasHr && <YAxis yAxisId="hr" orientation="right" domain={[(v) => Math.floor((v - 5) / 20) * 20, (v) => Math.ceil((v + 5) / 20) * 20]}
-          tickFormatter={(v) => Math.round(v)} stroke={AXIS} tick={{ fill: '#f87171', fontSize: 12 }} width={40} />}
-        <Tooltip content={<ChartTip />} cursor={{ stroke: ACCENT, strokeWidth: 1 }} />
-        {hasEle && <Area yAxisId="ele" dataKey="ele" stroke="#cbd5e1" strokeWidth={1.5} fill="url(#eleFill)" isAnimationActive={false} />}
-        {hasHr && <Line yAxisId="hr" dataKey="hr" stroke="#ef4444" strokeWidth={1.5} dot={false} isAnimationActive={false} />}
-      </ComposedChart>
-    </ResponsiveContainer>
+    <div onBlur={() => hover.current(null)}>
+      <ResponsiveContainer width="100%" height={280}>
+        <ComposedChart
+          accessibilityLayer
+          title={`${title}, flèches gauche et droite pour parcourir`}
+          data={data}
+          margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
+          onMouseMove={(s) => hover.current(s?.activePayload?.[0]?.payload.i ?? null)}
+          onMouseLeave={() => hover.current(null)}
+        >
+          <defs>
+            <linearGradient id="eleFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={TICK} stopOpacity={0.45} />
+              <stop offset="100%" stopColor={TICK} stopOpacity={0.02} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid stroke={GRID} vertical={false} />
+          <XAxis dataKey="km" type="number" domain={[0, 'dataMax']} tickFormatter={(v) => `${v.toFixed(1)} ${distUnit()}`}
+            stroke={AXIS} tick={{ fill: TICK, fontSize: 12 }} tickCount={8} />
+          {hasEle && <YAxis yAxisId="ele" domain={[(v) => Math.floor((v - 10) / 50) * 50, (v) => Math.ceil((v + 10) / 50) * 50]}
+            tickFormatter={(v) => `${Math.round(v)} ${elevUnit()}`} stroke={AXIS} tick={{ fill: TICK, fontSize: 12 }} width={60} />}
+          {hasHr && <YAxis yAxisId="hr" orientation="right" domain={[(v) => Math.floor((v - 5) / 20) * 20, (v) => Math.ceil((v + 5) / 20) * 20]}
+            tickFormatter={(v) => Math.round(v)} stroke={AXIS} tick={{ fill: '#f87171', fontSize: 12 }} width={40} />}
+          <Tooltip content={<ChartTip />} cursor={{ stroke: ACCENT, strokeWidth: 1 }} />
+          {hasEle && <Area yAxisId="ele" dataKey="ele" stroke="#cbd5e1" strokeWidth={1.5} fill="url(#eleFill)" isAnimationActive={false} />}
+          {hasHr && <Line yAxisId="hr" dataKey="hr" stroke="#ef4444" strokeWidth={1.5} dot={false} isAnimationActive={false} />}
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
   );
 });
 

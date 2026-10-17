@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // MapLibre resolves its worker relative to its own module URL, which Vite's dep bundling breaks.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import { MAP_STYLE } from '../lib/offline.js';
-import { ACCENT } from '../theme.js';
+import { ACCENT, MAP_LOCALE } from '../theme.js';
 import Terrain3D from './Terrain3D.js';
 
 setWorkerUrl(workerUrl);
@@ -21,7 +21,7 @@ export default function TrackMap({ track, hover, range }) {
     const coords = track.map((p) => [p.lon, p.lat]);
     const bounds = coords.reduce((b, c) => b.extend(c), new LngLatBounds(coords[0], coords[0]));
     // cooperativeGestures: one finger scrolls the page, two fingers move the map (ctrl+wheel on desktop).
-    const map = new MapLibre({ container: el.current, style: MAP_STYLE, bounds, fitBoundsOptions: { padding: 40 }, cooperativeGestures: true });
+    const map = new MapLibre({ container: el.current, style: MAP_STYLE, locale: MAP_LOCALE, bounds, fitBoundsOptions: { padding: 40 }, cooperativeGestures: true });
 
     const line = (c) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: c } });
     let frame;
