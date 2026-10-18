@@ -463,6 +463,7 @@ export default {
   'Télécharger la carte': 'Download map',
   'Chaleur': 'Heatmap',
   'Créer un itinéraire': 'Create a route',
+  'Trouver un itinéraire': 'Find a route',
   'Trace ton parcours, collé aux routes et sentiers': 'Draw your route, snapped to roads and trails',
   "Idées d'itinéraires": 'Route ideas',
   'Des boucles proposées selon ta distance, ton dénivelé et tes envies': 'Loops suggested by distance, elevation and what you feel like',

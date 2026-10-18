@@ -5,8 +5,8 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // Same Vite worker fix as TrackMap.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import RoutePreview from '../components/RoutePreview.jsx';
-import Segmented from '../components/Segmented.jsx';
-import { forEachTrack } from '../lib/db.js';
+import Terrain3D from '../components/Terrain3D.js';
+import { forEachTrack, getSetting, setSetting } from '../lib/db.js';
 import { distUnit, elevUnit, fmtDist, fmtElev } from '../lib/format.js';
 import { homeLines, thin } from '../lib/heatmap.js';
 import { watchPosition } from '../lib/location.js';
@@ -38,11 +38,21 @@ export default function MapsPage({ activities, routes }) {
   const carousel = useRef();
   const options = useMemo(() => sportOptions([...list, ...(routes ?? [])]), [list, routes]);
 
-  useEffect(() => watchPosition((f) => {
-    setPos([f.lon, f.lat]);
-    setOrigin((o) => o ?? [f.lon, f.lat]);
-    setGpsError(null);
-  }, setGpsError), []);
+  const [last, setLast] = useState(null); // last known position: the map opens on it before the first fix
+
+  useEffect(() => {
+    getSetting('lastPos').then(setLast, () => {});
+    let saved = false;
+    return watchPosition((f) => {
+      setPos([f.lon, f.lat]);
+      setOrigin((o) => o ?? [f.lon, f.lat]);
+      setGpsError(null);
+      if (!saved) {
+        saved = true;
+        setSetting('lastPos', [f.lon, f.lat]).catch(() => {});
+      }
+    }, setGpsError, { maxAge: 60000 });
+  }, []);
 
   useEffect(() => {
     if (!activities) return;
@@ -77,12 +87,23 @@ export default function MapsPage({ activities, routes }) {
   const start = origin ?? list.find((a) => a.preview?.length)?.preview[0] ?? FALLBACK_START;
   return (
     <main className="explore">
-      <ExploreMap start={start} pos={pos} heat={heat ? heatLines : null} routes={shown} picked={shown[index]?.id} focus={focus} onPick={pick} />
+      <ExploreMap start={start} last={last} pos={pos} heat={heat ? heatLines : null} routes={shown} picked={shown[index]?.id} focus={focus} onPick={pick} />
       <div className="explore-top">
-        {options.length > 2 && <Segmented label={t('Sport')} options={options} value={sport} onChange={setSport} />}
-        <button type="button" className="map-btn" aria-pressed={heat} onClick={() => setHeat(!heat)}>{t('Chaleur')}</button>
+        <div className="map-search">
+          <label className="map-sport">
+            <span aria-hidden="true">{SPORTS[sport]?.icon ?? '🗺️'}</span>
+            <select aria-label={t('Sport')} value={sport} onChange={(e) => setSport(e.target.value)}>
+              {options.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+            </select>
+          </label>
+          <a href="#/suggest">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+            {t('Trouver un itinéraire')}
+          </a>
+        </div>
+        <button type="button" className="map-filter" aria-pressed={heat} onClick={() => setHeat(!heat)}>{t('Chaleur')}</button>
+        {gpsError && <p className="map-alert" role="status"><span aria-hidden="true">i</span>{gpsError}</p>}
       </div>
-      {gpsError && <p className="chip explore-gps" role="status">{gpsError}</p>}
       <div className="map-carousel" ref={carousel} onScroll={onScroll}>
         {shown.map((r, i) => (
           <a key={r.id} className={`card link-card route-card${i === index ? ' on' : ''}`} href={`#/route/${r.id}`}>
@@ -113,14 +134,16 @@ const lineFeatures = (items, coords, props = () => ({})) => ({
   features: items.map((x) => ({ type: 'Feature', properties: props(x), geometry: { type: 'LineString', coordinates: coords(x) } })),
 });
 const boundsOf = (coords) => coords.reduce((b, c) => b.extend(c), new LngLatBounds(coords[0], coords[0]));
-const FIT = { top: 80, bottom: 140, left: 30, right: 30 }; // clear of the floating controls and the carousel
+const FIT = { top: 120, bottom: 140, left: 30, right: 70 }; // clear of the floating controls and the carousel
 
-/** The map itself. heat: heatmap lines, or null when hidden; picked: highlighted route id; focus: route to fit on. */
-function ExploreMap({ start, pos, heat, routes, picked, focus, onPick }) {
+/** The map itself. last: last known position, to open on; heat: heatmap lines, or null when hidden; picked: highlighted route id; focus: route to fit on. */
+function ExploreMap({ start, last, pos, heat, routes, picked, focus, onPick }) {
   const el = useRef();
   const map = useRef();
   const me = useRef();
+  const threeD = useRef();
   const moved = useRef(false); // the athlete panned: stop auto-centering
+  const placed = useRef(false); // centered on the athlete (live or last known): no heatmap fit
   const cb = useRef();
   cb.current = onPick;
   const [ready, setReady] = useState(false);
@@ -145,6 +168,8 @@ function ExploreMap({ start, pos, heat, routes, picked, focus, onPick }) {
       // Wide invisible line: a finger-sized target to tap a route.
       m.addLayer({ id: 'routes-hit', type: 'line', source: 'routes', layout: round, paint: { 'line-color': ROUTE, 'line-width': 24, 'line-opacity': 0 } });
       m.on('click', 'routes-hit', (e) => cb.current(e.features[0].properties.id));
+      // The 3D button joins the floating column instead of a map corner.
+      threeD.current.replaceChildren(new Terrain3D().onAdd(m));
       setReady(true);
     });
     me.current = new Marker({ element: Object.assign(document.createElement('div'), { className: 'pin me' }) });
@@ -157,8 +182,8 @@ function ExploreMap({ start, pos, heat, routes, picked, focus, onPick }) {
     if (!ready) return;
     m.getSource('heat').setData(lineFeatures(heat ?? [], (l) => l.coords));
     // No position yet: open on the home area of the heatmap instead.
-    if (heat?.length && !pos && !moved.current) m.fitBounds(boundsOf(homeLines(heat).flatMap((l) => l.coords)), { padding: FIT, duration: 0 });
-  }, [ready, heat]); // eslint-disable-line react-hooks/exhaustive-deps -- pos only gates the first fit
+    if (heat?.length && !placed.current && !moved.current) m.fitBounds(boundsOf(homeLines(heat).flatMap((l) => l.coords)), { padding: FIT, duration: 0 });
+  }, [ready, heat]);
 
   useEffect(() => {
     if (ready) map.current.getSource('routes').setData(lineFeatures(routes, (r) => r.preview, (r) => ({ id: r.id })));
@@ -175,9 +200,20 @@ function ExploreMap({ start, pos, heat, routes, picked, focus, onPick }) {
   }, [focus]);
 
   useEffect(() => {
+    if (!last || placed.current || moved.current) return;
+    placed.current = true;
+    map.current.jumpTo({ center: last, zoom: 14 });
+  }, [last]);
+
+  useEffect(() => {
     if (!pos) return;
     me.current.setLngLat(pos).addTo(map.current);
-    if (!moved.current) map.current.easeTo({ center: pos, zoom: Math.max(map.current.getZoom(), 14) });
+    if (moved.current) return;
+    const view = { center: pos, zoom: Math.max(map.current.getZoom(), 14) };
+    // First placement lands straight on the athlete; later fixes follow smoothly.
+    if (placed.current) map.current.easeTo(view);
+    else map.current.jumpTo(view);
+    placed.current = true;
   }, [pos]);
 
   const locate = () => {
@@ -188,9 +224,15 @@ function ExploreMap({ start, pos, heat, routes, picked, focus, onPick }) {
   return (
     <>
       <div ref={el} className="map explore-map" />
-      <button type="button" className="map-btn locate" onClick={locate} disabled={!pos} aria-label={t('Me localiser')}>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /><circle cx="12" cy="12" r="8" /></svg>
-      </button>
+      <div className="map-fabs">
+        <div ref={threeD} />
+        <button type="button" className="map-fab" onClick={locate} disabled={!pos} aria-label={t('Me localiser')}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /><circle cx="12" cy="12" r="8" /></svg>
+        </button>
+        <a className="map-fab" href="#/route/new" aria-label={t('Créer un itinéraire')}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4L15 6l3 3L8 19zM13 8l3 3M18 2v6M15 5h6" /></svg>
+        </a>
+      </div>
     </>
   );
 }

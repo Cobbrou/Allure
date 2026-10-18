@@ -10,9 +10,10 @@ import { demoTrack } from './demo.js';
  * Watch the position. Calls onFix({ lat, lon, ele, time, accuracy, speed }) and
  * onError(message). Returns a stop function. background: keep receiving fixes with the
  * screen off (native shell only; shows the "recording" notification on Android).
+ * maxAge: accept a cached fix up to that old (ms) as the first one, for a fast first answer.
  * Dev only: `?sim=5` in the URL replays a demo run at 5× speed instead of the real GPS.
  */
-export function watchPosition(onFix, onError, { background = false } = {}) {
+export function watchPosition(onFix, onError, { background = false, maxAge = 0 } = {}) {
   const sim = import.meta.env?.DEV && Number(new URLSearchParams(location.search).get('sim'));
   if (sim) return simulate(sim, onFix);
   if (background && Capacitor.isNativePlatform()) return watchNative(onFix, onError);
@@ -24,7 +25,7 @@ export function watchPosition(onFix, onError, { background = false } = {}) {
     ({ coords: c, timestamp }) =>
       onFix({ lat: c.latitude, lon: c.longitude, ele: c.altitude, time: timestamp, accuracy: c.accuracy, speed: c.speed }),
     (e) => onError(t(e.code === e.PERMISSION_DENIED ? 'Accès à la position refusé.' : 'Signal GPS perdu.')),
-    { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 },
+    { enableHighAccuracy: true, maximumAge: maxAge, timeout: 30000 },
   );
   return () => navigator.geolocation.clearWatch(id);
 }

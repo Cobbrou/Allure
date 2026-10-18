@@ -67,6 +67,7 @@ a { color: inherit; text-decoration: none; }
 }
 .tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--muted); }
 .tabbar a.active { color: var(--accent); }
+.tabbar a.active svg { box-sizing: content-box; padding: 2px 14px; margin: -2px 0; border-radius: 14px; background: var(--accent-15); }
 .tabbar svg { width: 24px; height: 24px; }
 
 /* Buttons: >= 44px tap targets */
@@ -632,17 +633,35 @@ button:active:not(:disabled), .button:active, .activity-card:active, .sport-pick
 /* Maps tab: full-screen map between the top safe area and the tab bar, controls float over it */
 .explore { position: fixed; inset: 0 0 calc(var(--tabbar-h) + var(--safe-bottom)); max-width: 640px; margin: 0 auto; overflow: hidden; }
 .map.explore-map { height: 100%; }
-.explore-top { position: absolute; top: calc(var(--safe-top) + 10px); left: 12px; right: 12px; display: flex; gap: 8px; align-items: center; }
-.explore-top .segmented { flex: 1; min-width: 0; background: rgba(15, 17, 21, 0.82); backdrop-filter: blur(8px); }
-.explore-top .map-btn { margin-left: auto; }
-.map-btn {
-  min-width: 44px; min-height: 44px; padding: 0 14px; border-radius: 22px; display: grid; place-items: center; font-size: 13px;
-  background: rgba(15, 17, 21, 0.82); border: 1px solid var(--border); color: var(--text); backdrop-filter: blur(8px);
+.explore-top { position: absolute; top: calc(var(--safe-top) + 10px); left: 16px; right: 16px; display: grid; justify-items: start; gap: 8px; }
+.map-search {
+  justify-self: stretch; display: flex; align-items: center; min-height: 48px; border-radius: 24px; overflow: hidden;
+  background: rgba(24, 27, 34, 0.94); border: 1px solid var(--border); backdrop-filter: blur(8px); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
-.map-btn[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-.map-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; }
-.map-btn.locate { position: absolute; right: 12px; bottom: 150px; padding: 0; }
-.explore-gps { position: absolute; left: 12px; bottom: 156px; }
+.map-sport { position: relative; display: flex; align-items: center; gap: 2px; align-self: stretch; padding: 0 10px 0 14px; border-right: 1px solid var(--border-strong); font-size: 20px; }
+.map-sport::after { content: '▾'; font-size: 12px; color: var(--accent); }
+/* Invisible native select over the icon: the OS picker, no custom dropdown. */
+.map-sport select { position: absolute; inset: 0; opacity: 0; font-size: 16px; cursor: pointer; }
+.map-search a { flex: 1; display: flex; align-items: center; gap: 8px; align-self: stretch; padding: 0 14px; color: var(--muted); font-size: 15px; }
+.map-search svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.map-filter {
+  min-height: 44px; padding: 0 16px; border-radius: 22px; font-size: 13px;
+  background: rgba(15, 17, 21, 0.82); border: 1px solid var(--accent); color: var(--accent); backdrop-filter: blur(8px);
+}
+.map-filter[aria-pressed='true'] { background: var(--accent); color: var(--on-accent); }
+.map-alert {
+  justify-self: stretch; display: flex; align-items: center; gap: 10px; margin: 0; padding: 10px 12px; border-radius: 12px;
+  font-size: 13px; color: var(--text); background: rgba(15, 17, 21, 0.9); backdrop-filter: blur(8px);
+}
+.map-alert span { flex: none; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: var(--text); color: var(--bg); font-size: 12px; font-weight: 800; }
+.map-fabs { position: absolute; right: 16px; bottom: 150px; display: grid; gap: 12px; }
+.map-fab, .map-fabs .ctrl-3d {
+  width: 48px; height: 48px; padding: 0; border-radius: 50%; display: grid; place-items: center; font-size: 15px;
+  background: var(--card); border: 1px solid var(--border-strong); color: var(--text); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+.map-fabs .maplibregl-ctrl-group { margin: 0; background: none; box-shadow: none; }
+.map-fabs .ctrl-3d[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.map-fab svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .map-carousel {
   position: absolute; left: 0; right: 0; bottom: 12px; display: flex; gap: 10px; padding: 0 12px; scroll-padding: 0 12px;
   overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
