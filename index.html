@@ -9,7 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Launch screen: same mark, size and position as the native splash; React replaces it on mount. -->
+    <div id="root"><div style="position:fixed;inset:0;display:grid;place-items:center;background:#0f1115"><svg width="112" height="96" viewBox="33 30 42 36" aria-label="Allure"><path d="M54 30 75 66H33z" fill="#ff5500"/></svg></div></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
