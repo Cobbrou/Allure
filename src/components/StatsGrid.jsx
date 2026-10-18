@@ -10,7 +10,10 @@ export default function StatsGrid({ act }) {
   const e = effort(act.sport, act.avgPace);
   const tiles = [
     { label: t('Distance'), count: act.distance, format: fmtDist, unit: distUnit(), size: 'xl', cls: 'hero' },
-    act.movingTime != null ? { label: t('Temps en mouvement'), count: act.movingTime, format: fmtDuration } : { label: t('Temps en mouvement'), value: '—' },
+    act.movingTime != null
+      ? { label: t('Temps en mouvement'), count: act.movingTime, format: fmtDuration,
+        sub: act.elapsedTime - act.movingTime >= 60 ? t('Écoulé {time}', { time: fmtDuration(act.elapsedTime) }) : null }
+      : { label: t('Temps en mouvement'), value: '—' },
     { label: e.label, value: e.value, unit: act.avgPace ? e.unit : '', sub: usesGap(act.sport) && act.gap ? `GAP ${fmtPaceUnit(act.gap)} ${paceUnit()}` : null },
     act.gain != null ? { label: t('Dénivelé positif'), count: act.gain, format: fmtElev, unit: elevUnit() } : { label: t('Dénivelé positif'), value: '—' },
     act.avgHr ? { label: t('FC moyenne'), count: act.avgHr, format: int, unit: 'bpm' } : { label: t('FC moyenne'), value: '—' },

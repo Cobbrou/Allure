@@ -125,7 +125,7 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
 // analyze(points, sport): computed on demand, never stored; splits come from computeSplits(track, size, sport)
 {
   track: Point & { dist /* cumulative m */, ele /* smoothed */, gdist /* grade-adjusted m, with ele */ }[],
-  distance, movingTime, avgPace, gain, avgHr, date,
+  distance, movingTime, elapsedTime, avgPace, gain, avgHr, date,
   gap,                   // grade adjusted pace, s/km (lib/gap.js, Minetti cost, downhill halved)
 }
 ```

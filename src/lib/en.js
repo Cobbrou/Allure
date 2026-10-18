@@ -54,6 +54,7 @@ export default {
   'Génération…': 'Generating…',
   'Recherche…': 'Searching…',
   'Enregistrement…': 'Saving…',
+  'Écoulé {time}': 'Elapsed {time}',
   'Terminé': 'Finished',
   '{n} jour': '{n} day',
   '{n} jours': '{n} days',

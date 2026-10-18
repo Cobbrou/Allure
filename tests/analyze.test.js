@@ -35,6 +35,13 @@ test('computeSplits supports custom split sizes', () => {
   assert.equal(computeSplits(a.track, 100).length, 100);
 });
 
+test('elapsed time counts stops', () => {
+  const p = [{ lat: 45, lon: 6, time: 0 }, { lat: 45.001, lon: 6, time: 30e3 }, { lat: 45.001, lon: 6, time: 330e3 }];
+  const a = analyze(p);
+  assert.equal(a.elapsedTime, 330);
+  assert.equal(a.movingTime, 30);
+});
+
 test('moving threshold depends on the sport', () => {
   // A steep climb on foot: 0.3 m/s horizontal, 3 s between points.
   const climb = Array.from({ length: 101 }, (_, i) => ({ lat: 45 + (i * 0.9) / 111195, lon: 6, time: i * 3000 }));

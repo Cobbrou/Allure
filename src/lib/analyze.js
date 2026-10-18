@@ -45,6 +45,7 @@ export function analyze(points, sport) {
     track,
     distance: dist,
     movingTime: hasTime ? movingTime : null,
+    elapsedTime: hasTime && points.length ? (points.at(-1).time - points[0].time) / 1000 : null, // stops and pauses included
     avgPace: hasTime && dist ? movingTime / (dist / 1000) : null,
     gap: hasTime && gdist?.at(-1) ? movingTime / (gdist.at(-1) / 1000) : null, // grade adjusted pace, s/km
     gain: ele ? gain : null,
