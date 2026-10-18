@@ -232,8 +232,8 @@ Fixes
       as stopped. Make it per sport (like `STOP_SPEED` in the recorder)
       (`SPORTS[sport].moving`: hike and swim 0.2, walk 0.25; DB v8 recomputes them. Live
       auto-pause uses it too and no longer pauses a slow climb between stored points)
-- [ ] Deleted segments leave their efforts on activity metas (see `db.js`): clean them on
-      delete instead of filtering on every read
+- [x] Deleted segments leave their efforts on activity metas (see `db.js`): clean them on
+      delete instead of filtering on every read (orphans from earlier deletes stay, filtered out)
 - [ ] Route following is forward-only: a route run in reverse reads as off route
       (`follow.js`). Detect the direction from the first fixes
 - [ ] Feed renders every activity at once: a 1 000-activity Strava archive mounts 1 000

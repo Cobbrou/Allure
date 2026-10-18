@@ -186,9 +186,18 @@ export const saveSegment = (seg) =>
     }), (meta) => meta.sport === seg.sport);
   });
 
-// ponytail: efforts of a deleted segment stay on metas; every reader goes through the
-// segment list, so they are dead weight only. Strip them with backfill if that grows.
-export const deleteSegment = (id) => tx(['segments'], 'readwrite', (s) => s.delete(id));
+/** Delete a segment and strip its efforts from the metas. */
+export const deleteSegment = (id) =>
+  tx(['activities', 'segments'], 'readwrite', (acts, segs) => {
+    segs.delete(id);
+    acts.openCursor().onsuccess = (e) => {
+      const cursor = e.target.result;
+      if (!cursor) return;
+      const { efforts } = cursor.value;
+      if (efforts?.some((x) => x.seg === id)) cursor.update({ ...cursor.value, efforts: efforts.filter((x) => x.seg !== id) });
+      cursor.continue();
+    };
+  });
 
 // ponytail: routes keep their points inline, so listing loads every point. Split them into
 // their own store like tracks if athletes save hundreds of long routes.

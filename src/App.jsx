@@ -96,7 +96,7 @@ export default function App() {
   const addSegment = async (seg) => { await saveSegment(seg); await Promise.all([loadSegments(), reload()]); };
   const removeSegment = async (sid) => {
     await deleteSegment(sid);
-    await loadSegments();
+    await Promise.all([loadSegments(), reload()]);
     back('/profile');
   };
   const [routes, setRoutes] = useState(null);
