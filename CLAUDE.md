@@ -69,7 +69,7 @@ src/
   components/       reusable React components, one per file, default export
   lib/              pure logic (analyze, records, stats, sports, format, i18n…)
                     + platform modules (db, offline, share, story, importer, formats/, location,
-                      sensors, lockscreen, haptics, health, shell: native-only, loaded in the app)
+                      sensors, lockscreen, haptics, health, elevation, shell: native-only, loaded in the app)
   styles/global.css design tokens (CSS vars) + all styles
 tests/              node:test files for src/lib
 docs/               ROADMAP, ARCHITECTURE, DECISIONS
@@ -84,7 +84,7 @@ Details and data model: `docs/ARCHITECTURE.md`.
 - Keep domain logic in `src/lib/` as pure functions (no React). Browser APIs
   (`DOMParser`, canvas, IndexedDB, Web Share, geolocation, Web Bluetooth, Media Session,
   Vibration) are allowed only in platform modules (`formats/`, `story.js`, `db.js`,
-  `share.js`, `location.js`, `sensors.js`, `lockscreen.js`, `haptics.js`, `health.js`, `shell.js`,
+  `share.js`, `location.js`, `sensors.js`, `lockscreen.js`, `haptics.js`, `health.js`, `elevation.js`, `shell.js`,
   `offline.js`).
   Capacitor plugins are imported dynamically behind `Capacitor.isNativePlatform()`, so
   the browser build never loads them.

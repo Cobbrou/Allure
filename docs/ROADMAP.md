@@ -224,8 +224,10 @@ Fixes
       fix that moved ≥ 3 m or passed the accuracy filter. Keep HR samples on their own
       timeline (stops, tunnels, bad GPS)
       (a heart-rate-only point at the last position every 5 s while no fix is stored)
-- [ ] Absolute elevation is GPS ellipsoid height (~50 m too high in France): correct it
+- [x] Absolute elevation is GPS ellipsoid height (~50 m too high in France): correct it
       with the AWS Terrain DEM already used for 3D, Strava-style "elevation correction"
+      (recorded activities, on finish; imports keep their altitude)
+- [ ] "Correct elevation" button on an imported activity (same `correctElevation`)
 - [ ] Moving time uses one 0.5 m/s threshold for every sport: steep hikes and swims read
       as stopped. Make it per sport (like `STOP_SPEED` in the recorder)
 - [ ] Deleted segments leave their efforts on activity metas (see `db.js`): clean them on

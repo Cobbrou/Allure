@@ -3,6 +3,18 @@
 Lightweight decision log. Newest first. Each entry: context, decision, consequences.
 Open questions sit at the bottom until decided.
 
+## 2026-10-18: Recorded altitude comes from the DEM
+
+**Context**: phone GPS altitude is WGS84 ellipsoid height (~50 m above sea level in
+France) and noisy, so recorded D+ and profiles were off.
+**Decision**: on finish, `lib/elevation.js` replaces the altitude of a recorded track
+with the AWS Terrain DEM (terrarium tiles at z12, ~27 m per pixel, bilinear), the source
+the 3D map already uses. It waits at most 5 s and skips tracks needing over 64 tiles;
+offline or on failure the GPS altitude stays. The draft stays stored meanwhile.
+Imported activities keep their altitude: watches often have a barometer.
+**Consequences**: finishing a recording does up to ~1 s of network on a good
+connection. DEM height is the ground: bridges dip and tunnels follow the hill above.
+
 ## 2026-10-17: Segments are local, efforts live on the activity meta
 
 **Context**: segments are the core of Strava's competitive side, but Allure has no

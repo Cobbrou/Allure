@@ -200,7 +200,7 @@ src/
                  SegmentEfforts, ErrorBoundary, Intervals, Gear)
   lib/           pure logic (analyze, gap, records, stats, sports, format, activity, demo, recorder, training,
                  segments, heatmap, intervals, gear)
-                 + platform modules (db, share, story, location, formats/)
+                 + platform modules (db, share, story, location, elevation, formats/)
 ```
 
 - **Chart ↔ map sync**: `ActivityPage` owns a `hover` ref. `TrackMap` assigns

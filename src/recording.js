@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createActivity } from './lib/activity.js';
 import { clearDraft, loadDraft, saveActivities, saveDraft } from './lib/db.js';
+import { correctElevation } from './lib/elevation.js';
 import { followCue } from './lib/follow.js';
 import { distUnit, fmtDist, fmtDuration } from './lib/format.js';
 import { haptic } from './lib/haptics.js';
@@ -26,6 +27,7 @@ export function useRecording() {
   const lastSave = useRef(0);
   const sensor = useRef(null); // { disconnect, bpm, at }
   const lock = useRef(null); // lock-screen controls while recording
+  const finishing = useRef(null); // the save in progress: a second tap waits for it
 
   const update = useCallback((fn) => {
     const prev = ref.current;
@@ -98,16 +100,18 @@ export function useRecording() {
       if (ref.current.audio) speak(lapCue(done.n, done.time));
     },
     /** Saves the activity and returns its id, or null if the track is too short. */
-    finish: async () => {
+    // The draft stays stored until the activity is saved, so waiting on the DEM loses nothing.
+    finish: () => (finishing.current ??= (async () => {
       const r = ref.current;
       if (r.points.length < 2) return null;
-      const act = createActivity({ sport: r.sport, points: r.points, source: 'record', laps: lapStarts(r) });
+      const points = await correctElevation(r.points);
+      const act = createActivity({ sport: r.sport, points, source: 'record', laps: lapStarts(r) });
       await saveActivities([act]);
       hideLock();
       haptic('success');
       await set(null);
       return act.meta.id;
-    },
+    })().finally(() => { finishing.current = null; })),
     /** Pair a heart rate strap (from a tap: the browser shows its device picker). */
     connectStrap: async () => {
       const c = await connectHeartRate(

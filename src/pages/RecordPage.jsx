@@ -78,6 +78,7 @@ function Live({ recording, contacts, onSaved }) {
   const { rec, gpsError } = recording;
   const [now, setNow] = useState(Date.now);
   const [tooShort, setTooShort] = useState(false);
+  const [saving, setSaving] = useState(false);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
@@ -87,10 +88,11 @@ function Live({ recording, contacts, onSaved }) {
   const cur = effort(rec.sport, currentPace(rec));
   const avg = effort(rec.sport, rec.distance > 10 ? time / (rec.distance / 1000) : null);
   const lapNow = lapStatus(rec, now);
-  const status = rec.paused ? t('En pause') : rec.autoPaused ? t('Pause auto') : gpsError ?? (rec.follow?.off ? t("Hors de l'itinéraire") : null);
+  const status = saving ? t('Enregistrement…') : rec.paused ? t('En pause') : rec.autoPaused ? t('Pause auto') : gpsError ?? (rec.follow?.off ? t("Hors de l'itinéraire") : null);
 
   const finish = async () => {
-    const id = await recording.finish();
+    setSaving(true);
+    const id = await recording.finish().finally(() => setSaving(false));
     if (id) onSaved(id);
     else setTooShort(true);
   };
