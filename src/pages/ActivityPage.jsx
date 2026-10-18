@@ -35,9 +35,10 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
     getPhotos(id).then(setPhotoList, () => setPhotoList([]));
   }, [id]);
   // Keyed on points only, so renaming doesn't rebuild the map and chart.
-  const analysis = useMemo(() => data && analyze(data.points), [data?.points]);
-  const splitSize = splitSizeOf(data?.meta.sport);
-  const splits = useMemo(() => analysis && computeSplits(analysis.track, splitSize), [analysis, splitSize]);
+  const sport = data?.meta.sport;
+  const analysis = useMemo(() => data && analyze(data.points, sport), [data?.points, sport]);
+  const splitSize = splitSizeOf(sport);
+  const splits = useMemo(() => analysis && computeSplits(analysis.track, splitSize, sport), [analysis, splitSize, sport]);
 
   if (data === undefined) return (<><TopBar /><DetailSkeleton /></>);
   if (data === null) return (<><TopBar /><p className="empty">{t('Activité introuvable.')}</p></>);
@@ -47,6 +48,11 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
 
   const save = async (patch) => {
     const meta = { ...data.meta, ...patch };
+    // Another sport, another moving threshold: moving time and pace follow.
+    if (meta.sport !== data.meta.sport) {
+      const { movingTime, avgPace } = analyze(data.points, meta.sport);
+      Object.assign(meta, { movingTime, avgPace });
+    }
     await updateActivity(meta);
     setData({ ...data, meta });
     setSheet(null);

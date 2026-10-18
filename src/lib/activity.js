@@ -11,7 +11,7 @@ import { SPORTS } from './sports.js';
  * loaded on the detail screen.
  */
 export function createActivity({ name, sport = 'run', points, source = 'gpx', laps }) {
-  const a = analyze(points);
+  const a = analyze(points, sport);
   const date = a.date ?? Date.now();
   const meta = {
     id: crypto.randomUUID(),

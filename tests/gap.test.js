@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { analyze } from '../src/lib/analyze.js';
+import { analyze, computeSplits } from '../src/lib/analyze.js';
 import { gradeFactor } from '../src/lib/gap.js';
 
 /** Straight 2 km at 5:00/km, one point every 10 m, climbing `grade` (rise / run). */
@@ -21,11 +21,11 @@ test('GAP equals pace on flat, is faster uphill and slower downhill', () => {
   assert.ok(Math.abs(flat.avgPace - 300) < 1);
   assert.ok(up.gap < 250, `up ${up.gap}`);
   assert.ok(down.gap > 330, `down ${down.gap}`);
-  assert.ok(up.splits.every((s) => s.gap < s.pace));
+  assert.ok(computeSplits(up.track).every((s) => s.gap < s.pace));
 });
 
 test('GAP is null without elevation', () => {
   const a = analyze([{ lat: 45, lon: 6, time: 0 }, { lat: 45.001, lon: 6, time: 30e3 }]);
   assert.equal(a.gap, null);
-  assert.equal(a.splits[0].gap, null);
+  assert.equal(computeSplits(a.track)[0].gap, null);
 });

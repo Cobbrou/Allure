@@ -228,8 +228,10 @@ Fixes
       with the AWS Terrain DEM already used for 3D, Strava-style "elevation correction"
       (recorded activities, on finish; imports keep their altitude)
 - [ ] "Correct elevation" button on an imported activity (same `correctElevation`)
-- [ ] Moving time uses one 0.5 m/s threshold for every sport: steep hikes and swims read
+- [x] Moving time uses one 0.5 m/s threshold for every sport: steep hikes and swims read
       as stopped. Make it per sport (like `STOP_SPEED` in the recorder)
+      (`SPORTS[sport].moving`: hike and swim 0.2, walk 0.25; DB v8 recomputes them. Live
+      auto-pause uses it too and no longer pauses a slow climb between stored points)
 - [ ] Deleted segments leave their efforts on activity metas (see `db.js`): clean them on
       delete instead of filtering on every read
 - [ ] Route following is forward-only: a route run in reverse reads as off route

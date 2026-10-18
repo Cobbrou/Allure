@@ -13,7 +13,8 @@ import { SPORTS, splitSize } from './sports.js';
 
 const MAX_ACCURACY = 30; // m: fixes less precise than this are dropped
 const MIN_STEP = 3; // m: smaller moves are GPS jitter, not progress
-const STOP_SPEED = { ride: 1.5 }; // m/s under which the athlete counts as stopped (default 0.6)
+// m/s under which the athlete counts as stopped; other sports use their `moving` threshold.
+const STOP_SPEED = { run: 0.6, ride: 1.5 };
 const STOP_DELAY = 5000; // ms of being stopped before auto-pause kicks in
 const PACE_WINDOW = 30000; // ms of track used for the current pace
 const HR_EVERY = 5000; // ms between heart-rate-only points while no fix is stored
@@ -95,13 +96,18 @@ export function addFix(rec, fix) {
   if (rec.liveSegs?.length) rec = { ...rec, seg: segmentStep(rec.seg, rec.liveSegs, fix) };
   const prev = rec.points.at(-1);
   const d = prev ? haversine(prev, fix) : 0;
-  if (prev && d < MIN_STEP) return tick({ ...rec, pos: fix }, fix.time);
+  const stopSpeed = STOP_SPEED[rec.sport] ?? SPORTS[rec.sport]?.moving ?? 0.6;
+  if (prev && d < MIN_STEP) {
+    // Too close to store, but steady slow progress (a steep climb) is still moving.
+    const creeping = d / ((fix.time - prev.time) / 1000) >= stopSpeed;
+    return tick({ ...rec, pos: fix, ...(creeping && { lastMove: fix.time }) }, fix.time);
+  }
 
   // Speed against the previous fix, not the last stored point, which can be minutes old after a stop.
   const last = rec.pos ?? prev;
   const dt = last ? (fix.time - last.time) / 1000 : 0;
   const speed = fix.speed ?? (dt > 0 ? haversine(last, fix) / dt : 0);
-  const moving = !prev || speed >= (STOP_SPEED[rec.sport] ?? 0.6);
+  const moving = !prev || speed >= stopSpeed;
   let next = { ...rec, pos: fix, points: [...rec.points, point(fix)], distance: rec.distance + d };
   if (moving) {
     next.lastMove = fix.time;

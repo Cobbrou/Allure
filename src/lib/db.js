@@ -12,7 +12,7 @@ import { segmentEfforts } from './segments.js';
 import { hrTime } from './training.js';
 
 const DB_NAME = 'allure';
-export const VERSION = 7;
+export const VERSION = 8;
 let dbPromise;
 
 // Schema migrations, keyed by the version they upgrade to. They run inside the upgrade
@@ -37,6 +37,12 @@ const MIGRATIONS = {
   6: (db) => db.createObjectStore('routes', { keyPath: 'id' }),
   // v7: `photos` holds each activity's pictures (array of JPEG Blobs) by activity id.
   7: (db) => db.createObjectStore('photos'),
+  // v8: moving speed threshold per sport (was 0.5 m/s for all): recompute slow sports' moving time.
+  8: (db, tx) => backfill(tx, (points, meta) => {
+    if (!points) return {};
+    const { movingTime, avgPace } = analyze(points, meta.sport);
+    return { movingTime, avgPace };
+  }, (meta) => ['hike', 'walk', 'swim'].includes(meta.sport)),
 };
 
 // Patch every meta accepted by `want` with fields computed from its track and the meta.

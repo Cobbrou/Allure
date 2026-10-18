@@ -120,3 +120,9 @@ test('heart rate keeps coming in while stopped, without distance or moving time'
   const empty = startRecording({}, 0);
   assert.equal(addHr(empty, 120, 10_000), empty);
 });
+
+test('a slow steep hike does not auto-pause', () => {
+  const at = (sport) => run(startRecording({ sport }, 0), 0, 60, 0.3);
+  assert.equal(at('run').autoPaused, true);
+  assert.equal(at('hike').autoPaused, false);
+});

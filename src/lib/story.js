@@ -15,7 +15,7 @@ export const W = 1080, H = 1920;
 const FONT = 'Inter, system-ui, sans-serif';
 const MAX_SPLITS = 20; // ponytail: longer activities show their first 20 splits only
 
-const splitsOf = (act) => computeSplits(act.track, splitSize(act.sport)).filter((s) => s.pace);
+const splitsOf = (act) => computeSplits(act.track, splitSize(act.sport), act.sport).filter((s) => s.pace);
 
 export const TEMPLATES = [
   { id: 'track', get label() { return t('Tracé'); } },

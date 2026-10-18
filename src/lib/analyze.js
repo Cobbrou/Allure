@@ -1,5 +1,6 @@
 import { adjustedDistance } from './gap.js';
 import { haversine } from './geo.js';
+import { SPORTS } from './sports.js';
 
 // 7-point moving average: GPS altitude is noisy, raw deltas would inflate D+.
 function smoothEle(points) {
@@ -13,21 +14,25 @@ function smoothEle(points) {
   });
 }
 
-// Moving = speed > 0.5 m/s and no recording gap (auto-pause) over 60 s.
-const isMoving = (d, dt) => dt > 0 && dt < 60 && d / dt > 0.5;
+// Moving = faster than the sport's threshold and no recording gap (auto-pause) over 60 s.
+const moving = (sport) => {
+  const min = (SPORTS[sport] ?? SPORTS.run).moving;
+  return (d, dt) => dt > 0 && dt < 60 && d / dt > min;
+};
 
 /** Compute activity stats and an enriched track (cumulative dist, smoothed ele, grade-adjusted gdist). */
-export function analyze(points, splitSize = 1000) {
+export function analyze(points, sport) {
+  const isMoving = moving(sport);
   const hasTime = points.every((p) => Number.isFinite(p.time));
   const ele = smoothEle(points);
-  let dist = 0, moving = 0, gain = 0;
+  let dist = 0, movingTime = 0, gain = 0;
 
   const track = points.map((p, i) => {
     if (i > 0) {
       const prev = points[i - 1];
       const d = haversine(prev, p);
       dist += d;
-      if (hasTime && isMoving(d, (p.time - prev.time) / 1000)) moving += (p.time - prev.time) / 1000;
+      if (hasTime && isMoving(d, (p.time - prev.time) / 1000)) movingTime += (p.time - prev.time) / 1000;
       if (ele && ele[i] > ele[i - 1]) gain += ele[i] - ele[i - 1];
     }
     return { ...p, ele: ele ? ele[i] : null, dist };
@@ -39,13 +44,12 @@ export function analyze(points, splitSize = 1000) {
   return {
     track,
     distance: dist,
-    movingTime: hasTime ? moving : null,
-    avgPace: hasTime && dist ? moving / (dist / 1000) : null,
-    gap: hasTime && gdist?.at(-1) ? moving / (gdist.at(-1) / 1000) : null, // grade adjusted pace, s/km
+    movingTime: hasTime ? movingTime : null,
+    avgPace: hasTime && dist ? movingTime / (dist / 1000) : null,
+    gap: hasTime && gdist?.at(-1) ? movingTime / (gdist.at(-1) / 1000) : null, // grade adjusted pace, s/km
     gain: ele ? gain : null,
     avgHr: hrs.length ? hrs.reduce((a, b) => a + b, 0) / hrs.length : null,
     date: hasTime ? points[0].time : null,
-    splits: computeSplits(track, splitSize),
   };
 }
 
@@ -53,8 +57,9 @@ export function analyze(points, splitSize = 1000) {
  * Splits of `size` meters over an analyzed track. Each segment counts toward the split
  * where it starts. The last split is partial, and dropped if under 2% of `size`.
  */
-export function computeSplits(track, size = 1000) {
+export function computeSplits(track, size = 1000, sport) {
   const hasTime = track.every((p) => Number.isFinite(p.time));
+  const isMoving = moving(sport);
   const splits = [];
   for (let i = 1; i < track.length; i++) {
     const a = track[i - 1], b = track[i];

@@ -82,6 +82,7 @@ inside the upgrade transaction:
 | 5 | create `segments` |
 | 6 | create `routes` |
 | 7 | create `photos` |
+| 8 | recompute `movingTime` / `avgPace` of hikes, walks and swims (per-sport moving threshold) |
 
 Full backups (`lib/backup.js`, Profile → Mes données) dump every store except `drafts`
 and the map caches to one JSON file (photos inlined as data URLs on their activity) tagged with `schema` = `VERSION`. Restore puts the

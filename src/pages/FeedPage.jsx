@@ -12,7 +12,7 @@ export default function FeedPage({ activities, zones, onRefresh, onImport, onDem
   const [shared, setShared] = useState(null); // analyzed activity in the share sheet
   const share = async (id) => {
     const d = await getActivity(id);
-    if (d) setShared({ ...analyze(d.points), ...d.meta });
+    if (d) setShared({ ...analyze(d.points, d.meta.sport), ...d.meta });
   };
   const ptr = usePullToRefresh(onRefresh);
   const demo = async () => {

@@ -7,11 +7,11 @@ import { fmtDuration, fmtPace } from '../src/lib/format.js';
 test('demo track yields a realistic 10 km run', () => {
   const a = analyze(demoTrack());
   assert.ok(Math.abs(a.distance - 10000) < 50, `distance ${a.distance}`);
-  assert.equal(a.splits.length, 10);
+  assert.equal(computeSplits(a.track).length, 10);
   assert.ok(a.gain > 150 && a.gain < 400, `gain ${a.gain}`);
   assert.ok(a.avgPace > 240 && a.avgPace < 420, `pace ${a.avgPace}`);
   assert.ok(a.avgHr > 120 && a.avgHr < 185, `hr ${a.avgHr}`);
-  assert.ok(Math.abs(a.splits.reduce((s, x) => s + x.time, 0) - a.movingTime) < 1);
+  assert.ok(Math.abs(computeSplits(a.track).reduce((s, x) => s + x.time, 0) - a.movingTime) < 1);
 });
 
 test('pauses are excluded from moving time', () => {
@@ -33,4 +33,13 @@ test('computeSplits supports custom split sizes', () => {
   assert.equal(five.length, 2);
   assert.ok(Math.abs(five.reduce((s, x) => s + x.time, 0) - a.movingTime) < 1);
   assert.equal(computeSplits(a.track, 100).length, 100);
+});
+
+test('moving threshold depends on the sport', () => {
+  // A steep climb on foot: 0.3 m/s horizontal, 3 s between points.
+  const climb = Array.from({ length: 101 }, (_, i) => ({ lat: 45 + (i * 0.9) / 111195, lon: 6, time: i * 3000 }));
+  assert.equal(analyze(climb, 'run').movingTime, 0);
+  assert.equal(analyze(climb, 'hike').movingTime, 300);
+  assert.equal(computeSplits(analyze(climb, 'hike').track, 50, 'hike')[0].time > 0, true);
+  assert.equal(analyze(climb).movingTime, 0); // no sport: run threshold
 });

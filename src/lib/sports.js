@@ -4,12 +4,13 @@ import { t } from './i18n.js';
 // display: how average effort is shown. 'speed' = km/h, 'pace' = min/km, 'pace100' = min/100 m
 // (mi/h, min/mi and min/100 yd in imperial units).
 // split: split length in display units (km or mi; m or yd for swims), see splitSize.
+// moving: m/s above which the athlete counts as moving (a steep climb on foot is ~0.3).
 export const SPORTS = {
-  run: { get label() { return t('Course'); }, icon: '🏃', display: 'pace', split: 1 },
-  ride: { get label() { return t('Vélo'); }, icon: '🚴', display: 'speed', split: 5 },
-  hike: { get label() { return t('Randonnée'); }, icon: '🥾', display: 'pace', split: 1 },
-  walk: { get label() { return t('Marche'); }, icon: '🚶', display: 'pace', split: 1 },
-  swim: { get label() { return t('Natation'); }, icon: '🏊', display: 'pace100', split: 100 },
+  run: { get label() { return t('Course'); }, icon: '🏃', display: 'pace', split: 1, moving: 0.5 },
+  ride: { get label() { return t('Vélo'); }, icon: '🚴', display: 'speed', split: 5, moving: 0.5 },
+  hike: { get label() { return t('Randonnée'); }, icon: '🥾', display: 'pace', split: 1, moving: 0.2 },
+  walk: { get label() { return t('Marche'); }, icon: '🚶', display: 'pace', split: 1, moving: 0.25 },
+  swim: { get label() { return t('Natation'); }, icon: '🏊', display: 'pace100', split: 100, moving: 0.2 },
 };
 
 /** Map a GPX/TCX/FIT sport value (Strava, Garmin, numeric codes…) to a sport id. */
