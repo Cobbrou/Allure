@@ -24,7 +24,7 @@ import { toGpx } from '../lib/formats/gpxExport.js';
 import { safeName, shareFile } from '../lib/share.js';
 import { go } from '../router.js';
 
-export default function ActivityPage({ id, activities, hr, ftp, zones, segments, onSegment, gears, onChange }) {
+export default function ActivityPage({ id, activities, hr, ftp, weight, zones, segments, onSegment, gears, onChange }) {
   const [data, setData] = useState(); // undefined: loading, null: not found
   const [sheet, setSheet] = useState(null); // null | 'edit' | 'share'
   const [photos, setPhotoList] = useState([]);
@@ -92,7 +92,7 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
         </div>
         {act.description && <p className="description">{act.description}</p>}
         {act.notes && <p className="description notes"><b>{t('Notes privées')} · </b>{act.notes}</p>}
-        <StatsGrid act={act} />
+        <StatsGrid act={act} weight={weight} />
         <section className="card map-card">
           <TrackMap track={act.track} hover={hover} range={range} />
         </section>

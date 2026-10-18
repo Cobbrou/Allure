@@ -184,7 +184,7 @@ ${cur.text}` } : summary));
   };
 
   let content;
-  if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} ftp={ftp} zones={zones} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} />;
+  if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} ftp={ftp} weight={hrSaved?.weight} zones={zones} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} />;
   else if (page === 'log') content = <TrainingLogPage activities={activities} hr={hr} />;
   else if (page === 'maps') content = <MapsPage activities={activities} routes={routes} />;
   else if (page === 'suggest') content = <SuggestPage activities={activities} onPick={pickRoute} />;

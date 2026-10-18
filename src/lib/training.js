@@ -96,6 +96,25 @@ export const activityEffort = (a, hr) => relativeEffort(a.hrTime, hr) ?? rpeEffo
 /** Perceived exertion in words: 1-3 easy, 4-6 moderate, 7-8 hard, 9-10 max. */
 export const rpeLabel = (rpe) => t(rpe <= 3 ? 'Facile' : rpe <= 6 ? 'Modéré' : rpe <= 8 ? 'Difficile' : 'Maximal');
 
+const CLIMB_KCAL = 9.81 / 0.2 / 4184; // kcal per kg per meter climbed, at ~20 % muscle efficiency
+
+/**
+ * Energy spent, kcal. With power: work in kJ ≈ kcal (cycling efficiency ~24 % cancels the
+ * kJ-to-kcal factor). On foot: ~1 kcal/kg/km running, ~0.6 walking or hiking, plus the
+ * climb. Rides without power and swims: MET x weight x hours. null without a weight.
+ */
+export function calories({ sport, distance, movingTime, gain, avgPower }, weight) {
+  if (avgPower && movingTime) return Math.round((avgPower * movingTime) / 1000);
+  if (!weight || !distance || !movingTime) return null;
+  const km = distance / 1000, h = movingTime / 3600;
+  const climb = weight * (gain ?? 0) * CLIMB_KCAL;
+  if (sport === 'run') return Math.round(weight * km + climb);
+  if (sport === 'walk' || sport === 'hike') return Math.round(weight * km * 0.6 + climb);
+  // ponytail: MET from average speed (~4 at 16 km/h, ~8.5 at 25), no wind or drafting.
+  const met = sport === 'ride' ? Math.min(16, Math.max(4, (km / h) * 0.5 - 4)) : 7;
+  return Math.round(met * weight * h);
+}
+
 const DAY = 86400e3;
 const dayStart = (t) => new Date(t).setHours(0, 0, 0, 0);
 

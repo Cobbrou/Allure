@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createActivity } from '../src/lib/activity.js';
 import { demoTrack } from '../src/lib/demo.js';
-import { activityEffort, estimateMaxHr, fitnessSeries, hrTime, relativeEffort, restingFromWatch, rpeEffort, timeInZones } from '../src/lib/training.js';
+import { activityEffort, calories, estimateMaxHr, fitnessSeries, hrTime, relativeEffort, restingFromWatch, rpeEffort, timeInZones } from '../src/lib/training.js';
 
 const HR = { max: 190, rest: 60 };
 /** `min` minutes at a constant heart rate, one point per second. */
@@ -68,4 +68,16 @@ test('perceived exertion stands in for heart rate', () => {
   assert.equal(activityEffort(withHr, HR), relativeEffort(withHr.hrTime, HR)); // heart rate wins
   assert.equal(activityEffort({ rpe: 5, movingTime: 1800 }, HR), rpeEffort(5, 1800));
   assert.equal(activityEffort({}, HR), null);
+});
+
+test('calories from power, distance on foot, or MET', () => {
+  assert.equal(calories({ sport: 'ride', avgPower: 200, movingTime: 3600 }, null), 720); // 720 kJ
+  assert.equal(calories({ sport: 'run', distance: 10000, movingTime: 3000 }, null), null); // no weight
+  assert.equal(calories({ sport: 'run', distance: 10000, movingTime: 3000, gain: 0 }, 70), 700);
+  const flat = calories({ sport: 'hike', distance: 10000, movingTime: 10800, gain: 0 }, 70);
+  const hilly = calories({ sport: 'hike', distance: 10000, movingTime: 10800, gain: 1000 }, 70);
+  assert.equal(flat, 420);
+  assert.ok(hilly - flat > 700 && hilly - flat < 900, hilly - flat);
+  assert.equal(calories({ sport: 'ride', distance: 25000, movingTime: 3600 }, 70), Math.round(8.5 * 70));
+  assert.equal(calories({ sport: 'swim', distance: 2000, movingTime: 3600 }, 70), 490);
 });

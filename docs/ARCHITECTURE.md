@@ -54,7 +54,7 @@ IndexedDB database `allure`, version 7:
 - `drafts`: the in-progress live recording, autosaved every 5 s, in parts so a save stays
   small: `current` (live state + point count), `static` (route, live segments), `p0`, `p1`…
   (500-point chunks). See `draftWrites` / `joinDraft` in `recorder.js`
-- `settings` (key = setting name): user preferences, e.g. `hr` → `{ max, rest, ftp }`,
+- `settings` (key = setting name): user preferences, e.g. `hr` → `{ max, rest, ftp, weight /* kg */ }`,
   `goals` → `[{ id, sport, metric, period, target }]` (see `lib/goals.js`),
   `gear` → `[{ id, name, kind, initial, alert, isDefault, retired }]` (see `lib/gear.js`),
   `privacy` → `[{ id, name, lat, lon, radius }]` privacy zones (see `lib/privacy.js`)

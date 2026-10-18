@@ -1,14 +1,15 @@
 import { t } from '../lib/i18n.js';
 import { distUnit, elevUnit, fmtDist, fmtDuration, fmtElev, fmtPaceUnit, paceUnit } from '../lib/format.js';
 import { effort, usesGap } from '../lib/sports.js';
-import { rpeLabel } from '../lib/training.js';
+import { calories, rpeLabel } from '../lib/training.js';
 import StatMetric from './StatMetric.jsx';
 
 const int = (v) => Math.round(v);
 
 /** Bento grid of an activity's stats: distance as the wide hero tile, the rest around it; numbers count up. */
-export default function StatsGrid({ act }) {
+export default function StatsGrid({ act, weight }) {
   const e = effort(act.sport, act.avgPace);
+  const kcal = calories(act, weight);
   const tiles = [
     { label: t('Distance'), count: act.distance, format: fmtDist, unit: distUnit(), size: 'xl', cls: 'hero' },
     act.movingTime != null
@@ -19,6 +20,7 @@ export default function StatsGrid({ act }) {
     act.gain != null ? { label: t('Dénivelé positif'), count: act.gain, format: fmtElev, unit: elevUnit() } : { label: t('Dénivelé positif'), value: '—' },
     act.avgHr ? { label: t('FC moyenne'), count: act.avgHr, format: int, unit: 'bpm' } : { label: t('FC moyenne'), value: '—' },
     act.avgPower && { label: t('Puissance moy.'), count: act.avgPower, format: int, unit: 'W' },
+    kcal && { label: t('Calories'), count: kcal, format: int, unit: 'kcal' },
     act.rpe && { label: t('Effort perçu'), value: act.rpe, unit: '/10', sub: rpeLabel(act.rpe) },
   ].filter(Boolean);
   return (

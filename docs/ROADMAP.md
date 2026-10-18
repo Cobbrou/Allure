@@ -250,7 +250,9 @@ Activity details
       notes never leave the app)
 - [x] Perceived exertion (1–10) feeding Relative Effort when there is no heart rate
       (session RPE × minutes × 0.45, in Fitness & Freshness and the training log)
-- [ ] Calories estimate (HR-based, else MET by sport and weight)
+- [x] Calories estimate (HR-based, else MET by sport and weight)
+      (power when there is some, else distance and climb on foot, MET for rides and swims;
+      weight in Settings. Not HR-based: that needs age and sex)
 - [ ] Crop an activity (trim start / end, e.g. a forgotten stop button)
 - [ ] Manual activity entry (no GPS: gym, treadmill, pool) and indoor recording (timer +
       strap, no GPS)

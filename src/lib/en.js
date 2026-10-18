@@ -55,6 +55,9 @@ export default {
   'Recherche…': 'Searching…',
   'Enregistrement…': 'Saving…',
   'Écoulé {time}': 'Elapsed {time}',
+  'Poids (kg)': 'Weight (kg)',
+  'Poids (lb)': 'Weight (lb)',
+  'Calories': 'Calories',
   'Facile': 'Easy',
   'Modéré': 'Moderate',
   'Difficile': 'Hard',
@@ -130,8 +133,8 @@ export default {
   'Fatigue {n}': 'Fatigue {n}',
   'Effort {n}': 'Effort {n}',
   'Cardio et puissance': 'Heart rate and power',
-  "La FC sert aux zones cardio, à l'effort relatif et à la courbe de forme ; la FTP à l'intensité et à la charge des sorties vélo.":
-    'Heart rate drives HR zones, Relative Effort and the fitness curve; FTP drives the intensity and load of rides.',
+  "La FC sert aux zones cardio, à l'effort relatif et à la courbe de forme ; la FTP à l'intensité et à la charge des sorties vélo ; le poids aux calories.":
+    'Heart rate drives HR zones, Relative Effort and the fitness curve; FTP drives the intensity and load of rides; weight drives calories.',
   'FC max': 'Max HR',
   '{n} (estimée)': '{n} (estimated)',
   '{n} (montre)': '{n} (watch)',
