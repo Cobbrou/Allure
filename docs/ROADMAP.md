@@ -128,6 +128,13 @@ Sharing
 - [ ] Clubs, club feed and leaderboards
 - [x] Monthly platform challenges and badges (8 challenges a month derived from your
       activities, trophy case on the Groups tab, toast on completion; local until accounts)
+- [x] Achievements ("Succès"): 14 permanent badges, unlike the monthly challenges. Milestones
+      (first activity, 50 activities, 100 / 1,000 / 5,000 km, Everest of elevation), streaks
+      (7 days, 12 weeks), special efforts (half marathon, marathon, 160 km ride, dawn or
+      night start, 3 sports). Derived from local activities (`lib/achievements.js`), so
+      retroactive on existing history; unlock toast, gallery on the Profile tab with locked
+      badges and progress
+- [ ] More achievements: PR-based ones (beat a record N times), yearly totals
 - [ ] Group challenges created by users, with friends (distance, time, elevation) **(premium)**
 - [ ] Group activities (detect athletes who ran together)
 

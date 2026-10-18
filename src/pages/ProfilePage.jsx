@@ -1,5 +1,6 @@
 import { t, tn } from '../lib/i18n.js';
 import { useMemo, useState } from 'react';
+import Achievements from '../components/Achievements.jsx';
 import ActivityCalendar from '../components/ActivityCalendar.jsx';
 import FitnessChart from '../components/FitnessChart.jsx';
 import Gear from '../components/Gear.jsx';
@@ -53,6 +54,7 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
         </section>
 
         <Goals goals={goals} activities={list} onSave={onSaveGoals} />
+        <Achievements activities={list} />
 
         {list.length > 0 && (
           <>

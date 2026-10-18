@@ -6,6 +6,7 @@ import { deleteRoute, deleteSegment, getSetting, listActivities, listRoutes, lis
 import { demoHistory } from './lib/demo.js';
 import { setUnits } from './lib/format.js';
 import { deviceLang, getLang, setLang, t, tn } from './lib/i18n.js';
+import { newlyUnlocked } from './lib/achievements.js';
 import { newlyCompleted } from './lib/challenges.js';
 import { goalLabel, newlyReached } from './lib/goals.js';
 import { healthTasks, importFiles, importTasks } from './lib/importer.js';
@@ -140,9 +141,14 @@ export default function App() {
       const list = await listActivities();
       const won = prevList.current ? newlyReached(goalsRef.current, prevList.current, list) : [];
       const done = prevList.current ? newlyCompleted(prevList.current, list) : [];
+      const unlocked = prevList.current ? newlyUnlocked(prevList.current, list) : [];
       prevList.current = list;
       setActivities(list);
-      const news = [...won.map((g) => t('🎉 Objectif atteint : {goal}', { goal: goalLabel(g) })), ...done.map((c) => t('🏆 Défi terminé : {title}', { title: c.title }))];
+      const news = [
+        ...won.map((g) => t('🎉 Objectif atteint : {goal}', { goal: goalLabel(g) })),
+        ...done.map((c) => t('🏆 Défi terminé : {title}', { title: c.title })),
+        ...unlocked.map((a) => t('🏅 Succès débloqué : {title}', { title: a.title })),
+      ];
       if (news.length) setToast({ kind: 'notice', goal: true, text: news.join(' · ') });
     } catch (e) {
       setToast({ kind: 'error', text: t('Stockage indisponible : {error}', { error: e.message }) });

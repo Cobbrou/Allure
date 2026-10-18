@@ -269,6 +269,11 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .trophies li { display: grid; justify-items: center; gap: 4px; padding: 14px 8px; text-align: center; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); }
 .trophies b { font-size: 13px; }
 .trophies .muted { font-size: 11px; }
+.achievements { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.achievements li { background: var(--bg); align-content: start; padding: 12px 6px; }
+.achievements .progress { justify-self: stretch; margin-top: 2px; }
+.achievements li.locked .badge-icon { filter: grayscale(1); opacity: 0.45; border-color: var(--border-strong); background: var(--card-2); }
+.achievements li.locked b { color: var(--muted); }
 .log { display: grid; gap: 14px; }
 .log-dow, .log-days { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }
 .log-dow { font-size: 11px; color: var(--muted); position: sticky; top: calc(var(--safe-top) + 56px); z-index: 1; background: var(--card); padding: 4px 0; }
