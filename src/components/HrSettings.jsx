@@ -24,7 +24,7 @@ export default function HrSettings({ hr, ftpEstimate, saved, onSave }) {
             onChange={(e) => { setMax(e.target.value); setDone(false); }} />
         </label>
         <label>{t('FC repos')}
-          <input type="number" inputMode="numeric" min="30" max="100" placeholder={String(hr.rest)} value={rest}
+          <input type="number" inputMode="numeric" min="30" max="100" placeholder={hr.restFromWatch ? t('{n} (montre)', { n: hr.rest }) : String(hr.rest)} value={rest}
             onChange={(e) => { setRest(e.target.value); setDone(false); }} />
         </label>
         <label>{t('FTP (W)')}

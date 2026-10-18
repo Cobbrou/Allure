@@ -46,6 +46,17 @@ export function estimateMaxHr(activities) {
   return max || DEFAULT_MAX_HR;
 }
 
+/**
+ * Resting HR from the daily values a watch measured (oldest first): median of the last 7,
+ * so one restless night doesn't move zones. null when there are none or they're implausible.
+ */
+export function restingFromWatch(bpms) {
+  const last = (bpms ?? []).filter((b) => b >= 30 && b <= 100).slice(-7).sort((a, b) => a - b);
+  if (!last.length) return null;
+  const mid = last.length >> 1;
+  return Math.round(last.length % 2 ? last[mid] : (last[mid - 1] + last[mid]) / 2);
+}
+
 /** Seconds spent in each of the 5 zones. */
 export function timeInZones(hist, maxHr) {
   const out = ZONES.map(() => 0);

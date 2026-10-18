@@ -4,9 +4,13 @@
 import { t } from './i18n.js';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 
+import { restingFromWatch } from './training.js';
+
 const PERMISSIONS = ['READ_WORKOUTS', 'READ_ROUTE', 'READ_HEART_RATE'];
-let Health;
+let Health, RestingHr;
 const plugin = () => (Health ??= registerPlugin('HealthPlugin'));
+// Local plugin (android/app/src/main/java/app/allure/RestingHrPlugin.kt): capacitor-health can't read resting HR.
+const restingPlugin = () => (RestingHr ??= registerPlugin('RestingHr'));
 
 /** 'unsupported' (browser, iOS), 'missing' (Health Connect not installed) or 'ready'. */
 export async function healthStatus() {
@@ -36,4 +40,10 @@ export async function readWorkouts(days = 365) {
     includeRoute: true, includeHeartRate: true, includeSteps: false,
   });
   return workouts;
+}
+
+/** Resting HR from the watch (last 30 days), or null. prompt: ask for access if not granted yet. */
+export async function readRestingHr({ prompt = false } = {}) {
+  const { bpm } = await restingPlugin().read({ days: 30, prompt });
+  return restingFromWatch(bpm);
 }

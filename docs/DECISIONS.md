@@ -207,6 +207,20 @@ first grant. The plugin has no write method, so Allure activities aren't written
 yet. Its permission rationale screen loads `privacy_policy_url` (the policy source on
 GitHub for now), which needs a hosted page before the store release.
 
+## 2026-10-18: Resting heart rate through a local Capacitor plugin
+
+**Context**: HR zones and Relative Effort need resting HR; the watch measures it daily
+into Health Connect, but `capacitor-health` can't read `RestingHeartRateRecord`.
+**Decision**: a local plugin in the app module (`android/.../RestingHrPlugin.kt`, ~70
+lines) reads the last 30 days; `restingFromWatch` takes the median of the last 7. It reuses
+the `connect-client` version capacitor-health already ships, so no new npm package. Access
+is asked during the Health Connect import; at launch the value only refreshes when access
+was already granted. A resting HR typed in Settings still wins. Max HR needs no plugin:
+imported watch workouts carry their heart rate, so `estimateMaxHr` already uses them.
+**Consequences**: the app module now builds Kotlin (`kotlin-gradle-plugin` 2.2.20 on the
+root classpath, same version as capacitor-health). Switching to a health plugin that reads
+resting HR would make this plugin redundant.
+
 ## 2026-10-17: Display units as module state in format.js
 
 **Context**: imperial units touch ~30 components and the pure lib code that builds labels

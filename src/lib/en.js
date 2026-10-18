@@ -121,6 +121,7 @@ export default {
     'Heart rate drives HR zones, Relative Effort and the fitness curve; FTP drives the intensity and load of rides.',
   'FC max': 'Max HR',
   '{n} (estimée)': '{n} (estimated)',
+  '{n} (montre)': '{n} (watch)',
   'FC repos': 'Resting HR',
   'FTP (W)': 'FTP (W)',
   'Auto': 'Auto',

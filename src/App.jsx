@@ -61,9 +61,25 @@ export default function App() {
   }, []);
   const [hrSaved, setHrSaved] = useState(null); // { max?, rest? } set by the athlete
   useEffect(() => { getSetting('hr').then(setHrSaved, () => {}); }, []);
+  const [watchRest, setWatchRest] = useState(null); // resting HR measured by the watch (Health Connect)
+  // prompt: ask for Health Connect access; without it, only refresh when already granted.
+  const syncRestingHr = useCallback(async (prompt) => {
+    const health = await import('./lib/health.js');
+    if (await health.healthStatus() !== 'ready') return;
+    const rest = await health.readRestingHr({ prompt });
+    if (rest) { setWatchRest(rest); await setSetting('watchRest', rest); }
+  }, []);
+  useEffect(() => {
+    getSetting('watchRest').then((r) => r && setWatchRest(r), () => {});
+    syncRestingHr(false).catch(() => {});
+  }, [syncRestingHr]);
   const hr = useMemo(
-    () => ({ max: hrSaved?.max || estimateMaxHr(activities ?? []), rest: hrSaved?.rest || DEFAULT_REST_HR }),
-    [hrSaved, activities],
+    () => ({
+      max: hrSaved?.max || estimateMaxHr(activities ?? []),
+      rest: hrSaved?.rest || watchRest || DEFAULT_REST_HR,
+      restFromWatch: !hrSaved?.rest && !!watchRest,
+    }),
+    [hrSaved, watchRest, activities],
   );
   const ftpEstimate = useMemo(() => estimateFtp(activities ?? []), [activities]);
   const ftp = useMemo(
@@ -139,6 +155,7 @@ export default function App() {
     const { readWorkouts } = await import('./lib/health.js');
     const workouts = await readWorkouts();
     const tasks = healthTasks(workouts);
+    await syncRestingHr(true).catch(() => {}); // a missing resting HR never fails the import
     if (!tasks.length) throw new Error(t(workouts.length ? 'Aucune séance avec trace GPS dans Health Connect.' : 'Aucune séance trouvée dans Health Connect.'));
     return importTasks(tasks, existing, onProgress);
   });

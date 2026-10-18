@@ -181,6 +181,8 @@ and `lib/sports.js` (`effort()` picks km/h, min/km or min/100 m by sport).
 - Health Connect (Android): `lib/health.js` reads workouts through `capacitor-health`;
   `healthTasks` keeps outdoor sports with a route and `fromHealthWorkout` matches each
   route point to the nearest heart rate sample (≤ 10 s). Both feed `importTasks`, like files.
+  `readRestingHr` goes through the local `RestingHr` plugin (`android/app/.../RestingHrPlugin.kt`);
+  App keeps the result in the `watchRest` setting, used when no resting HR is typed in.
 
 ## UI structure
 

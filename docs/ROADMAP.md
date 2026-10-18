@@ -201,7 +201,9 @@ Pixel Watch / Google
       GPS route + heart rate; to verify on a device. Write-back: the plugin can't yet)
 - [ ] Google Health API (cloud REST, OAuth): pull Pixel Watch / Fitbit workouts and
       daily metrics (resting HR, sleep) without the native shell
-- [ ] Use resting HR and max HR from the watch for HR zones and Relative Effort
+- [x] Use resting HR and max HR from the watch for HR zones and Relative Effort
+      (resting: local Health Connect plugin, median of the last 7 days; max: estimated
+      from imported watch workouts)
 - [ ] Garmin / Coros / Suunto / Polar device sync (partner APIs)
 - [ ] Open API + webhooks for third parties
 

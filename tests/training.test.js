@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createActivity } from '../src/lib/activity.js';
 import { demoTrack } from '../src/lib/demo.js';
-import { estimateMaxHr, fitnessSeries, hrTime, relativeEffort, timeInZones } from '../src/lib/training.js';
+import { estimateMaxHr, fitnessSeries, hrTime, relativeEffort, restingFromWatch, timeInZones } from '../src/lib/training.js';
 
 const HR = { max: 190, rest: 60 };
 /** `min` minutes at a constant heart rate, one point per second. */
@@ -50,4 +50,11 @@ test('createActivity stores hrTime for demo tracks', () => {
   const { meta } = createActivity({ points: demoTrack({ km: 5 }) });
   const total = Object.values(meta.hrTime).reduce((a, b) => a + b, 0);
   assert.ok(Math.abs(total - meta.movingTime) < 5, `${total} vs ${meta.movingTime}`);
+});
+
+test('restingFromWatch: median of the last 7 plausible days', () => {
+  assert.equal(restingFromWatch([70, 70, 70, 52, 55, 51, 60, 54, 53, 56]), 54);
+  assert.equal(restingFromWatch([50, 0, 250, 54]), 52);
+  assert.equal(restingFromWatch([]), null);
+  assert.equal(restingFromWatch(undefined), null);
 });

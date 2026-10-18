@@ -34,8 +34,9 @@ const FR = {
             des boucles autour de toi.</li>
           <li><b>Bluetooth</b> : pour lire une ceinture cardio que tu choisis. Les mesures restent sur le téléphone.</li>
           <li><b>Health Connect</b> (Android) : lecture des séances d'exercice, de leur trace GPS et de
-            la fréquence cardiaque, seulement quand tu lances un import. Allure n'écrit rien dans
-            Health Connect et ces données restent sur le téléphone.</li>
+            la fréquence cardiaque, seulement quand tu lances un import ; et, si tu l'autorises, la
+            fréquence cardiaque au repos mesurée par ta montre (30 derniers jours) pour régler tes
+            zones cardio. Allure n'écrit rien dans Health Connect et ces données restent sur le téléphone.</li>
         </ul>
         <h3>Services externes</h3>
         <p>Certaines fonctions interrogent des services tiers. Ils reçoivent ton adresse IP et les informations listées :</p>
@@ -153,8 +154,9 @@ const EN = {
             loops around you.</li>
           <li><b>Bluetooth</b>: to read a heart rate strap you pick. Readings stay on the phone.</li>
           <li><b>Health Connect</b> (Android): reads exercise sessions, their GPS track and
-            heart rate, only when you start an import. Allure writes nothing to
-            Health Connect and this data stays on the phone.</li>
+            heart rate, only when you start an import; and, if you allow it, the resting heart
+            rate your watch measured (last 30 days) to set your heart rate zones. Allure writes
+            nothing to Health Connect and this data stays on the phone.</li>
         </ul>
         <h3>External services</h3>
         <p>Some features query third-party services. They receive your IP address and the information listed:</p>
