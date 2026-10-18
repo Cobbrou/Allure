@@ -1,11 +1,13 @@
 import { t } from '../lib/i18n.js';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ActivityCard from '../components/ActivityCard.jsx';
 import ImportButton from '../components/ImportButton.jsx';
 import ShareSheet from '../components/ShareSheet.jsx';
 import { usePullToRefresh } from '../gestures.js';
 import { analyze } from '../lib/analyze.js';
 import { getActivity } from '../lib/db.js';
+
+const PAGE = 30; // cards rendered per scroll step: a big archive doesn't mount every card
 
 export default function FeedPage({ activities, zones, onRefresh, onImport, onDemo }) {
   const [busy, setBusy] = useState(false);
@@ -15,6 +17,15 @@ export default function FeedPage({ activities, zones, onRefresh, onImport, onDem
     if (d) setShared({ ...analyze(d.points, d.meta.sport), ...d.meta });
   };
   const ptr = usePullToRefresh(onRefresh);
+  const [shown, setShown] = useState(PAGE);
+  const more = useRef();
+  // Re-observed after each page, so a sentinel still in view loads the next one too.
+  useEffect(() => {
+    if (!more.current) return;
+    const io = new IntersectionObserver(([e]) => e.isIntersecting && setShown((n) => n + PAGE), { rootMargin: '600px' });
+    io.observe(more.current);
+    return () => io.disconnect();
+  }, [shown, activities]);
   const demo = async () => {
     setBusy(true);
     try { await onDemo(); } finally { setBusy(false); }
@@ -42,7 +53,8 @@ export default function FeedPage({ activities, zones, onRefresh, onImport, onDem
       </div>
       {activities?.length > 0 && (
         <main className="feed">
-          {activities.map((a, i) => <ActivityCard key={a.id} a={a} i={i} onShare={share} />)}
+          {activities.slice(0, shown).map((a, i) => <ActivityCard key={a.id} a={a} i={i} onShare={share} />)}
+          {shown < activities.length && <div ref={more} aria-hidden="true" />}
         </main>
       )}
       <ShareSheet act={shared} zones={zones} open={!!shared} onClose={() => setShared(null)} />
