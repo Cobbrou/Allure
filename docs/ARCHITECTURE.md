@@ -63,7 +63,8 @@ IndexedDB database `allure`, version 7:
   `lang` → `'fr' | 'en'` UI language, device language when unset (see `lib/i18n.js`)
   `prefs` → `{ name, autoPause, audio }` display name and recording defaults (Settings page)
 - `segments` (keyPath `id`): user-created segments (see `lib/segments.js`)
-- `routes` (keyPath `id`): planned routes with waypoints, points and stats (see `lib/routes.js`)
+- `routes` (keyPath `id`): planned route metas: waypoints, stats, preview (see `lib/routes.js`)
+- `routeLegs` (key = route id): each route's points, read by `getRoute` (builder, recording)
 - `photos` (key = activity id): the activity's pictures, an array of JPEG Blobs shrunk to
   1600 px on import (`shrinkPhoto` in `lib/story.js`); the first one is the default story
   background. Deleted with the activity
@@ -83,6 +84,7 @@ inside the upgrade transaction:
 | 6 | create `routes` |
 | 7 | create `photos` |
 | 8 | recompute `movingTime` / `avgPace` of hikes, walks and swims (per-sport moving threshold) |
+| 9 | move route `legs` into `routeLegs` |
 
 Full backups (`lib/backup.js`, Profile → Mes données) dump every store except `drafts`
 and the map caches to one JSON file (photos inlined as data URLs on their activity) tagged with `schema` = `VERSION`. Restore puts the
@@ -114,18 +116,17 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
   powerCurve,            // { [seconds]: best average W } for 5 s … 1 h
 }
 
-// Route: stored in `routes`
+// Route: meta in `routes`, legs in `routeLegs` (getRoute joins them; backups keep them inline)
 { id, name, sport, snap, waypoints /* [lon, lat] */, legs /* Point[] per waypoint pair */, distance, gain, preview, created, updated }
 
 // Segment: stored in `segments`
 { id, name, sport, points /* [lon, lat] every ~10 m */, distance, gain, grade /* avg % */, created }
 
-// analyze(points): computed on demand, never stored
+// analyze(points, sport): computed on demand, never stored; splits come from computeSplits(track, size, sport)
 {
   track: Point & { dist /* cumulative m */, ele /* smoothed */, gdist /* grade-adjusted m, with ele */ }[],
   distance, movingTime, avgPace, gain, avgHr, date,
   gap,                   // grade adjusted pace, s/km (lib/gap.js, Minetti cost, downhill halved)
-  splits,                // per km, each with pace and gap; the detail page uses computeSplits(track, sport.split)
 }
 ```
 

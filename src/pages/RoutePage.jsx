@@ -15,6 +15,7 @@ import { createRoute, fetchLeg, joinLegs, legKey, straightLeg } from '../lib/rou
 import { safeName, shareFile } from '../lib/share.js';
 import { SPORTS } from '../lib/sports.js';
 import { back } from '../router.js';
+import { getRoute } from '../lib/db.js';
 import { downloadRoute, MAP_STYLE, offlineInfo, removeOffline } from '../lib/offline.js';
 import { ACCENT, mapLocale } from '../theme.js';
 
@@ -25,8 +26,14 @@ const snapOptions = () => [{ id: true, label: t('Suivre les chemins') }, { id: f
 const FALLBACK_CENTER = [6.8696, 45.9237]; // Chamonix, where the demo history lives
 
 /** Route builder: tap the map to add waypoints, drag them to adjust. `id` is 'new' or a saved route. */
-export default function RoutePage({ id, routes, activities, onSave, onDelete }) {
-  const saved = id === 'new' ? null : routes?.find((r) => r.id === id);
+export default function RoutePage({ id, activities, onSave, onDelete }) {
+  // The route with its points (the app keeps metas only): undefined while loading, null if none.
+  const [saved, setSaved] = useState(id === 'new' ? null : undefined);
+  useEffect(() => {
+    if (id === 'new') { setSaved(null); return; }
+    setSaved(undefined);
+    getRoute(id).then((r) => setSaved(r ?? null), () => setSaved(null));
+  }, [id]);
   const top = (
     <header className="topbar">
       <a className="back" href="#/maps" aria-label={t('Retour')} onClick={(e) => { e.preventDefault(); back('/maps'); }}>‹</a>
@@ -34,7 +41,7 @@ export default function RoutePage({ id, routes, activities, onSave, onDelete }) 
       <span className="back" aria-hidden="true" />
     </header>
   );
-  if (id !== 'new' && !routes) return top;
+  if (saved === undefined) return top;
   if (id !== 'new' && !saved) return (<>{top}<p className="empty">{t('Itinéraire introuvable.')}</p></>);
   return (<>{top}<Builder key={id} saved={saved} activities={activities} onSave={onSave} onDelete={onDelete} /></>);
 }

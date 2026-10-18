@@ -9,6 +9,7 @@ import { distUnit, fmtDist, fmtDuration, fmtLength } from '../lib/format.js';
 import { haptic } from '../lib/haptics.js';
 import { speak, watchPosition } from '../lib/location.js';
 import { currentPace, elapsed, lapStatus } from '../lib/recorder.js';
+import { getRoute } from '../lib/db.js';
 import { joinLegs } from '../lib/routes.js';
 import { alertText, checkIn, smsUrl } from '../lib/safety.js';
 import { hasBluetooth } from '../lib/sensors.js';
@@ -36,9 +37,10 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
   // Warm up the GPS so the first recorded fix is precise.
   useEffect(() => watchPosition((f) => setGps({ accuracy: f.accuracy }), (error) => setGps({ error })), []);
 
-  const go = () => {
+  const go = async () => {
     if (audio) speak(t('Enregistrement démarré.')); // also unlocks speech on iOS, which needs a user gesture
-    recording.start({ sport, autoPause, audio, safety: safety && contacts.length > 0, route: route && followRoute(route, joinLegs(route.legs)), liveSegs: liveSegments(segments, sport, activities) });
+    const full = route && (await getRoute(route.id)); // the list holds metas, not points
+    recording.start({ sport, autoPause, audio, safety: safety && contacts.length > 0, route: full && followRoute(full, joinLegs(full.legs)), liveSegs: liveSegments(segments, sport, activities) });
   };
 
   return (

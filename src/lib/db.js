@@ -1,6 +1,6 @@
 // Local store (IndexedDB): `activities` holds light meta records for lists, `tracks` the
 // raw points by activity id (loaded only on the detail screen), plus `drafts`, `settings`
-// `segments`, planned `routes` and activity `photos`.
+// `segments`, planned `routes` (metas; their points in `routeLegs`) and activity `photos`.
 // Platform module: a native storage plugin can replace it without touching components.
 
 import { t } from './i18n.js';
@@ -12,7 +12,7 @@ import { segmentEfforts } from './segments.js';
 import { hrTime } from './training.js';
 
 const DB_NAME = 'allure';
-export const VERSION = 8;
+export const VERSION = 9;
 let dbPromise;
 
 // Schema migrations, keyed by the version they upgrade to. They run inside the upgrade
@@ -43,6 +43,21 @@ const MIGRATIONS = {
     const { movingTime, avgPace } = analyze(points, meta.sport);
     return { movingTime, avgPace };
   }, (meta) => ['hike', 'walk', 'swim'].includes(meta.sport)),
+  // v9: route points (`legs`) move to `routeLegs` by route id, so listing routes reads metas only.
+  9: (db, tx) => {
+    db.createObjectStore('routeLegs');
+    const legs = tx.objectStore('routeLegs');
+    tx.objectStore('routes').openCursor().onsuccess = (e) => {
+      const cursor = e.target.result;
+      if (!cursor) return;
+      const { legs: l, ...meta } = cursor.value;
+      if (l) {
+        legs.put(l, cursor.key);
+        cursor.update(meta);
+      }
+      cursor.continue();
+    };
+  },
 };
 
 // Patch every meta accepted by `want` with fields computed from its track and the meta.
@@ -199,11 +214,24 @@ export const deleteSegment = (id) =>
     };
   });
 
-// ponytail: routes keep their points inline, so listing loads every point. Split them into
-// their own store like tracks if athletes save hundreds of long routes.
+/** Route metas (no points), most recently edited first. */
 export const listRoutes = async () => (await tx(['routes'], 'readonly', (s) => s.getAll())).sort((a, b) => b.updated - a.updated);
-export const saveRoute = (route) => tx(['routes'], 'readwrite', (s) => s.put(route));
-export const deleteRoute = (id) => tx(['routes'], 'readwrite', (s) => s.delete(id));
+/** A route with its `legs`, or undefined. */
+export async function getRoute(id) {
+  const [meta, legs] = await tx(['routes', 'routeLegs'], 'readonly', (r, l) => {
+    const m = r.get(id), g = l.get(id);
+    return { get result() { return [m.result, g.result]; } };
+  });
+  return meta && { ...meta, legs: legs ?? [] };
+}
+export const saveRoute = ({ legs, ...meta }) => tx(['routes', 'routeLegs'], 'readwrite', (r, l) => {
+  r.put(meta);
+  l.put(legs, meta.id);
+});
+export const deleteRoute = (id) => tx(['routes', 'routeLegs'], 'readwrite', (r, l) => {
+  r.delete(id);
+  l.delete(id);
+});
 
 /** Every store's contents, for a full backup (see lib/backup.js). */
 export async function exportAll() {
@@ -212,7 +240,7 @@ export async function exportAll() {
     tx(['settings'], 'readonly', (s) => s.getAllKeys()),
     tx(['settings'], 'readonly', (s) => s.getAll()),
     listSegments(),
-    tx(['routes'], 'readonly', (s) => s.getAll()),
+    listRoutes().then((metas) => Promise.all(metas.map((r) => getRoute(r.id)))),
     tx(['photos'], 'readonly', (s) => s.getAllKeys()),
     tx(['photos'], 'readonly', (s) => s.getAll()),
   ]);
@@ -239,7 +267,7 @@ const toDataUrl = (blob) => new Promise((resolve, reject) => {
 export async function restoreAll({ activities, settings, segments, routes }) {
   // Decoded before the transaction: an await inside it would let it auto-commit.
   const photos = await Promise.all(activities.map((a) => Promise.all((a.photos ?? []).map(async (u) => (await fetch(u)).blob()))));
-  return tx(['activities', 'tracks', 'settings', 'segments', 'routes', 'photos'], 'readwrite', (acts, tracks, sets, segs, rts, pics) => {
+  return tx(['activities', 'tracks', 'settings', 'segments', 'routes', 'routeLegs', 'photos'], 'readwrite', (acts, tracks, sets, segs, rts, legs, pics) => {
     activities.forEach(({ meta, points }, i) => {
       acts.put(meta);
       tracks.put(points, meta.id);
@@ -247,7 +275,10 @@ export async function restoreAll({ activities, settings, segments, routes }) {
     });
     for (const [key, value] of Object.entries(settings)) sets.put(value, key);
     for (const seg of segments) segs.put(seg);
-    for (const route of routes) rts.put(route);
+    for (const { legs: l, ...route } of routes) {
+      rts.put(route);
+      legs.put(l ?? [], route.id);
+    }
   });
 }
 

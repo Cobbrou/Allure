@@ -237,10 +237,10 @@ Fixes
 - [x] Route following is forward-only: a route run in reverse reads as off route
       (`follow.js`). Detect the direction from the first fixes
       (both ways tracked until one gains 200 m, then that route is kept)
-- [ ] Feed renders every activity at once: a 1 000-activity Strava archive mounts 1 000
-      cards and thumbnails. Render in pages as the user scrolls
-- [ ] Route listing loads every route's points (`db.js`): split points from route metas
-      like activities and tracks
+- [x] Feed renders every activity at once: a 1 000-activity Strava archive mounts 1 000
+      cards and thumbnails. Render in pages as the user scrolls (30 at a time)
+- [x] Route listing loads every route's points (`db.js`): split points from route metas
+      like activities and tracks (`routeLegs` store, DB v9)
 
 Activity details
 - [ ] Elapsed time stored and shown next to moving time
