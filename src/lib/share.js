@@ -22,6 +22,28 @@ export async function shareFile(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+/**
+ * Shares a text (a challenge link) through the share sheet; copies it when there is none.
+ * Resolves 'copied' in that case, so the caller can say so.
+ */
+export async function shareText(text) {
+  try {
+    if (Capacitor.isNativePlatform()) {
+      const { Share } = await import('@capacitor/share');
+      await Share.share({ text });
+      return;
+    }
+    if (matchMedia('(pointer: coarse)').matches && navigator.share) return await navigator.share({ text });
+  } catch (e) {
+    if (e.name === 'AbortError' || /cancel/i.test(e.message)) return; // the athlete closed the sheet
+  }
+  await navigator.clipboard.writeText(text);
+  return 'copied';
+}
+
+/** Link to an in-app hash route that opens the app, or null in the native shell (no public URL). */
+export const appLink = (hash) => (Capacitor.isNativePlatform() ? null : `${location.href.split('#')[0]}#${hash}`);
+
 /** File-system-safe base name from an activity title. */
 export const safeName = (name) => name.replace(/[^\p{L}\p{N}\- ]+/gu, '').trim().replace(/\s+/g, '-') || 'activite';
 

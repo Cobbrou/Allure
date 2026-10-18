@@ -1,14 +1,15 @@
 import { locale, t, tn } from '../lib/i18n.js';
 import { useMemo } from 'react';
+import FriendChallenges from '../components/FriendChallenges.jsx';
 import { badges, fmtChallenge, monthChallenges } from '../lib/challenges.js';
 
 const monthName = (y, m) => new Date(y, m, 1).toLocaleDateString(locale(), { month: 'long', year: 'numeric' });
 
 /**
  * Groups tab: this month's challenges and the trophy case (local, from your activities),
- * then clubs and events, which need accounts and a backend (roadmap phase 4).
+ * then challenges with friends, shared by link. `incoming`: a challenge code to join.
  */
-export default function GroupsPage({ activities }) {
+export default function GroupsPage({ activities, name, incoming }) {
   const now = Date.now();
   const month = useMemo(() => monthChallenges(activities ?? [], now), [activities]); // eslint-disable-line react-hooks/exhaustive-deps -- now: once per render of the list
   const won = useMemo(() => badges(activities ?? [], now), [activities]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -49,23 +50,9 @@ export default function GroupsPage({ activities }) {
           </ul>
         ) : <p className="muted">{t('Termine un défi pour gagner ton premier trophée.')}</p>}
 
-        <h2 className="section-title">{t('Clubs')}</h2>
-        <Soon title={t('Rejoindre un club')} text={t("Retrouve ton club, son fil d'activités et ses classements")} />
-        <Soon title={t('Créer un club')} text={t("Rassemble tes partenaires d'entraînement")} />
-        <h2 className="section-title">{t('Événements')}</h2>
-        <Soon title={t('Sorties de groupe')} text={t('Organise une sortie ou rejoins celles de tes clubs')} />
-        <Soon title={t('Défis entre amis')} text={t('Défie tes amis sur la distance, le dénivelé ou la régularité')} />
+        <h2 className="section-title">{t('Défis entre amis')}</h2>
+        <FriendChallenges activities={activities ?? []} name={name} incoming={incoming} />
       </main>
     </>
-  );
-}
-
-// ponytail: static placeholders until clubs and events ship (roadmap phase 4).
-function Soon({ title, text }) {
-  return (
-    <div className="card link-card">
-      <span><b>{title}</b><span className="muted">{text}</span></span>
-      <span className="pill">{t('Bientôt')}</span>
-    </div>
   );
 }

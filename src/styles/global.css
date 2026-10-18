@@ -253,7 +253,6 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .legal p, .legal ul { margin-top: 8px; }
 .legal a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
 .section-title { font-size: 17px; margin-top: 8px; }
-.pill { flex: none; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: var(--border); color: var(--muted); }
 .challenges { display: grid; gap: 10px; }
 .challenge { display: flex; gap: 14px; align-items: flex-start; }
 .challenge > div { flex: 1; display: grid; gap: 4px; min-width: 0; }
@@ -269,6 +268,11 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .trophies li { display: grid; justify-items: center; gap: 4px; padding: 14px 8px; text-align: center; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); }
 .trophies b { font-size: 13px; }
 .trophies .muted { font-size: 11px; }
+.friend-challenge { display: grid; gap: 4px; margin-bottom: 10px; }
+.friend-challenge > .muted { font-size: 13px; }
+.friend-challenge ol { margin: 8px 0; padding-left: 22px; display: grid; gap: 6px; }
+.friend-challenge li > span:last-child { float: right; }
+.friend-challenge li.me { font-weight: 700; }
 .achievements { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .achievements li { background: var(--bg); align-content: start; padding: 12px 6px; }
 .achievements .progress { justify-self: stretch; margin-top: 2px; }

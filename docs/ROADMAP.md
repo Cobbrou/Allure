@@ -19,7 +19,7 @@ parity": every line must be covered before the app can claim it.
 | # | Strava subscription feature | Allure equivalent | Phase | Status |
 |---|---|---|---|---|
 | 1 | *Enregistrez vos activités* (record your activities) | Live GPS recording, auto-pause, audio cues, sensors | 2 | Partly done (web recording; background GPS and sensors need the native shell) |
-| 2 | *Rejoignez une communauté d'un grand soutien* (join a supportive community) | Follow, feed, kudos, comments, clubs | 4 | Planned |
+| 2 | *Rejoignez une communauté d'un grand soutien* (join a supportive community) | Not a goal: no central social network (see `DECISIONS.md`, 2026-10-18). Outward sharing instead; ActivityPub federation as a far idea | 4 | Dropped |
 | 3 | *Ayez l'esprit tranquille grâce à des fonctionnalités de sécurité* (peace of mind with safety features) | Live location sharing (Beacon-like), privacy zones, emergency contacts | 3 / 5 | Partly done (privacy zones on shared stories, emergency contacts, stillness check-in with an SMS alert, SOS button; live sharing needs accounts) |
 | 4 | *Essayez des itinéraires créés rien que pour vous* (routes made for you) | Suggested routes from popular segments and personal preferences | 5 | Partly done (loops ranked on distance, terrain, surface, novelty vs your heatmap; global popularity needs accounts) |
 | 5 | *Enregistrez des itinéraires pour les utiliser hors ligne* (save routes for offline use) | Offline routes + offline map tiles | 5 | Done (corridor of vector tiles + style, sprite, glyphs in Cache Storage, per route) |
@@ -28,7 +28,7 @@ parity": every line must be covered before the app can claim it.
 | 8 | *Analysez vos entraînements grâce à des statistiques avancées* (advanced stats) | HR zones, GAP, intervals, matched activities, predictions, power | 5 | Done (splits, best efforts, HR zones, GAP, race predictions, matched activities, intervals, power) |
 | 9 | *Définissez des objectifs personnalisés et suivez vos progrès* (custom goals and progress) | Weekly / monthly / yearly goals per sport, progress rings | 5 | Done (in-app toast when reached; push notifications in phase 6) |
 | 10 | *Mesurez-vous aux autres dans les classements sur les segments* (segment leaderboards) | Segments, auto-matching, leaderboards, live segments | 5 | Partly done (segments and personal efforts ranking; shared leaderboards need accounts) |
-| 11 | *Rejoignez et créez des challenges avec des amis* (join and create challenges with friends) | Platform challenges + user-created group challenges | 4 / 5 | Partly done (monthly challenges and badges, local; challenges with friends need accounts) |
+| 11 | *Rejoignez et créez des challenges avec des amis* (join and create challenges with friends) | Platform challenges + user-created group challenges | 4 / 5 | Done (monthly challenges and badges, local; challenges with friends through a shared link, no account) |
 | 12 | *Mesurez vos efforts dans différentes activités* (measure effort across sports) | Relative Effort: HR-based load comparable across sports | 5 | Done (Banister TRIMP) |
 | 13 | *Découvrez votre score de condition physique au fil du temps* (fitness score over time) | Fitness & Freshness (CTL / ATL / TSB) chart | 5 | Done |
 
@@ -104,15 +104,16 @@ Motion & polish
 - [ ] Sync local activities to the server, multi-device
 - [x] Privacy zones hiding start/end near home (subscription feature 3; local for now:
       applied to shared stories)
-- [ ] Activity visibility (public / followers / only me), once activities are shared
 - [x] Gear tracking (shoe / bike mileage, default gear per sport, wear alert; local
       until accounts land)
 - [x] Data export & deletion (local: full JSON backup, restore on another device, erase
       everything; server-side account deletion with the backend)
 
-## Phase 4: Social
+## Phase 4: Sharing & challenges without accounts
 
-*Covers subscription features 2 and 11.*
+*Covers subscription feature 11. Feature 2 (community) is dropped: Allure is open source
+and self-hosted, a small instance can't host a living feed (see `DECISIONS.md`,
+2026-10-18).*
 
 Sharing
 - [x] Story redesign: several templates to pick from after an activity (route only,
@@ -121,11 +122,8 @@ Sharing
       the activity or the camera roll, Strava-style
 - [x] Transparent story background (PNG sticker to lay over a photo in another app)
 
-- [ ] Follow athletes, home feed
 - [x] Photos on activities (local: added from the camera roll, gallery on the detail page,
       default story background, included in backups)
-- [ ] Kudos, comments on activities
-- [ ] Clubs, club feed and leaderboards
 - [x] Monthly platform challenges and badges (8 challenges a month derived from your
       activities, trophy case on the Groups tab, toast on completion; local until accounts)
 - [x] Achievements ("Succès"): 14 permanent badges, unlike the monthly challenges. Milestones
@@ -135,8 +133,22 @@ Sharing
       retroactive on existing history; unlock toast, gallery on the Profile tab with locked
       badges and progress
 - [ ] More achievements: PR-based ones (beat a record N times), yearly totals
-- [ ] Group challenges created by users, with friends (distance, time, elevation) **(premium)**
-- [ ] Group activities (detect athletes who ran together)
+- [x] Share an activity file (GPX) through the native share sheet (FIT export: later)
+- [x] Group challenges with friends (distance, time, elevation, activities) **(premium)**:
+      the challenge is a URL-safe code in a `#/challenge/…` link (or pasted as is in the native
+      app), carrying the rules and every result; each athlete adds theirs and shares it back
+- [ ] Group activities: detect from imported GPX files that athletes ran together
+
+Dropped (central social network, see `DECISIONS.md`)
+- ~~Follow athletes, home feed~~
+- ~~Kudos, comments on activities~~
+- ~~Clubs, club feed and leaderboards~~
+- ~~Activity visibility (public / followers / only me)~~
+
+Far idea
+- [ ] ActivityPub federation: an instance publishes activities to the Fediverse, people
+      follow and comment from Mastodon & co. The only "community" path that fits
+      self-hosting
 
 ## Phase 5: Premium-equivalent features
 
@@ -163,7 +175,7 @@ Goals (feature 9)
 Segments (feature 10)
 - [x] Segments: create from an activity, auto-match on save, segment efforts ranked
       against your own (local; shared segments wait for phase 3)
-- [ ] Segment leaderboards (filters: age, weight, friends, clubs) **(premium)**
+- [ ] Segment leaderboards across the athletes of an instance (filters: age, weight) **(premium)**
 - [x] Live segments during recording **(premium)** (start / finish detection, time left,
       spoken result vs your record)
 - [ ] Local Legends (most efforts in 90 days)
@@ -197,7 +209,7 @@ Safety (feature 3)
 - [ ] App Store + Google Play release (signing, store listings, privacy labels)
       (in-app privacy policy, terms and licenses done in Settings; the stores also want
       the privacy policy at a public URL)
-- [ ] Push notifications (kudos, comments, challenges)
+- [ ] Push notifications (challenges, goals)
 - [ ] Apple Watch / Wear OS companion
 - [ ] Apple Health sync
 

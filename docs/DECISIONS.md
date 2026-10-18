@@ -3,6 +3,32 @@
 Lightweight decision log. Newest first. Each entry: context, decision, consequences.
 Open questions sit at the bottom until decided.
 
+## 2026-10-18: Challenges with friends travel as links
+
+**Context**: without accounts, friends still need to see each other's progress on a
+shared challenge.
+**Decision**: the challenge (rules + every athlete's latest result) is base64url JSON in a
+`#/challenge/<code>` link. Opening it joins or merges (newest result per athlete wins);
+"Share" sends it back with your live result. The native shell has no public URL, so it
+shares a message ending with the bare code, pasted in Groups > Join a challenge. Results
+are self-reported, there is no anti-cheat: it's a game between friends.
+**Consequences**: standings are only as fresh as the last link received. Links grow with
+participants (capped at 50 entries). A real deep link (App Links) needs a hosted domain.
+
+## 2026-10-18: No central social network
+
+**Context**: Strava's community (follow, feed, kudos, comments, clubs) is one of its
+subscription arguments. Allure is open source and meant to be self-hosted: an instance
+has a handful of users, and a social layer needs accounts, moderation, reports, GDPR
+handling and push, all permanent work against the local-first design.
+**Decision**: drop follow, home feed, kudos, comments, clubs and activity visibility.
+Keep what works without a server: outward sharing (stories, activity files through the
+share sheet), challenges with friends as a shared file or link compared locally, group
+activity detection from imported tracks. ActivityPub federation stays a far idea, the
+only community path that fits self-hosting.
+**Consequences**: subscription feature 2 is not covered; parity is claimed without it.
+The Groups tab must be rethought around challenges, trophies and sharing.
+
 ## 2026-10-18: Recorded altitude comes from the DEM
 
 **Context**: phone GPS altitude is WGS84 ellipsoid height (~50 m above sea level in

@@ -63,6 +63,8 @@ IndexedDB database `allure`, version 7:
   `lang` → `'fr' | 'en'` UI language, device language when unset (see `lib/i18n.js`)
   `prefs` → `{ name, autoPause, audio, recordScreen }` display name and recording defaults (Settings page);
   `recordScreen` → `{ [sport]: { map, hero, fields } }` live screen layout (`lib/liveFields.js`)
+  `friendChallenges` → `[{ id, title, metric, sport, from, to, entries, me }]` challenges with
+  friends, shared as `#/challenge/<code>` links (see `lib/friendChallenges.js`)
 - `segments` (keyPath `id`): user-created segments (see `lib/segments.js`)
 - `routes` (keyPath `id`): planned route metas: waypoints, stats, preview (see `lib/routes.js`)
 - `routeLegs` (key = route id): each route's points, read by `getRoute` (builder, recording)
