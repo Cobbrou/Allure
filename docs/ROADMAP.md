@@ -220,9 +220,10 @@ Fixes
       references only, microseconds at 20k, and keeps the recorder pure)
 - [x] Share sheet: the last story template (Splits) could not be selected, the strip
       stopped short of centring it and the picker stayed on the previous one
-- [ ] Heart rate is lost while standing still: a strap reading is only stored with a GPS
+- [x] Heart rate is lost while standing still: a strap reading is only stored with a GPS
       fix that moved ≥ 3 m or passed the accuracy filter. Keep HR samples on their own
       timeline (stops, tunnels, bad GPS)
+      (a heart-rate-only point at the last position every 5 s while no fix is stored)
 - [ ] Absolute elevation is GPS ellipsoid height (~50 m too high in France): correct it
       with the AWS Terrain DEM already used for 3D, Strava-style "elevation correction"
 - [ ] Moving time uses one 0.5 m/s threshold for every sport: steep hikes and swims read

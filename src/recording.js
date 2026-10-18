@@ -7,7 +7,7 @@ import { haptic } from './lib/haptics.js';
 import { segmentCue } from './lib/liveSegments.js';
 import { keepAwake, speak, watchPosition } from './lib/location.js';
 import { lockScreenControls } from './lib/lockscreen.js';
-import { addFix, elapsed, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, splitCue, startRecording, tick } from './lib/recorder.js';
+import { addFix, addHr, elapsed, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, splitCue, startRecording, tick } from './lib/recorder.js';
 import { connectHeartRate } from './lib/sensors.js';
 
 const SAVE_EVERY = 5000; // ms between draft autosaves
@@ -63,14 +63,18 @@ export function useRecording() {
   useEffect(() => {
     if (!active) return;
     setGpsError(null);
+    const freshHr = () => {
+      const s = sensor.current;
+      return s?.bpm && Date.now() - s.at < HR_FRESH ? s.bpm : null;
+    };
     const stop = watchPosition((fix) => {
       setGpsError(null);
-      const s = sensor.current;
-      const hr = s?.bpm && Date.now() - s.at < HR_FRESH ? s.bpm : null;
+      const hr = freshHr();
       update((r) => addFix(r, hr ? { ...fix, hr } : fix));
     }, setGpsError, { background: true });
     const timer = setInterval(() => {
-      update((r) => tick(r, Date.now()));
+      const now = Date.now();
+      update((r) => tick(addHr(r, freshHr(), now), now));
       const r = ref.current;
       lock.current?.update({ title: `${fmtDist(r.distance)} ${distUnit()} · ${fmtDuration(elapsed(r, Date.now()))}`, paused: r.paused || r.autoPaused });
     }, 1000);

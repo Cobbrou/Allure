@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { addFix, currentPace, draftWrites, joinDraft, elapsed, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, splitCue, startRecording, tick } from '../src/lib/recorder.js';
+import { addFix, addHr, currentPace, draftWrites, joinDraft, elapsed, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, splitCue, startRecording, tick } from '../src/lib/recorder.js';
 
 const M = 1 / 111195; // degrees of latitude per meter
 /** Fix `m` meters north of the origin at second `s`. */
@@ -104,4 +104,19 @@ test('draft saves write only the changed chunk and load back whole', () => {
   // Drafts saved whole by an older version still load.
   assert.equal(joinDraft(new Map([['current', rec]])), rec);
   assert.equal(joinDraft(new Map()), null);
+});
+
+test('heart rate keeps coming in while stopped, without distance or moving time', () => {
+  let rec = run(startRecording({}, 0), 0, 10); // 40 m
+  const { distance } = rec;
+  for (let s = 11; s <= 130; s++) rec = tick(addHr(addFix(rec, fix(40, s)), 120, s * 1000), s * 1000);
+  const hrPts = rec.points.filter((p) => p.hr === 120);
+  assert.equal(hrPts.length, 24); // one every 5 s over 2 min
+  assert.equal(rec.distance, distance);
+  assert.ok(hrPts.every((p) => p.lat === rec.points[10].lat));
+  // No strap reading, paused or not started: nothing added.
+  assert.equal(addHr(rec, null, 200_000), rec);
+  assert.equal(addHr(pause(rec, 130_000), 120, 200_000).points, rec.points);
+  const empty = startRecording({}, 0);
+  assert.equal(addHr(empty, 120, 10_000), empty);
 });
