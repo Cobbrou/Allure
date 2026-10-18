@@ -325,8 +325,6 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .gear-retired { margin-top: 8px; }
 .gear-retired summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-size: 14px; }
 
-/* Heatmap: as much map as the screen allows, under the top bar and above the tab bar */
-.map.heatmap, .skeleton.heatmap { height: calc(100vh - 56px - var(--safe-top) - var(--tabbar-h) - var(--safe-bottom) - 120px); min-height: 320px; }
 
 /* Profile dashboard */
 .segmented { display: flex; gap: 4px; padding: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; scrollbar-width: none; }
@@ -621,3 +619,25 @@ button:active:not(:disabled), .button:active, .activity-card:active, .sport-pick
 .photo.add span { font-size: 24px; line-height: 1; }
 .photo.add.busy { opacity: 0.6; }
 .photo-full { width: 100%; max-height: 65vh; object-fit: contain; border-radius: 12px; background: var(--bg); }
+
+/* Maps tab: full-screen map between the top safe area and the tab bar, controls float over it */
+.explore { position: fixed; inset: 0 0 calc(var(--tabbar-h) + var(--safe-bottom)); max-width: 640px; margin: 0 auto; overflow: hidden; }
+.map.explore-map { height: 100%; }
+.explore-top { position: absolute; top: calc(var(--safe-top) + 10px); left: 12px; right: 12px; display: flex; gap: 8px; align-items: center; }
+.explore-top .segmented { flex: 1; min-width: 0; background: rgba(15, 17, 21, 0.82); backdrop-filter: blur(8px); }
+.explore-top .map-btn { margin-left: auto; }
+.map-btn {
+  min-width: 44px; min-height: 44px; padding: 0 14px; border-radius: 22px; display: grid; place-items: center; font-size: 13px;
+  background: rgba(15, 17, 21, 0.82); border: 1px solid var(--border); color: var(--text); backdrop-filter: blur(8px);
+}
+.map-btn[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.map-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; }
+.map-btn.locate { position: absolute; right: 12px; bottom: 150px; padding: 0; }
+.explore-gps { position: absolute; left: 12px; bottom: 156px; }
+.map-carousel {
+  position: absolute; left: 0; right: 0; bottom: 12px; display: flex; gap: 10px; padding: 0 12px; scroll-padding: 0 12px;
+  overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+}
+.map-carousel > .card { flex: 0 0 82%; scroll-snap-align: start; min-height: 84px; background: rgba(24, 27, 34, 0.94); backdrop-filter: blur(8px); }
+.map-carousel > .card.on { border-color: var(--accent); }
+.explore .maplibregl-ctrl-bottom-right, .explore .maplibregl-ctrl-bottom-left { bottom: 104px; }

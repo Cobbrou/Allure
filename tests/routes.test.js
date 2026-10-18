@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createRoute, joinLegs, legKey, legUrl, parseLeg, straightLeg } from '../src/lib/routes.js';
+import { createRoute, joinLegs, legKey, legUrl, nearestFirst, parseLeg, routeUrl, straightLeg } from '../src/lib/routes.js';
 
 const M = 0.000009; // ≈ 1 m of latitude in degrees
 
@@ -28,4 +28,15 @@ test('createRoute measures distance and climb', () => {
   assert.ok(Math.abs(r.distance - 1000) < 5);
   assert.ok(r.gain > 90 && r.gain <= 100);
   assert.ok(r.preview.length > 1);
+});
+
+test('nearestFirst orders routes by the closest point of their thumbnail', () => {
+  const far = { id: 'far', preview: [[7, 46], [7.01, 46]] };
+  const near = { id: 'near', preview: [[6.5, 45.5], [6, 45.001]] };
+  assert.deepEqual(nearestFirst([far, near], [6, 45]).map((r) => r.id), ['near', 'far']);
+});
+
+test('routeUrl keeps to paved ways when roads are asked for, whatever the sport', () => {
+  for (const sport of ['run', 'ride', 'hike']) assert.match(routeUrl([[6, 45], [6.1, 45.1]], sport, 'paved'), /profile=fastbike&/);
+  assert.match(routeUrl([[6, 45], [6.1, 45.1]], 'run', 'trail'), /profile=hiking-mountain&/);
 });

@@ -5,6 +5,7 @@ import { RAD } from './geo.js';
 
 const M_PER_DEG = 111195;
 const WIGGLE = 1.25; // routed length over the circle drawn through the waypoints (roads aren't straight)
+export const FALLBACK_START = [6.8696, 45.9237]; // Chamonix, where the demo history lives
 export const BEARINGS = [0, 60, 120, 180, 240, 300];
 
 /** The point `d` meters from [lon, lat] towards `bearing` degrees (flat approximation). */

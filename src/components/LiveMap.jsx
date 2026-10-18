@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // Same Vite worker fix as TrackMap.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import { MAP_STYLE } from '../lib/offline.js';
-import { ACCENT, mapLocale } from '../theme.js';
+import { ACCENT, mapLocale, ROUTE } from '../theme.js';
 
 setWorkerUrl(workerUrl);
 
@@ -23,7 +23,7 @@ export default function LiveMap({ points, pos, route }) {
       if (route) {
         m.addSource('planned', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: route } } });
         m.addLayer({ id: 'planned', type: 'line', source: 'planned', layout: { 'line-join': 'round', 'line-cap': 'round' },
-          paint: { 'line-color': '#60a5fa', 'line-width': 6, 'line-opacity': 0.6 } });
+          paint: { 'line-color': ROUTE, 'line-width': 6, 'line-opacity': 0.6 } });
       }
       m.addSource('route', { type: 'geojson', data: line(points) });
       m.addLayer({ id: 'route', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' },

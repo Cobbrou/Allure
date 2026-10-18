@@ -39,7 +39,7 @@ Route changes run inside `document.startViewTransition` (slide or fade, see
 | `#/record`       | `RecordPage`: setup (sport, route to follow, auto-pause, voice cues, GPS status), then live recording. `#/record/:routeId` preselects a route |
 | `#/log`          | `TrainingLogPage`: week-by-week bubbles, opened from the profile |
 | `#/segment/:id`  | `SegmentPage`: segment map, distance / grade, your efforts fastest first |
-| `#/maps`         | `MapsPage` (tab): personal heatmap and saved routes |
+| `#/maps`         | `MapsPage` (tab): full-screen map around you, saved routes nearest first in a bottom carousel, heatmap layer |
 | `#/suggest`      | `SuggestPage`: routes made for you, loops from your position ranked on your preferences |
 | `#/route/:id`    | `RoutePage`: route builder (`new`) or a saved route, editable |
 | `#/groups`       | `GroupsPage` (tab): clubs and events (placeholders until accounts land) |

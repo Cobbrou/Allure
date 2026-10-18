@@ -10,14 +10,13 @@ import { distUnit, elevUnit, fmtDist, fmtElev, isImperial } from '../lib/format.
 import { currentPosition } from '../lib/location.js';
 import { createRoute, fetchRoute, splitLegs } from '../lib/routes.js';
 import { SPORTS } from '../lib/sports.js';
-import { BEARINGS, cellKey, familiarity, loopWaypoints, rank } from '../lib/suggest.js';
+import { BEARINGS, cellKey, FALLBACK_START, familiarity, loopWaypoints, rank } from '../lib/suggest.js';
 import { back } from '../router.js';
 
 const sportOptions = () => ['run', 'ride', 'hike'].map((id) => ({ id, label: `${SPORTS[id].icon} ${SPORTS[id].label}` }));
 const KM = { run: [3, 30, 10], ride: [10, 150, 40], hike: [5, 30, 12] }; // min, max, default
 const terrains = () => [{ id: '', label: t('Peu importe') }, { id: 'flat', label: t('Plat') }, { id: 'hilly', label: t('Vallonné') }];
 const surfaces = () => [{ id: '', label: t('Peu importe') }, { id: 'paved', label: t('Route') }, { id: 'trail', label: t('Chemins') }];
-const FALLBACK_START = [6.8696, 45.9237]; // Chamonix, where the demo history lives
 const OFF_TARGET = 0.15; // a first loop further than this from the target distance is routed again, resized
 
 /** Routes made for you: loops from your position matching distance, terrain, surface and novelty. */
@@ -53,11 +52,11 @@ export default function SuggestPage({ activities, onPick }) {
     const target = km * 1000;
     const loop = async (bearing) => {
       let waypoints = loopWaypoints(start.coords, target, bearing);
-      let r = await fetchRoute(waypoints, sport);
+      let r = await fetchRoute(waypoints, sport, surface);
       const first = analyze(r.points).distance;
       if (Math.abs(first - target) / target > OFF_TARGET) {
         waypoints = loopWaypoints(start.coords, target, bearing, Math.min(2, Math.max(0.5, target / first)));
-        r = await fetchRoute(waypoints, sport);
+        r = await fetchRoute(waypoints, sport, surface);
       }
       const { distance, gain } = analyze(r.points);
       return { bearing, waypoints, points: r.points, distance, gain, unpaved: r.unpaved, familiar: familiarity(r.points, cells.current) };

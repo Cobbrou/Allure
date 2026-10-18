@@ -5,19 +5,22 @@
 import { t } from './i18n.js';
 import { analyze } from './analyze.js';
 import { preview } from './activity.js';
+import { haversine } from './geo.js';
 
 const BROUTER = 'https://brouter.de/brouter';
-// BRouter profiles: trekking favors cycle-friendly roads, hiking-mountain takes paths and trails.
+// BRouter profiles: trekking favors cycle-friendly roads, hiking-mountain takes paths and trails,
+// fastbike (road bike) keeps to paved ways: used for any sport when roads are asked for.
 const PROFILE = { ride: 'trekking' };
+const profile = (sport, surface) => (surface === 'paved' ? 'fastbike' : PROFILE[sport] ?? 'hiking-mountain');
 
 /** Cache key of the leg a -> b ([lon, lat] waypoints). */
-export const legKey = (a, b, sport, snap) => `${snap ? PROFILE[sport] ?? 'hiking-mountain' : 'line'}:${a}:${b}`;
+export const legKey = (a, b, sport, snap) => `${snap ? profile(sport) : 'line'}:${a}:${b}`;
 
 export const straightLeg = (a, b) => [{ lon: a[0], lat: a[1] }, { lon: b[0], lat: b[1] }];
 
-/** BRouter URL for a route through [lon, lat] waypoints. */
-export const routeUrl = (lonlats, sport) =>
-  `${BROUTER}?lonlats=${lonlats.map((c) => c.join(',')).join('|')}&profile=${PROFILE[sport] ?? 'hiking-mountain'}&alternativeidx=0&format=geojson`;
+/** BRouter URL for a route through [lon, lat] waypoints. surface: 'paved' to stay on roads. */
+export const routeUrl = (lonlats, sport, surface) =>
+  `${BROUTER}?lonlats=${lonlats.map((c) => c.join(',')).join('|')}&profile=${profile(sport, surface)}&alternativeidx=0&format=geojson`;
 
 export const legUrl = (a, b, sport) => routeUrl([a, b], sport);
 
@@ -36,9 +39,9 @@ async function fetchGeojson(url) {
 
 export const fetchLeg = async (a, b, sport) => parseLeg(await fetchGeojson(legUrl(a, b, sport)));
 
-/** A whole route through waypoints in one request: { points, unpaved }. */
-export async function fetchRoute(lonlats, sport) {
-  const json = await fetchGeojson(routeUrl(lonlats, sport));
+/** A whole route through waypoints in one request: { points, unpaved }. surface: as routeUrl. */
+export async function fetchRoute(lonlats, sport, surface) {
+  const json = await fetchGeojson(routeUrl(lonlats, sport, surface));
   return { points: parseLeg(json), unpaved: unpavedShare(json) };
 }
 
@@ -91,4 +94,10 @@ export function createRoute({ id = crypto.randomUUID(), name, sport, snap, waypo
   const points = joinLegs(legs);
   const { distance, gain } = analyze(points);
   return { id, name, sport, snap, waypoints, legs, distance, gain, preview: preview(points), created, updated: Date.now() };
+}
+
+/** Routes sorted by how close they pass to [lon, lat] (nearest thumbnail point), nearest first. */
+export function nearestFirst(routes, [lon, lat]) {
+  const gap = (r) => Math.min(...r.preview.map(([x, y]) => haversine({ lon, lat }, { lon: x, lat: y })));
+  return routes.map((r) => [gap(r), r]).sort((a, b) => a[0] - b[0]).map(([, r]) => r);
 }

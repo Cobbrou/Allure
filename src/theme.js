@@ -9,6 +9,7 @@ export const GOOD = '#22c55e'; // --good
 export const GRID = '#262a34'; // chart grid lines (--border)
 export const AXIS = '#3a3f4b'; // chart axis lines
 export const TICK = '#8b93a7'; // chart labels (--muted)
+export const ROUTE = '#60a5fa'; // planned routes on maps (not the main GPS track)
 export const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 // Relief: AWS Terrain Tiles (Terrarium-encoded elevation, public, CORS enabled).
 export const DEM_TILES = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
