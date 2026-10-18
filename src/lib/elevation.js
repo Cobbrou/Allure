@@ -2,7 +2,7 @@
 // and noisy, so recorded tracks take their altitude from the AWS Terrain DEM instead,
 // the tiles the 3D map already uses. Platform module: fetches and decodes PNG tiles.
 // ponytail: DEM ground height, so bridges dip and tunnels climb over the hill; a
-// barometric watch track would be better left alone (imports aren't corrected).
+// barometric watch track would be better left alone (imports are corrected only on request).
 
 import { DEM_TILES } from '../theme.js';
 

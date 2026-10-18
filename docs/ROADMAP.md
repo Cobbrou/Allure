@@ -246,7 +246,8 @@ Fixes
 - [x] Absolute elevation is GPS ellipsoid height (~50 m too high in France): correct it
       with the AWS Terrain DEM already used for 3D, Strava-style "elevation correction"
       (recorded activities, on finish; imports keep their altitude)
-- [ ] "Correct elevation" button on an imported activity (same `correctElevation`)
+- [x] "Correct elevation" button on an imported activity (same `correctElevation`)
+      (edit sheet, hidden on recorded activities: already corrected on finish)
 - [x] Moving time uses one 0.5 m/s threshold for every sport: steep hikes and swims read
       as stopped. Make it per sport (like `STOP_SPEED` in the recorder)
       (`SPORTS[sport].moving`: hike and swim 0.2, walk 0.25; DB v8 recomputes them. Live

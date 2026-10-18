@@ -17,6 +17,7 @@ import StatsGrid from '../components/StatsGrid.jsx';
 import TrackMap from '../components/TrackMap.jsx';
 import { analyze, computeSplits } from '../lib/analyze.js';
 import { cropActivity } from '../lib/activity.js';
+import { correctElevation } from '../lib/elevation.js';
 import { deleteActivities, getActivity, getPhotos, saveActivities, setPhotos, updateActivity } from '../lib/db.js';
 import { distUnit, fmtDist, fmtDuration } from '../lib/format.js';
 import { defaultGear, GEAR_KINDS, gearFor } from '../lib/gear.js';
@@ -68,6 +69,16 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
     setCropping(false);
     onChange();
   };
+  // A crop that keeps every point: stats recomputed, typed fields kept. False when the DEM is out of reach.
+  const fixElevation = async () => {
+    const points = await correctElevation(data.points, 15000);
+    if (points === data.points) return false;
+    await saveActivities([cropActivity(data.meta, points, 0, points.length - 1)]);
+    setData(await getActivity(id));
+    setSheet(null);
+    onChange();
+    return true;
+  };
   const remove = async () => {
     await deleteActivities([id]);
     await onChange();
@@ -86,7 +97,8 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
         <button className="small" onClick={() => setSheet('share')}>{t('Partager')}</button>
       </TopBar>
       <BottomSheet open={sheet === 'edit'} onClose={() => setSheet(null)} title={t("Modifier l'activité")}>
-        <EditForm meta={data.meta} gears={gears} onSave={save} onDelete={remove} onCrop={() => { setSheet(null); setCropping(true); }} />
+        <EditForm meta={data.meta} gears={gears} onSave={save} onDelete={remove}
+          onFixElevation={data.meta.source !== 'record' && fixElevation} onCrop={() => { setSheet(null); setCropping(true); }} />
       </BottomSheet>
       <ShareSheet act={act} zones={zones} photos={photos} open={sheet === 'share'} onClose={() => setSheet(null)}>
         <button type="button" className="ghost" onClick={exportGpx}>{t('Fichier GPX')}</button>
@@ -133,7 +145,8 @@ function TopBar({ children }) {
   );
 }
 
-function EditForm({ meta, gears, onSave, onDelete, onCrop }) {
+function EditForm({ meta, gears, onSave, onDelete, onCrop, onFixElevation }) {
+  const [fixing, setFixing] = useState(null); // null | 'busy' | 'failed'
   const [name, setName] = useState(meta.name);
   const [sport, setSport] = useState(meta.sport);
   const [gear, setGear] = useState(meta.gear ?? '');
@@ -187,6 +200,17 @@ function EditForm({ meta, gears, onSave, onDelete, onCrop }) {
         <span className="hint">{t('Jamais partagées ni exportées.')}</span>
       </label>
       <button type="button" className="ghost" onClick={onCrop}>{t('Recadrer le début ou la fin')}</button>
+      {onFixElevation && (
+        <label>
+          <button type="button" className="ghost" disabled={fixing === 'busy'}
+            onClick={async () => { setFixing('busy'); setFixing((await onFixElevation()) ? null : 'failed'); }}>
+            {fixing === 'busy' ? t('Correction…') : t("Corriger l'altitude")}
+          </button>
+          <span className="hint">{fixing === 'failed'
+            ? t('Relief indisponible (hors ligne ou trace trop longue).')
+            : t("Remplace l'altitude du fichier par celle du relief. Inutile pour une montre barométrique.")}</span>
+        </label>
+      )}
       <div className="edit-actions">
         <ConfirmButton onConfirm={onDelete} confirmLabel={t('Confirmer')}>{t('Supprimer')}</ConfirmButton>
         <button type="submit">{t('Enregistrer')}</button>
