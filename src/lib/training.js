@@ -83,6 +83,19 @@ export function relativeEffort(hist, { max, rest }) {
   return any ? Math.round(trimp) : null;
 }
 
+/**
+ * Session effort from perceived exertion (Foster's session RPE: 1-10 times minutes), scaled
+ * so an hour at RPE 3-4 lands near 100 like Relative Effort. null without an RPE.
+ * ponytail: linear, so hard sessions read a bit higher than heart rate would say.
+ */
+export const rpeEffort = (rpe, movingTime) => (rpe && movingTime ? Math.round(rpe * (movingTime / 60) * 0.45) : null);
+
+/** An activity's effort: from heart rate when it has some, else from its perceived exertion. */
+export const activityEffort = (a, hr) => relativeEffort(a.hrTime, hr) ?? rpeEffort(a.rpe, a.movingTime);
+
+/** Perceived exertion in words: 1-3 easy, 4-6 moderate, 7-8 hard, 9-10 max. */
+export const rpeLabel = (rpe) => t(rpe <= 3 ? 'Facile' : rpe <= 6 ? 'Modéré' : rpe <= 8 ? 'Difficile' : 'Maximal');
+
 const DAY = 86400e3;
 const dayStart = (t) => new Date(t).setHours(0, 0, 0, 0);
 
@@ -96,7 +109,7 @@ export function fitnessSeries(activities, hr, days = 90, now = Date.now()) {
   const load = new Map();
   for (const a of activities) {
     const d = dayStart(a.date);
-    load.set(d, (load.get(d) ?? 0) + (relativeEffort(a.hrTime, hr) ?? 0));
+    load.set(d, (load.get(d) ?? 0) + (activityEffort(a, hr) ?? 0));
   }
   const today = dayStart(now);
   const first = Math.min(dayStart(today - (days - 1) * DAY + DAY / 2), ...load.keys());

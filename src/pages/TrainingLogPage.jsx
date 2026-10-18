@@ -4,7 +4,7 @@ import Segmented from '../components/Segmented.jsx';
 import { distUnit, fmtDist, fmtDuration } from '../lib/format.js';
 import { SPORTS, sportOptions } from '../lib/sports.js';
 import { trainingWeeks } from '../lib/stats.js';
-import { relativeEffort } from '../lib/training.js';
+import { activityEffort } from '../lib/training.js';
 
 const PAGE = 12; // weeks shown per "load more"
 
@@ -12,7 +12,7 @@ const PAGE = 12; // weeks shown per "load more"
 const SIZES = [
   { id: 'movingTime', get label() { return t('Temps'); }, of: (a) => a.movingTime ?? 0 },
   { id: 'distance', get label() { return t('Distance'); }, of: (a) => a.distance },
-  { id: 'effort', get label() { return t('Effort'); }, of: (a, hr) => relativeEffort(a.hrTime, hr) ?? 0 },
+  { id: 'effort', get label() { return t('Effort'); }, of: (a, hr) => activityEffort(a, hr) ?? 0 },
 ];
 
 /** Week-by-week log: one bubble per active day, sized by time, distance or effort. */

@@ -161,6 +161,8 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .edit textarea { padding: 10px 12px; resize: vertical; line-height: 1.4; }
 .edit input:focus, .edit select:focus, .edit textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; }
 .edit .hint { font-size: 12px; font-weight: 400; }
+.edit input[type='range'] { min-height: 44px; padding: 0; accent-color: var(--accent); border: 0; background: none; }
+.edit label b { color: var(--text); font-weight: 600; }
 .description { white-space: pre-line; line-height: 1.45; overflow-wrap: anywhere; }
 .description.notes { color: var(--muted); font-size: 14px; border-left: 2px solid var(--border-strong); padding-left: 10px; }
 .description.notes b { font-weight: 600; }

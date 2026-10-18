@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createActivity } from '../src/lib/activity.js';
 import { demoTrack } from '../src/lib/demo.js';
-import { estimateMaxHr, fitnessSeries, hrTime, relativeEffort, restingFromWatch, timeInZones } from '../src/lib/training.js';
+import { activityEffort, estimateMaxHr, fitnessSeries, hrTime, relativeEffort, restingFromWatch, rpeEffort, timeInZones } from '../src/lib/training.js';
 
 const HR = { max: 190, rest: 60 };
 /** `min` minutes at a constant heart rate, one point per second. */
@@ -57,4 +57,15 @@ test('restingFromWatch: median of the last 7 plausible days', () => {
   assert.equal(restingFromWatch([50, 0, 250, 54]), 52);
   assert.equal(restingFromWatch([]), null);
   assert.equal(restingFromWatch(undefined), null);
+});
+
+test('perceived exertion stands in for heart rate', () => {
+  assert.equal(rpeEffort(null, 3600), null);
+  const easyHour = rpeEffort(3.5, 3600);
+  assert.ok(easyHour > 80 && easyHour < 110, easyHour);
+  assert.ok(rpeEffort(8, 3600) > easyHour * 2);
+  const withHr = { hrTime: steady(150, 60), rpe: 2, movingTime: 3600 };
+  assert.equal(activityEffort(withHr, HR), relativeEffort(withHr.hrTime, HR)); // heart rate wins
+  assert.equal(activityEffort({ rpe: 5, movingTime: 1800 }, HR), rpeEffort(5, 1800));
+  assert.equal(activityEffort({}, HR), null);
 });

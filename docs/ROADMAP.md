@@ -248,7 +248,8 @@ Activity details
       not stored on metas until a list needs it)
 - [x] Description and private notes on an activity (description exported in GPX `<desc>`,
       notes never leave the app)
-- [ ] Perceived exertion (1–10) feeding Relative Effort when there is no heart rate
+- [x] Perceived exertion (1–10) feeding Relative Effort when there is no heart rate
+      (session RPE × minutes × 0.45, in Fitness & Freshness and the training log)
 - [ ] Calories estimate (HR-based, else MET by sport and weight)
 - [ ] Crop an activity (trim start / end, e.g. a forgotten stop button)
 - [ ] Manual activity entry (no GPS: gym, treadmill, pool) and indoor recording (timer +

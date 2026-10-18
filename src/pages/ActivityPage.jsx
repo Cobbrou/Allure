@@ -19,6 +19,7 @@ import { analyze, computeSplits } from '../lib/analyze.js';
 import { deleteActivities, getActivity, getPhotos, setPhotos, updateActivity } from '../lib/db.js';
 import { defaultGear, GEAR_KINDS, gearFor } from '../lib/gear.js';
 import { SPORTS, splitSize as splitSizeOf } from '../lib/sports.js';
+import { rpeLabel } from '../lib/training.js';
 import { toGpx } from '../lib/formats/gpxExport.js';
 import { safeName, shareFile } from '../lib/share.js';
 import { go } from '../router.js';
@@ -128,6 +129,7 @@ function EditForm({ meta, gears, onSave, onDelete }) {
   const [gear, setGear] = useState(meta.gear ?? '');
   const [description, setDescription] = useState(meta.description ?? '');
   const [notes, setNotes] = useState(meta.notes ?? '');
+  const [rpe, setRpe] = useState(meta.rpe ?? 0); // 0: not set
   // Active gear for the chosen sport, plus the current one even if retired.
   const options = gearFor(gears, sport);
   const current = gears.find((g) => g.id === meta.gear);
@@ -135,7 +137,7 @@ function EditForm({ meta, gears, onSave, onDelete }) {
   // Gear that doesn't fit a newly picked sport gives way to that sport's default.
   const gearId = !gear || options.some((g) => g.id === gear) ? gear : (defaultGear(gears, sport) ?? '');
   return (
-    <form className="card edit" onSubmit={(e) => { e.preventDefault(); onSave({ name: name.trim() || meta.name, sport, gear: gearId || undefined, description: description.trim() || undefined, notes: notes.trim() || undefined }); }}>
+    <form className="card edit" onSubmit={(e) => { e.preventDefault(); onSave({ name: name.trim() || meta.name, sport, gear: gearId || undefined, description: description.trim() || undefined, notes: notes.trim() || undefined, rpe: rpe || undefined }); }}>
       <label>
         {t('Titre')}
         <input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
@@ -163,6 +165,12 @@ function EditForm({ meta, gears, onSave, onDelete }) {
           </select>
         </label>
       )}
+      <label>
+        <span>{t('Effort perçu')} · <b>{rpe ? `${rpe}/10 ${rpeLabel(rpe)}` : t('Non renseigné')}</b></span>
+        <input type="range" min={0} max={10} step={1} value={rpe} onChange={(e) => setRpe(Number(e.target.value))}
+          aria-valuetext={rpe ? `${rpe}/10 ${rpeLabel(rpe)}` : t('Non renseigné')} />
+        <span className="hint">{t('Compte dans ta forme quand il n’y a pas de cardio.')}</span>
+      </label>
       <label>
         {t('Notes privées')}
         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} rows={2} placeholder={t('Sensations, météo, nutrition…')} />
