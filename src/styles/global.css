@@ -429,7 +429,9 @@ dialog.sheet[open]::backdrop { animation: fade-in 0.2s ease backwards; }
 /* Share sheet: story previews, swiped horizontally, one centered at a time */
 .share { display: grid; gap: 12px; }
 .story-strip {
-  --slide: min(60%, 28vh); /* 9:16 slides stay under half the screen height */
+  /* 9:16 slides stay under half the screen height. No %: it would resolve against the parent in
+     the padding but against the strip's content box on the slide, so the last slide couldn't centre. */
+  --slide: min(55vw, 28vh);
   display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
   padding: 4px calc(50% - var(--slide) / 2);
 }
