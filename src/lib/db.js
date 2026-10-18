@@ -7,6 +7,7 @@ import { t } from './i18n.js';
 import { analyze } from './analyze.js';
 import { defaultGear } from './gear.js';
 import { bestEfforts } from './records.js';
+import { draftWrites, joinDraft } from './recorder.js';
 import { segmentEfforts } from './segments.js';
 import { hrTime } from './training.js';
 
@@ -132,10 +133,24 @@ export function deleteActivities(ids) {
   });
 }
 
-/** The in-progress live recording (one at a time). */
-export const saveDraft = (rec) => tx(['drafts'], 'readwrite', (s) => s.put(rec, 'current'));
-export const loadDraft = () => tx(['drafts'], 'readonly', (s) => s.get('current'));
-export const clearDraft = () => tx(['drafts'], 'readwrite', (s) => s.delete('current'));
+/** The in-progress live recording (one at a time), stored in parts: see draftWrites. */
+let savedDraft = null;
+export async function saveDraft(rec) {
+  const { writes, saved } = draftWrites(rec, savedDraft);
+  await tx(['drafts'], 'readwrite', (s) => writes.forEach(([key, value]) => s.put(value, key)));
+  savedDraft = saved;
+}
+export async function loadDraft() {
+  const [keys, values] = await tx(['drafts'], 'readonly', (s) => {
+    const k = s.getAllKeys(), v = s.getAll();
+    return { get result() { return [k.result, v.result]; } };
+  });
+  return joinDraft(new Map(keys.map((key, i) => [key, values[i]])));
+}
+export async function clearDraft() {
+  await tx(['drafts'], 'readwrite', (s) => s.clear());
+  savedDraft = null;
+}
 
 /** An activity's photos (Blobs, oldest first); [] when it has none. */
 export const getPhotos = async (id) => (await tx(['photos'], 'readonly', (s) => s.get(id))) ?? [];

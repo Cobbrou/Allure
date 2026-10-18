@@ -55,6 +55,37 @@ export const lapStarts = (rec) => (rec.laps?.length ? [rec.points[0]?.time ?? re
 /** After a crash or reload: paused, with the clock stopped at the last saved point. */
 export const recover = (rec) => ({ ...stopClock(rec, rec.points.at(-1)?.time ?? rec.start), paused: true, autoPaused: false });
 
+// The autosaved draft is split so a save writes only what changed: `current` holds the small
+// live state, `static` the route and segments (set at start), `p0`, `p1`… the points in chunks.
+const CHUNK = 500;
+
+/**
+ * [key, value] writes that bring a saved draft up to `rec`. saved: { route, liveSegs, count }
+ * as last written (null for a fresh store); returns it updated as `saved`.
+ */
+export function draftWrites(rec, saved) {
+  const { points, route, liveSegs, ...state } = rec;
+  const writes = [];
+  if (saved?.route !== route || saved?.liveSegs !== liveSegs) writes.push(['static', { route, liveSegs }]);
+  // Rewrite from the chunk holding the first unsaved point (all of them if the track shrank).
+  const from = saved && saved.count <= points.length ? Math.floor(saved.count / CHUNK) : 0;
+  for (let i = from; i * CHUNK < points.length; i++) writes.push([`p${i}`, points.slice(i * CHUNK, (i + 1) * CHUNK)]);
+  writes.push(['current', { ...state, count: points.length }]);
+  return { writes, saved: { route, liveSegs, count: points.length } };
+}
+
+/** The recording back from the stored draft entries (a Map of key to value), or null. */
+export function joinDraft(entries) {
+  const cur = entries.get('current');
+  if (!cur) return null;
+  if (cur.points) return cur; // draft saved whole, before it was split
+  const { count, ...state } = cur;
+  const points = [];
+  // A chunk is missing only if a save was cut short: keep the points before it.
+  for (let i = 0, c; points.length < count && (c = entries.get(`p${i}`)); i++) points.push(...c.slice(0, count - points.length));
+  return { ...state, ...entries.get('static'), points };
+}
+
 /** Feed one GPS fix: { lat, lon, ele?, time, accuracy?, speed? }. */
 export function addFix(rec, fix) {
   if ((fix.accuracy ?? 0) > MAX_ACCURACY) return rec;

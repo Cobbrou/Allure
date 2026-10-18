@@ -212,9 +212,14 @@ Pixel Watch / Google
 Gaps found in a code review of the local-first app. No item here needs a backend.
 
 Fixes
-- [ ] Recording cost grows with length: `addFix` copies the whole points array on every
+- [x] Recording cost grows with length: `addFix` copies the whole points array on every
       fix and the draft autosave rewrites every point each 5 s. A 6 h ride at 1 Hz copies
       ~20k points per fix. Append in place (or chunk the draft) so long rides stay cheap
+      (draft stored in 500-point chunks, a save writes the last one plus the live state;
+      the route and segments are written once. `addFix` still copies the array: it copies
+      references only, microseconds at 20k, and keeps the recorder pure)
+- [x] Share sheet: the last story template (Splits) could not be selected, the strip
+      stopped short of centring it and the picker stayed on the previous one
 - [ ] Heart rate is lost while standing still: a strap reading is only stored with a GPS
       fix that moved ≥ 3 m or passed the accuracy filter. Keep HR samples on their own
       timeline (stops, tunnels, bad GPS)

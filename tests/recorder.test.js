@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { addFix, currentPace, elapsed, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, splitCue, startRecording, tick } from '../src/lib/recorder.js';
+import { addFix, currentPace, draftWrites, joinDraft, elapsed, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, splitCue, startRecording, tick } from '../src/lib/recorder.js';
 
 const M = 1 / 111195; // degrees of latitude per meter
 /** Fix `m` meters north of the origin at second `s`. */
@@ -80,4 +80,28 @@ test('laps: lap press, current lap time, saved lap starts and cue', () => {
   assert.equal(lap(pause(rec, 61_000), 62_000).laps.length, 1); // no lap while paused
   assert.equal(lapStarts(startRecording({}, 5)), null);
   assert.equal(lapCue(2, 3725), 'Tour 2 : 1 heure 2 minutes 5.');
+});
+
+test('draft saves write only the changed chunk and load back whole', () => {
+  const store = new Map();
+  const save = (rec, saved) => {
+    const out = draftWrites(rec, saved);
+    out.writes.forEach(([k, v]) => store.set(k, v));
+    return out;
+  };
+  let rec = { ...run(startRecording({ route: { coords: [[6, 45]] } }, 0), 0, 1200), follow: null };
+  let { saved } = save(rec, null);
+  assert.deepEqual(joinDraft(store), rec);
+
+  rec = run(rec, 1201, 1210, 4, 4800);
+  const next = save(rec, saved);
+  assert.deepEqual(next.writes.map(([k]) => k), ['p2', 'current']); // route unchanged, 1211 points
+  assert.deepEqual(joinDraft(store), rec);
+
+  // A cut-short save: the points before the missing chunk survive.
+  store.delete('p1');
+  assert.equal(joinDraft(store).points.length, 500);
+  // Drafts saved whole by an older version still load.
+  assert.equal(joinDraft(new Map([['current', rec]])), rec);
+  assert.equal(joinDraft(new Map()), null);
 });

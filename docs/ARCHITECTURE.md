@@ -51,7 +51,9 @@ IndexedDB database `allure`, version 7:
 
 - `activities` (keyPath `id`): **meta** records, small enough to list everything at once
 - `tracks` (key = activity id): raw **points** arrays, read only on the detail page
-- `drafts` (key `current`): the in-progress live recording, autosaved every 5 s
+- `drafts`: the in-progress live recording, autosaved every 5 s, in parts so a save stays
+  small: `current` (live state + point count), `static` (route, live segments), `p0`, `p1`…
+  (500-point chunks). See `draftWrites` / `joinDraft` in `recorder.js`
 - `settings` (key = setting name): user preferences, e.g. `hr` → `{ max, rest, ftp }`,
   `goals` → `[{ id, sport, metric, period, target }]` (see `lib/goals.js`),
   `gear` → `[{ id, name, kind, initial, alert, isDefault, retired }]` (see `lib/gear.js`),
