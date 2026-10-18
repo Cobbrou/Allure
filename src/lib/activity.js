@@ -34,6 +34,19 @@ export function createActivity({ name, sport = 'run', points, source = 'gpx', la
   return { meta, points };
 }
 
+/**
+ * The activity cut to points from..to (inclusive): every stat recomputed, what the athlete
+ * typed kept, device laps inside the new range kept. Segment efforts are redone on save.
+ */
+export function cropActivity(meta, points, from, to) {
+  const kept = points.slice(from, to + 1);
+  const start = kept[0].time, end = kept.at(-1).time;
+  const inside = (meta.laps ?? []).filter((t) => t > start && t < end);
+  const { meta: fresh } = createActivity({ sport: meta.sport, points: kept, source: meta.source, laps: inside.length ? [start, ...inside] : null });
+  const typed = Object.fromEntries(['name', 'gear', 'description', 'notes', 'rpe'].filter((k) => meta[k] !== undefined).map((k) => [k, meta[k]]));
+  return { meta: { ...fresh, ...typed, id: meta.id }, points: kept };
+}
+
 /** Same start second and distance within 10 m: treated as the same activity on re-import. */
 export const dupKey = (meta) => `${Math.round(meta.date / 1000)}|${Math.round(meta.distance / 10)}`;
 

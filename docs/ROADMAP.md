@@ -253,7 +253,7 @@ Activity details
 - [x] Calories estimate (HR-based, else MET by sport and weight)
       (power when there is some, else distance and climb on foot, MET for rides and swims;
       weight in Settings. Not HR-based: that needs age and sex)
-- [ ] Crop an activity (trim start / end, e.g. a forgotten stop button)
+- [x] Crop an activity (trim start / end, e.g. a forgotten stop button)
 - [ ] Manual activity entry (no GPS: gym, treadmill, pool) and indoor recording (timer +
       strap, no GPS)
 - [ ] More sport types: trail run, e-bike, gravel, virtual ride, ski, workout, yoga…

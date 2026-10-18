@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createActivity, defaultName } from '../src/lib/activity.js';
+import { createActivity, cropActivity, defaultName } from '../src/lib/activity.js';
 import { demoHistory } from '../src/lib/demo.js';
 import { effort, sportFromGpxType } from '../src/lib/sports.js';
 
@@ -36,4 +36,25 @@ test('sport helpers', () => {
   assert.equal(effort('run', 300).value, '5:00');
   assert.deepEqual([effort('swim', 1200).value, effort('swim', 1200).unit], ['2:00', '/100m']);
   assert.equal(defaultName('run', new Date(2026, 0, 1, 8).getTime()), 'Course du matin');
+});
+
+test('cropActivity trims the ends, recomputes stats and keeps what was typed', () => {
+  // 2 km north at 4 m/s, a point every 10 m, then 10 minutes standing at the end.
+  const pts = [
+    ...Array.from({ length: 201 }, (_, i) => ({ lat: 45 + (i * 10) / 111195, lon: 6, ele: 100, time: i * 2500, hr: 150 })),
+    ...Array.from({ length: 60 }, (_, i) => ({ lat: 45 + 2000 / 111195, lon: 6, ele: 100, time: 500e3 + (i + 1) * 10e3, hr: 100 })),
+  ];
+  const { meta } = createActivity({ sport: 'run', points: pts, laps: [0, 250e3, 400e3] });
+  const typed = { ...meta, name: 'Mon tour', notes: 'stop final oublié', rpe: 4, efforts: [{ seg: 'x' }] };
+  const out = cropActivity(typed, pts, 100, 200); // second km only
+  assert.equal(out.points.length, 101);
+  assert.equal(out.meta.id, meta.id);
+  assert.equal(out.meta.name, 'Mon tour');
+  assert.equal(out.meta.notes, 'stop final oublié');
+  assert.equal(out.meta.rpe, 4);
+  assert.ok(Math.abs(out.meta.distance - 1000) < 2, out.meta.distance);
+  assert.equal(out.meta.date, 250e3);
+  assert.deepEqual(out.meta.laps, [250e3, 400e3]);
+  assert.equal(out.meta.efforts, undefined); // redone by saveActivities
+  assert.equal(out.meta.avgHr, 150); // the 100 bpm stop is gone
 });

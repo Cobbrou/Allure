@@ -16,7 +16,9 @@ import SplitsTable from '../components/SplitsTable.jsx';
 import StatsGrid from '../components/StatsGrid.jsx';
 import TrackMap from '../components/TrackMap.jsx';
 import { analyze, computeSplits } from '../lib/analyze.js';
-import { deleteActivities, getActivity, getPhotos, setPhotos, updateActivity } from '../lib/db.js';
+import { cropActivity } from '../lib/activity.js';
+import { deleteActivities, getActivity, getPhotos, saveActivities, setPhotos, updateActivity } from '../lib/db.js';
+import { distUnit, fmtDist, fmtDuration } from '../lib/format.js';
 import { defaultGear, GEAR_KINDS, gearFor } from '../lib/gear.js';
 import { SPORTS, splitSize as splitSizeOf } from '../lib/sports.js';
 import { rpeLabel } from '../lib/training.js';
@@ -27,6 +29,7 @@ import { go } from '../router.js';
 export default function ActivityPage({ id, activities, hr, ftp, weight, zones, segments, onSegment, gears, onChange }) {
   const [data, setData] = useState(); // undefined: loading, null: not found
   const [sheet, setSheet] = useState(null); // null | 'edit' | 'share'
+  const [cropping, setCropping] = useState(false);
   const [photos, setPhotoList] = useState([]);
   const hover = useRef(() => {});
   const range = useRef(() => {});
@@ -59,6 +62,12 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
     setSheet(null);
     onChange();
   };
+  const crop = async (from, to) => {
+    await saveActivities([cropActivity(data.meta, data.points, from, to)]);
+    setData(await getActivity(id));
+    setCropping(false);
+    onChange();
+  };
   const remove = async () => {
     await deleteActivities([id]);
     await onChange();
@@ -77,7 +86,7 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
         <button className="small" onClick={() => setSheet('share')}>{t('Partager')}</button>
       </TopBar>
       <BottomSheet open={sheet === 'edit'} onClose={() => setSheet(null)} title={t("Modifier l'activité")}>
-        <EditForm meta={data.meta} gears={gears} onSave={save} onDelete={remove} />
+        <EditForm meta={data.meta} gears={gears} onSave={save} onDelete={remove} onCrop={() => { setSheet(null); setCropping(true); }} />
       </BottomSheet>
       <ShareSheet act={act} zones={zones} photos={photos} open={sheet === 'share'} onClose={() => setSheet(null)}>
         <button type="button" className="ghost" onClick={exportGpx}>{t('Fichier GPX')}</button>
@@ -93,6 +102,7 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
         {act.description && <p className="description">{act.description}</p>}
         {act.notes && <p className="description notes"><b>{t('Notes privées')} · </b>{act.notes}</p>}
         <StatsGrid act={act} weight={weight} />
+        {cropping && <CropForm track={act.track} range={range} onCancel={() => setCropping(false)} onCrop={crop} />}
         <section className="card map-card">
           <TrackMap track={act.track} hover={hover} range={range} />
         </section>
@@ -123,7 +133,7 @@ function TopBar({ children }) {
   );
 }
 
-function EditForm({ meta, gears, onSave, onDelete }) {
+function EditForm({ meta, gears, onSave, onDelete, onCrop }) {
   const [name, setName] = useState(meta.name);
   const [sport, setSport] = useState(meta.sport);
   const [gear, setGear] = useState(meta.gear ?? '');
@@ -176,11 +186,41 @@ function EditForm({ meta, gears, onSave, onDelete }) {
         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} rows={2} placeholder={t('Sensations, météo, nutrition…')} />
         <span className="hint">{t('Jamais partagées ni exportées.')}</span>
       </label>
+      <button type="button" className="ghost" onClick={onCrop}>{t('Recadrer le début ou la fin')}</button>
       <div className="edit-actions">
         <ConfirmButton onConfirm={onDelete} confirmLabel={t('Confirmer')}>{t('Supprimer')}</ConfirmButton>
         <button type="submit">{t('Enregistrer')}</button>
       </div>
     </form>
+  );
+}
+
+/** Trim the start and end with two sliders; the map highlights what is kept. */
+function CropForm({ track, range, onCancel, onCrop }) {
+  const last = track.length - 1;
+  const [from, setFrom] = useState(0);
+  const [to, setTo] = useState(last);
+  useEffect(() => { range.current([from, to]); }, [range, from, to]);
+  useEffect(() => () => range.current(null), [range]);
+  const at = (i) => `${fmtDist(track[i].dist)} ${distUnit()}${track[i].time != null ? ` · ${fmtDuration((track[i].time - track[0].time) / 1000)}` : ''}`;
+  const changed = from > 0 || to < last;
+  return (
+    <section className="card edit segment-form">
+      <h3>{t("Recadrer l'activité")}</h3>
+      <label>{t('Départ')} · {at(from)}
+        <input type="range" min="0" max={last} value={from} onChange={(e) => setFrom(Math.min(Number(e.target.value), to - 1))} />
+      </label>
+      <label>{t('Arrivée')} · {at(to)}
+        <input type="range" min="0" max={last} value={to} onChange={(e) => setTo(Math.max(Number(e.target.value), from + 1))} />
+      </label>
+      <p className="muted">{t('{dist} {unit} conservés. Les points retirés sont supprimés.', { dist: fmtDist(track[to].dist - track[from].dist), unit: distUnit() })}</p>
+      <div className="edit-actions">
+        <button type="button" className="ghost" onClick={onCancel}>{t('Annuler')}</button>
+        {changed
+          ? <ConfirmButton className="" onConfirm={() => onCrop(from, to)} confirmLabel={t('Confirmer')}>{t('Recadrer')}</ConfirmButton>
+          : <button type="button" disabled>{t('Recadrer')}</button>}
+      </div>
+    </section>
   );
 }
 
