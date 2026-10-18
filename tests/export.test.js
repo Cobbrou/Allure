@@ -17,6 +17,12 @@ test('toGpx writes points, heart rate, power and escapes the title', () => {
   assert.equal((gpx.match(/<trkpt /g) ?? []).length, 2);
 });
 
+test('toGpx exports the description, never the private notes', () => {
+  const gpx = toGpx({ name: 'Sortie', sport: 'run', date: 0, description: 'Belle & longue', notes: 'secret' }, []);
+  assert.match(gpx, /<desc>Belle &amp; longue<\/desc>/);
+  assert.doesNotMatch(gpx, /secret/);
+});
+
 test('safeName keeps accents, drops unsafe characters', () => {
   assert.equal(safeName('Vélo à Annecy / test?'), 'Vélo-à-Annecy-test');
   assert.equal(safeName('???'), 'activite');

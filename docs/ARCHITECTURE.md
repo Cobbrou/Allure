@@ -111,6 +111,7 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
   hrTime,                // { [bpm]: s } moving seconds per heart rate (lib/training.js)
   efforts,               // [{ seg, time, from, to }] segment efforts: segment id, elapsed s, point indices
   laps,                  // device lap start times (ms), from FIT / TCX; only when 2+ laps
+  description, notes,    // free text; notes are private (never exported)
   gear,                  // gear id (settings `gear`); `saveActivities` sets the sport's default
   avgPower, np,          // W, rides with a power meter only (lib/power.js)
   powerCurve,            // { [seconds]: best average W } for 5 s … 1 h

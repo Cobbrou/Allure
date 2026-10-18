@@ -246,7 +246,8 @@ Activity details
 - [x] Elapsed time stored and shown next to moving time
       (computed by `analyze`, shown under moving time when stops add a minute or more;
       not stored on metas until a list needs it)
-- [ ] Description and private notes on an activity
+- [x] Description and private notes on an activity (description exported in GPX `<desc>`,
+      notes never leave the app)
 - [ ] Perceived exertion (1–10) feeding Relative Effort when there is no heart rate
 - [ ] Calories estimate (HR-based, else MET by sport and weight)
 - [ ] Crop an activity (trim start / end, e.g. a forgotten stop button)

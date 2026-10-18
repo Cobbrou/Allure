@@ -89,6 +89,8 @@ export default function ActivityPage({ id, activities, hr, ftp, zones, segments,
             <p>{SPORTS[act.sport]?.label} · {fmtDate(act.date)}{gear && ` · ${GEAR_KINDS[gear.kind].icon} ${gear.name}`}</p>
           </div>
         </div>
+        {act.description && <p className="description">{act.description}</p>}
+        {act.notes && <p className="description notes"><b>{t('Notes privées')} · </b>{act.notes}</p>}
         <StatsGrid act={act} />
         <section className="card map-card">
           <TrackMap track={act.track} hover={hover} range={range} />
@@ -124,6 +126,8 @@ function EditForm({ meta, gears, onSave, onDelete }) {
   const [name, setName] = useState(meta.name);
   const [sport, setSport] = useState(meta.sport);
   const [gear, setGear] = useState(meta.gear ?? '');
+  const [description, setDescription] = useState(meta.description ?? '');
+  const [notes, setNotes] = useState(meta.notes ?? '');
   // Active gear for the chosen sport, plus the current one even if retired.
   const options = gearFor(gears, sport);
   const current = gears.find((g) => g.id === meta.gear);
@@ -131,10 +135,14 @@ function EditForm({ meta, gears, onSave, onDelete }) {
   // Gear that doesn't fit a newly picked sport gives way to that sport's default.
   const gearId = !gear || options.some((g) => g.id === gear) ? gear : (defaultGear(gears, sport) ?? '');
   return (
-    <form className="card edit" onSubmit={(e) => { e.preventDefault(); onSave({ name: name.trim() || meta.name, sport, gear: gearId || undefined }); }}>
+    <form className="card edit" onSubmit={(e) => { e.preventDefault(); onSave({ name: name.trim() || meta.name, sport, gear: gearId || undefined, description: description.trim() || undefined, notes: notes.trim() || undefined }); }}>
       <label>
         {t('Titre')}
         <input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
+      </label>
+      <label>
+        {t('Description')}
+        <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={2000} rows={3} placeholder={t('Comment ça s’est passé ?')} />
       </label>
       <fieldset>
         <legend>{t('Sport')}</legend>
@@ -155,6 +163,11 @@ function EditForm({ meta, gears, onSave, onDelete }) {
           </select>
         </label>
       )}
+      <label>
+        {t('Notes privées')}
+        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} rows={2} placeholder={t('Sensations, météo, nutrition…')} />
+        <span className="hint">{t('Jamais partagées ni exportées.')}</span>
+      </label>
       <div className="edit-actions">
         <ConfirmButton onConfirm={onDelete} confirmLabel={t('Confirmer')}>{t('Supprimer')}</ConfirmButton>
         <button type="submit">{t('Enregistrer')}</button>
