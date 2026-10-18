@@ -207,6 +207,60 @@ Pixel Watch / Google
 - [ ] Garmin / Coros / Suunto / Polar device sync (partner APIs)
 - [ ] Open API + webhooks for third parties
 
+## Phase 7: Audit follow-ups (2026-10-18)
+
+Gaps found in a code review of the local-first app. No item here needs a backend.
+
+Fixes
+- [ ] Recording cost grows with length: `addFix` copies the whole points array on every
+      fix and the draft autosave rewrites every point each 5 s. A 6 h ride at 1 Hz copies
+      ~20k points per fix. Append in place (or chunk the draft) so long rides stay cheap
+- [ ] Heart rate is lost while standing still: a strap reading is only stored with a GPS
+      fix that moved ≥ 3 m or passed the accuracy filter. Keep HR samples on their own
+      timeline (stops, tunnels, bad GPS)
+- [ ] Absolute elevation is GPS ellipsoid height (~50 m too high in France): correct it
+      with the AWS Terrain DEM already used for 3D, Strava-style "elevation correction"
+- [ ] Moving time uses one 0.5 m/s threshold for every sport: steep hikes and swims read
+      as stopped. Make it per sport (like `STOP_SPEED` in the recorder)
+- [ ] Deleted segments leave their efforts on activity metas (see `db.js`): clean them on
+      delete instead of filtering on every read
+- [ ] Route following is forward-only: a route run in reverse reads as off route
+      (`follow.js`). Detect the direction from the first fixes
+- [ ] Feed renders every activity at once: a 1 000-activity Strava archive mounts 1 000
+      cards and thumbnails. Render in pages as the user scrolls
+- [ ] Route listing loads every route's points (`db.js`): split points from route metas
+      like activities and tracks
+
+Activity details
+- [ ] Elapsed time stored and shown next to moving time
+- [ ] Description and private notes on an activity
+- [ ] Perceived exertion (1–10) feeding Relative Effort when there is no heart rate
+- [ ] Calories estimate (HR-based, else MET by sport and weight)
+- [ ] Crop an activity (trim start / end, e.g. a forgotten stop button)
+- [ ] Manual activity entry (no GPS: gym, treadmill, pool) and indoor recording (timer +
+      strap, no GPS)
+- [ ] More sport types: trail run, e-bike, gravel, virtual ride, ski, workout, yoga…
+- [ ] Weather at the start of the activity (Open-Meteo history, no key)
+
+Recording
+- [ ] 3-2-1 countdown before the clock starts
+- [ ] Custom live data fields (pick the 3–4 metrics shown: HR, lap pace, elevation, time
+      of day…)
+- [ ] HR zone and elevation gain on the live screen
+- [ ] Bluetooth cadence / speed and power sensors (same `sensors.js` path as the HR strap)
+- [ ] Audio cue options: every N km or N minutes, choose metrics, HR alerts
+
+Training
+- [ ] Structured workouts: build intervals (warm-up, reps, recovery), follow them live
+      with spoken / haptic prompts, compare plan vs done
+- [ ] Training plans (5 km → marathon) generated from goals and current fitness
+- [ ] Weekly streaks and a year-in-sport recap (shareable story)
+- [ ] Feed search and filters (sport, date range, distance, name)
+
+Production
+- [ ] Self-hosted or paid BRouter: the route builder depends on the public server (rate
+      limits, no SLA), like the Carto tiles below
+
 ## Cross-cutting
 
 - [x] i18n: English + French (Settings → Langue, device language by default; French
