@@ -89,7 +89,7 @@ test('draft saves write only the changed chunk and load back whole', () => {
     out.writes.forEach(([k, v]) => store.set(k, v));
     return out;
   };
-  let rec = { ...run(startRecording({ route: { coords: [[6, 45]] } }, 0), 0, 1200), follow: null };
+  let rec = { ...run(startRecording({ route: { coords: [[6, 45], [6, 45.01]], cum: [0, 1112], distance: 1112 } }, 0), 0, 1200), follow: null };
   let { saved } = save(rec, null);
   assert.deepEqual(joinDraft(store), rec);
 

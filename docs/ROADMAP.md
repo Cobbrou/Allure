@@ -234,8 +234,9 @@ Fixes
       auto-pause uses it too and no longer pauses a slow climb between stored points)
 - [x] Deleted segments leave their efforts on activity metas (see `db.js`): clean them on
       delete instead of filtering on every read (orphans from earlier deletes stay, filtered out)
-- [ ] Route following is forward-only: a route run in reverse reads as off route
+- [x] Route following is forward-only: a route run in reverse reads as off route
       (`follow.js`). Detect the direction from the first fixes
+      (both ways tracked until one gains 200 m, then that route is kept)
 - [ ] Feed renders every activity at once: a 1 000-activity Strava archive mounts 1 000
       cards and thumbnails. Render in pages as the user scrolls
 - [ ] Route listing loads every route's points (`db.js`): split points from route metas

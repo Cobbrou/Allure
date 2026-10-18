@@ -10,6 +10,7 @@ const BACK = 30; // m to count as back on it (hysteresis, so GPS noise doesn't f
 const AHEAD = 1000; // m of route searched past the last known position
 const END = 30; // m before the end of the route to count it as done (route.end overrides)
 const CLOSER = 5; // m a later stretch must be closer by to win over an earlier one (overlapping passes)
+const DECIDE = 200; // m of progress that settle which way the route is followed
 
 /** The light copy of a route kept in a recording: [lon, lat] coords and cumulative meters. */
 export function followRoute(route, points) {
@@ -37,8 +38,7 @@ function toSegment(p, a, b) {
  * or null). On route, only the stretch just ahead is searched, so a loop or an out-and-back
  * doesn't jump to the wrong pass. Off route (or at the start), the whole route is searched,
  * taking the first stretch within reach, so a loop starts at its start, not its end.
- * ponytail: forward-only, so a route run in reverse reads as off route. Detect the
- * direction on the first few hundred meters (and flip coords) if athletes ask for it.
+ * Forward only: followStep handles a route run the other way.
  */
 export function progress(route, pos, prev) {
   const { coords, cum } = route;
@@ -57,6 +57,34 @@ export function progress(route, pos, prev) {
   if (off) return { ...(prev ?? { i: 0, along: 0, done: false }), off, gap: best.gap };
   const along = cum[best.i] + best.t * (cum[best.i + 1] - cum[best.i]);
   return { i: best.i, along, off, gap: best.gap, done: prev?.done || along >= route.distance - (route.end ?? END) };
+}
+
+/** The same route run the other way. */
+export function reverseRoute(route) {
+  return { ...route, coords: [...route.coords].reverse(), cum: route.cum.map((c) => route.distance - c).reverse() };
+}
+
+const onAlong = (s) => (s && !s.off ? s.along : null);
+const gain = (s, base) => (s && !s.off && base != null ? s.along - base : 0);
+
+/**
+ * One fix of route following, either way round. alt: { f, r, f0, r0 } while the direction is
+ * unsettled: progress forward (f) and on the reversed route (r), and where each first joined
+ * it. The first to gain DECIDE m wins, its route is kept and alt becomes null. Until then the
+ * one ahead is shown, never done (a reversed point-to-point starts at the forward end).
+ * Returns { route, follow, alt }.
+ */
+export function followStep(route, follow, alt, pos) {
+  if (!alt) return { route, follow: progress(route, pos, follow), alt: null };
+  const back = reverseRoute(route);
+  const f = progress(route, pos, alt.f), r = progress(back, pos, alt.r);
+  const f0 = alt.f0 ?? onAlong(f), r0 = alt.r0 ?? onAlong(r);
+  const gf = gain(f, f0), gr = gain(r, r0);
+  if (gr >= DECIDE) return { route: back, follow: r, alt: null };
+  if (gf >= DECIDE) return { route, follow: f, alt: null };
+  // Tie (at the start): the one with more route ahead.
+  const shown = gr > gf || (gr === gf && (r?.along ?? Infinity) < (f?.along ?? Infinity)) ? r : f;
+  return { route, follow: shown && { ...shown, done: false }, alt: { f, r, f0, r0 } };
 }
 
 /** Spoken message when following state changes between two recordings, else null. */

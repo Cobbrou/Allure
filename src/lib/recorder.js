@@ -1,5 +1,5 @@
 import { getLang, t, tn } from './i18n.js';
-import { progress } from './follow.js';
+import { followStep } from './follow.js';
 import { haversine } from './geo.js';
 import { segmentStep } from './liveSegments.js';
 import { distLen, fmtSpeed, isImperial, shortLen } from './format.js';
@@ -21,7 +21,7 @@ const HR_EVERY = 5000; // ms between heart-rate-only points while no fix is stor
 
 /** route: optional route to follow, from followRoute(). liveSegs: from liveSegments(). safety: check-ins on. */
 export function startRecording({ sport = 'run', autoPause = true, audio = true, safety = false, route = null, liveSegs = [] }, now) {
-  return { sport, autoPause, audio, safety, route, follow: null, liveSegs, seg: null, laps: [], start: now, points: [], distance: 0, active: 0, runningSince: now, paused: false, autoPaused: false, lastMove: now, pos: null };
+  return { sport, autoPause, audio, safety, route, follow: null, followAlt: route && { f: null, r: null, f0: null, r0: null }, liveSegs, seg: null, laps: [], start: now, points: [], distance: 0, active: 0, runningSince: now, paused: false, autoPaused: false, lastMove: now, pos: null };
 }
 
 /** Running time in seconds. */
@@ -92,7 +92,10 @@ export function joinDraft(entries) {
 export function addFix(rec, fix) {
   if ((fix.accuracy ?? 0) > MAX_ACCURACY) return rec;
   if (rec.paused) return { ...rec, pos: fix };
-  if (rec.route) rec = { ...rec, follow: progress(rec.route, fix, rec.follow) };
+  if (rec.route) {
+    const s = followStep(rec.route, rec.follow, rec.followAlt, fix);
+    rec = { ...rec, route: s.route, follow: s.follow, followAlt: s.alt };
+  }
   if (rec.liveSegs?.length) rec = { ...rec, seg: segmentStep(rec.seg, rec.liveSegs, fix) };
   const prev = rec.points.at(-1);
   const d = prev ? haversine(prev, fix) : 0;
