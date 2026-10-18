@@ -3,7 +3,7 @@ import { haversine } from './geo.js';
 import { SPORTS } from './sports.js';
 
 // 7-point moving average: GPS altitude is noisy, raw deltas would inflate D+.
-function smoothEle(points) {
+export function smoothEle(points) {
   const first = points.find((p) => p.ele != null);
   if (!first) return null;
   let last = first.ele;

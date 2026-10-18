@@ -155,7 +155,7 @@ table.splits .pace { font-weight: 600; width: 56px; }
 /* Edit form */
 .edit { display: grid; gap: 16px; }
 .edit label { display: grid; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 500; }
-.edit input:not([type='radio']), .edit select, .edit textarea, .route-select select {
+.edit input:not([type='radio']), .edit select, .edit textarea, .route-select select, .screen-editor > select {
   font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--border);
   border-radius: 10px; min-height: 44px; padding: 0 12px;
 }
@@ -517,6 +517,22 @@ ol.splits li.best .split-gap { color: #fff; }
 .live-row .metric { padding: 12px 14px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); }
 .live-row .metric .metric-value { font-size: clamp(28px, 9vw, 40px); }
 .record-live.paused .live-hero .metric-value { color: var(--muted); }
+.live-row .metric:last-child:nth-child(odd) { grid-column: span 2; }
+.live-row .metric.hr .metric-value { color: #f87171; }
+/* Stats-only layout: the freed space goes to bigger numbers. */
+.no-map .live-hero > .metric .metric-value { font-size: clamp(64px, 21vw, 112px); }
+.no-map .live-row { grid-template-columns: 1fr; }
+.no-map .live-row .metric:last-child { grid-column: auto; }
+.no-map .live-row .metric .metric-value { font-size: clamp(44px, 15vw, 72px); }
+.live-extras { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; }
+.live-extras .live-chips { position: static; flex: 1; }
+.live-extras .sos { position: static; }
+.screen-editor { display: grid; gap: 12px; padding-bottom: 12px; }
+.screen-editor .route-select { width: 100%; }
+.screen-fields { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.screen-fields li { display: flex; align-items: center; gap: 6px; padding: 2px 4px 2px 12px; background: var(--card-2); border: 1px solid var(--border); border-radius: var(--radius); }
+.screen-fields span { flex: 1; }
+.screen-fields .icon { width: 44px; min-height: 44px; }
 .live-map { position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); background: var(--card); }
 .map.live { height: max(240px, calc(100vh - 430px - var(--safe-top) - var(--safe-bottom))); }
 .live-chips { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }

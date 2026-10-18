@@ -1,31 +1,49 @@
 import { t } from '../lib/i18n.js';
 import { useEffect, useState } from 'react';
+import BottomSheet from '../components/BottomSheet.jsx';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import LiveMap from '../components/LiveMap.jsx';
+import RecordScreenEditor from '../components/RecordScreenEditor.jsx';
 import StatMetric from '../components/StatMetric.jsx';
 import { followRoute } from '../lib/follow.js';
 import { liveSegments } from '../lib/liveSegments.js';
 import { distUnit, fmtDist, fmtDuration, fmtLength } from '../lib/format.js';
 import { haptic } from '../lib/haptics.js';
 import { speak, watchPosition } from '../lib/location.js';
-import { currentPace, elapsed, lapStatus } from '../lib/recorder.js';
+import { FIELDS, layoutFor } from '../lib/liveFields.js';
+import { elapsed, lapStatus } from '../lib/recorder.js';
 import { getRoute } from '../lib/db.js';
 import { joinLegs } from '../lib/routes.js';
 import { alertText, checkIn, smsUrl } from '../lib/safety.js';
 import { hasBluetooth } from '../lib/sensors.js';
-import { effort, SPORTS } from '../lib/sports.js';
+import { SPORTS } from '../lib/sports.js';
 
 /** routeId: route to preselect (from "#/record/<id>"). */
-export default function RecordPage({ recording, contacts, routes, routeId, segments, activities, prefs, onSaved }) {
+export default function RecordPage({ recording, contacts, routes, routeId, segments, activities, prefs, onSavePrefs, onSaved }) {
+  const [editing, setEditing] = useState(null); // sport whose screen layout is being edited
+  const live = recording.rec;
   return (
     <>
-      <header className="topbar"><h1>{t('Enregistrer|onglet')}</h1></header>
-      {recording.rec ? <Live recording={recording} contacts={contacts} onSaved={onSaved} /> : <Setup recording={recording} contacts={contacts} routes={routes} routeId={routeId} segments={segments} activities={activities} prefs={prefs} />}
+      <header className="topbar">
+        <h1>{t('Enregistrer|onglet')}</h1>
+        {live && <button type="button" className="ghost small" onClick={() => setEditing(live.sport)}>{t('Écran')}</button>}
+      </header>
+      {live
+        ? <Live recording={recording} contacts={contacts} layout={layoutFor(prefs.recordScreen, live.sport)} onSaved={onSaved} />
+        : <Setup recording={recording} contacts={contacts} routes={routes} routeId={routeId} segments={segments} activities={activities} prefs={prefs} onEditScreen={setEditing} />}
+      <BottomSheet open={editing != null} onClose={() => setEditing(null)} title={t("Écran d'enregistrement · {sport}", { sport: SPORTS[editing]?.label })}>
+        {editing && (
+          <RecordScreenEditor
+            layout={layoutFor(prefs.recordScreen, editing)}
+            onChange={(l) => onSavePrefs({ ...prefs, recordScreen: { ...prefs.recordScreen, [editing]: l } })}
+          />
+        )}
+      </BottomSheet>
     </>
   );
 }
 
-function Setup({ recording, contacts, routes, routeId, segments, activities, prefs }) {
+function Setup({ recording, contacts, routes, routeId, segments, activities, prefs, onEditScreen }) {
   const [routeSel, setRouteSel] = useState(routeId ?? '');
   const route = routes?.find((r) => r.id === routeSel);
   const [sport, setSport] = useState(route?.sport ?? 'run');
@@ -62,6 +80,7 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
           </select>
         </label>
       )}
+      <button type="button" className="ghost" onClick={() => onEditScreen(sport)}>{t("Personnaliser l'écran")}</button>
       {hasBluetooth() && <StrapButton recording={recording} />}
       <label className="switch"><input type="checkbox" checked={autoPause} onChange={(e) => setAutoPause(e.target.checked)} />{t('Pause automatique')}</label>
       <label className="switch"><input type="checkbox" checked={audio} onChange={(e) => setAudio(e.target.checked)} />{t('Annonces vocales')}</label>
@@ -76,7 +95,8 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
   );
 }
 
-function Live({ recording, contacts, onSaved }) {
+/** layout: { map, hero, fields } from layoutFor(). */
+function Live({ recording, contacts, layout, onSaved }) {
   const { rec, gpsError } = recording;
   const [now, setNow] = useState(Date.now);
   const [tooShort, setTooShort] = useState(false);
@@ -87,8 +107,8 @@ function Live({ recording, contacts, onSaved }) {
   }, []);
 
   const time = elapsed(rec, now);
-  const cur = effort(rec.sport, currentPace(rec));
-  const avg = effort(rec.sport, rec.distance > 10 ? time / (rec.distance / 1000) : null);
+  const ctx = { rec, now, time, bpm: recording.strap?.bpm ?? null };
+  const fields = layout.fields.filter((f) => f !== 'hr' || recording.strap); // no strap, no heart rate tile
   const lapNow = lapStatus(rec, now);
   const status = saving ? t('Enregistrement…') : rec.paused ? t('En pause') : rec.autoPaused ? t('Pause auto') : gpsError ?? (rec.follow?.off ? t("Hors de l'itinéraire") : null);
 
@@ -100,22 +120,21 @@ function Live({ recording, contacts, onSaved }) {
   };
 
   return (
-    <main className={`record-live ${rec.paused ? 'paused' : ''}`}>
+    <main className={`record-live ${rec.paused ? 'paused' : ''} ${layout.map ? '' : 'no-map'}`}>
       <section className="live-hero">
-        <StatMetric label={t('Temps')} value={fmtDuration(time)} size="xl" />
-        <div className="live-row">
-          <StatMetric label={t('Distance')} value={fmtDist(rec.distance)} unit={distUnit()} size="lg" />
-          <StatMetric label={t('{name} actuelle', { name: cur.short })} value={cur.value} unit={cur.unit} size="lg" />
-        </div>
+        <StatMetric {...FIELDS[layout.hero].get(ctx)} size="xl" />
+        {fields.length > 0 && (
+          <div className="live-row">
+            {fields.map((f) => <StatMetric key={f} {...FIELDS[f].get(ctx)} size="lg" className={f === 'hr' ? 'hr' : ''} />)}
+          </div>
+        )}
       </section>
       {status && <p className={`record-status ${(gpsError || rec.follow?.off) && !rec.paused ? 'bad' : ''}`} role="status">{status}</p>}
       {tooShort && <p className="record-status bad" role="alert">{t('Trop court pour être enregistré.')}</p>}
-      <section className="live-map">
-        {rec.pos ? <LiveMap points={rec.points} pos={rec.pos} route={rec.route?.coords} /> : <p className="map-wait muted">{t('Recherche du GPS…')}</p>}
+      <section className={layout.map ? 'live-map' : 'live-extras'}>
+        {layout.map && (rec.pos ? <LiveMap points={rec.points} pos={rec.pos} route={rec.route?.coords} /> : <p className="map-wait muted">{t('Recherche du GPS…')}</p>)}
         <div className="live-chips">
-          <span className="chip">{t('{name} moy.', { name: avg.short })} <b>{avg.value}</b></span>
-          {recording.strap && <span className="chip hr">♥ <b>{recording.strap.bpm ?? '…'}</b></span>}
-          {rec.laps?.length > 0 && <span key={rec.laps.length} className="chip lap">{t('Tour {n}', { n: lapNow.n })} <b>{fmtDuration(lapNow.time)}</b></span>}
+          {rec.laps?.length > 0 && !fields.includes('lap') && layout.hero !== 'lap' && <span key={rec.laps.length} className="chip lap">{t('Tour {n}', { n: lapNow.n })} <b>{fmtDuration(lapNow.time)}</b></span>}
           <SegmentChip rec={rec} now={now} />
           {rec.route && (
             <span className="chip follow">🧭 <b>{rec.follow?.done ? t('Terminé') : `${fmtDist(Math.max(0, rec.route.distance - (rec.follow?.along ?? 0)))} ${distUnit()}`}</b></span>

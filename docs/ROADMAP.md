@@ -268,8 +268,11 @@ Activity details
 
 Recording
 - [ ] 3-2-1 countdown before the clock starts
-- [ ] Custom live data fields (pick the 3–4 metrics shown: HR, lap pace, elevation, time
-      of day…)
+- [x] Customizable record screen: show or hide the live map (map / stats-only layout),
+      pick which metrics are shown and in what order (time, distance, current / average /
+      lap pace, speed, HR, elevation, elevation gain, cadence, time of day…), choose the
+      big hero metric; saved per sport, editable before and during recording, large
+      readable fields when the map is hidden (cadence waits for a cadence sensor)
 - [ ] HR zone and elevation gain on the live screen
 - [ ] Bluetooth cadence / speed and power sensors (same `sensors.js` path as the HR strap)
 - [ ] Audio cue options: every N km or N minutes, choose metrics, HR alerts

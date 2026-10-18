@@ -35,8 +35,8 @@ export const pause = (rec, now) => (rec.paused ? rec : { ...stopClock(rec, now),
 export const resume = (rec, now) =>
   rec.paused ? { ...rec, paused: false, autoPaused: false, runningSince: now, lastMove: now } : rec;
 
-/** Start a new lap now (manual lap button). laps: [{ time, at }], at = running seconds then. */
-export const lap = (rec, now) => (rec.paused ? rec : { ...rec, laps: [...(rec.laps ?? []), { time: now, at: elapsed(rec, now) }] });
+/** Start a new lap now (manual lap button). laps: [{ time, at, dist }], at = running seconds then, dist = meters. */
+export const lap = (rec, now) => (rec.paused ? rec : { ...rec, laps: [...(rec.laps ?? []), { time: now, at: elapsed(rec, now), dist: rec.distance }] });
 
 /** Current lap number (from 1) and its running seconds so far. */
 export function lapStatus(rec, now) {

@@ -61,7 +61,8 @@ IndexedDB database `allure`, version 7:
   `contacts` → `[{ id, name, phone }]` emergency contacts (see `lib/safety.js`)
   `units` → `'metric' | 'imperial'` display unit system (see `lib/format.js`)
   `lang` → `'fr' | 'en'` UI language, device language when unset (see `lib/i18n.js`)
-  `prefs` → `{ name, autoPause, audio }` display name and recording defaults (Settings page)
+  `prefs` → `{ name, autoPause, audio, recordScreen }` display name and recording defaults (Settings page);
+  `recordScreen` → `{ [sport]: { map, hero, fields } }` live screen layout (`lib/liveFields.js`)
 - `segments` (keyPath `id`): user-created segments (see `lib/segments.js`)
 - `routes` (keyPath `id`): planned route metas: waypoints, stats, preview (see `lib/routes.js`)
 - `routeLegs` (key = route id): each route's points, read by `getRoute` (builder, recording)
