@@ -9,7 +9,7 @@ import { followRoute } from '../lib/follow.js';
 import { liveSegments } from '../lib/liveSegments.js';
 import { distUnit, fmtDist, fmtDuration, fmtLength } from '../lib/format.js';
 import { haptic } from '../lib/haptics.js';
-import { speak, watchPosition } from '../lib/location.js';
+import { hush, speak, watchPosition } from '../lib/location.js';
 import { FIELDS, layoutFor } from '../lib/liveFields.js';
 import { elapsed, lapStatus } from '../lib/recorder.js';
 import { getRoute } from '../lib/db.js';
@@ -55,11 +55,30 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
   // Warm up the GPS so the first recorded fix is precise.
   useEffect(() => watchPosition((f) => setGps({ accuracy: f.accuracy }), (error) => setGps({ error })), []);
 
-  const go = async () => {
-    if (audio) speak(t('Enregistrement démarré.')); // also unlocks speech on iOS, which needs a user gesture
+  const [count, setCount] = useState(null); // 3, 2, 1 before the clock starts
+  const go = () => {
+    if (audio) speak('3'); // also unlocks speech on iOS, which needs a user gesture
+    haptic('tap');
+    setCount(3);
+  };
+  // The clock starts after the countdown, outside the tap: the page already had a user gesture,
+  // which is what Chrome wants for the lock-screen audio.
+  const begin = async () => {
+    setCount(null);
+    if (audio) { hush(); speak(t('Enregistrement démarré.')); }
     const full = route && (await getRoute(route.id)); // the list holds metas, not points
     recording.start({ sport, autoPause, audio, safety: safety && contacts.length > 0, route: full && followRoute(full, joinLegs(full.legs)), liveSegs: liveSegments(segments, sport, activities) });
   };
+  useEffect(() => {
+    if (count == null) return;
+    const timer = setTimeout(() => {
+      if (count === 1) return begin();
+      if (audio) speak(String(count - 1));
+      haptic('tap');
+      setCount(count - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [count]);
 
   return (
     <main className="record-setup">
@@ -91,6 +110,15 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
         {gps?.error ?? (gps ? t('GPS : précision {dist}', { dist: fmtLength(gps.accuracy) }) : t('Recherche du GPS…'))}
       </p>
       <button type="button" className="record-button" onClick={go}>{t('GO')}</button>
+      {count != null && (
+        <div className="countdown" role="timer" aria-live="assertive">
+          <button type="button" className="countdown-skip" onClick={begin} aria-label={t('Démarrer maintenant')}>
+            <span key={count}>{count}</span>
+            <small>{t('Touche pour démarrer maintenant')}</small>
+          </button>
+          <button type="button" className="ghost" onClick={() => { hush(); setCount(null); }}>{t('Annuler')}</button>
+        </div>
+      )}
     </main>
   );
 }

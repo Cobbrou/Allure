@@ -280,7 +280,7 @@ Activity details
 - [ ] Weather at the start of the activity (Open-Meteo history, no key)
 
 Recording
-- [ ] 3-2-1 countdown before the clock starts
+- [x] 3-2-1 countdown before the clock starts (spoken and buzzed; tap to start now, or cancel)
 - [x] Customizable record screen: show or hide the live map (map / stats-only layout),
       pick which metrics are shown and in what order (time, distance, current / average /
       lap pace, speed, HR, elevation, elevation gain, cadence, time of day…), choose the

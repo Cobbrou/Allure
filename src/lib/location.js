@@ -81,6 +81,9 @@ export function keepAwake() {
   };
 }
 
+/** Stop any pending or ongoing announcement. */
+export function hush() { window.speechSynthesis?.cancel(); }
+
 export function speak(text) {
   if (!window.speechSynthesis) return;
   speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance(text), { lang: locale() }));

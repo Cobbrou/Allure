@@ -58,6 +58,8 @@ export default {
   'Recadrer le début ou la fin': 'Trim the start or end',
   "Recadrer l'activité": 'Trim activity',
   'Recadrer': 'Trim',
+  'Démarrer maintenant': 'Start now',
+  'Touche pour démarrer maintenant': 'Tap to start now',
   "Corriger l'altitude": 'Correct elevation',
   'Correction…': 'Correcting…',
   'Relief indisponible (hors ligne ou trace trop longue).': 'Terrain data unavailable (offline or track too long).',

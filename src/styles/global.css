@@ -397,6 +397,15 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .record-status { font-weight: 700; color: var(--accent); }
 .route-select { display: grid; gap: 6px; width: min(100%, 340px); font-size: 13px; color: var(--muted); font-weight: 500; }
 .map-wait { height: 260px; display: grid; place-items: center; }
+/* 3-2-1 before the clock starts: full screen over the setup, tap to skip */
+.countdown {
+  position: fixed; inset: 0; z-index: 30; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 24px);
+}
+.countdown-skip { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: none; border: none; color: var(--text); }
+.countdown-skip span { font-size: 160px; font-weight: 800; line-height: 1; color: var(--accent); animation: count-pop 0.9s var(--ease-out) backwards; }
+.countdown-skip small { color: var(--muted); font-size: 14px; font-weight: 500; }
+@keyframes count-pop { from { transform: scale(1.6); opacity: 0; } }
 .map.builder { height: min(60vh, 520px); }
 .pin.via { background: #fff; width: 14px; height: 14px; }
 .pin.start, .pin.finish, .pin.via { cursor: grab; }
