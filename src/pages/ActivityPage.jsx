@@ -49,12 +49,13 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
   if (data === null) return (<><TopBar /><p className="empty">{t('Activité introuvable.')}</p></>);
 
   const act = { ...analysis, ...data.meta };
+  const hasTrack = data.points.length > 1; // false for an activity typed in by hand
   const gear = gears.find((g) => g.id === data.meta.gear);
 
   const save = async (patch) => {
     const meta = { ...data.meta, ...patch };
     // Another sport, another moving threshold: moving time and pace follow.
-    if (meta.sport !== data.meta.sport) {
+    if (meta.sport !== data.meta.sport && data.points.length) {
       const { movingTime, avgPace } = analyze(data.points, meta.sport);
       Object.assign(meta, { movingTime, avgPace });
     }
@@ -98,10 +99,11 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
       </TopBar>
       <BottomSheet open={sheet === 'edit'} onClose={() => setSheet(null)} title={t("Modifier l'activité")}>
         <EditForm meta={data.meta} gears={gears} onSave={save} onDelete={remove}
-          onFixElevation={data.meta.source !== 'record' && fixElevation} onCrop={() => { setSheet(null); setCropping(true); }} />
+          onFixElevation={hasTrack && data.meta.source !== 'record' && fixElevation}
+          onCrop={hasTrack && (() => { setSheet(null); setCropping(true); })} />
       </BottomSheet>
       <ShareSheet act={act} zones={zones} photos={photos} open={sheet === 'share'} onClose={() => setSheet(null)}>
-        <button type="button" className="ghost" onClick={exportGpx}>{t('Fichier GPX')}</button>
+        {hasTrack && <button type="button" className="ghost" onClick={exportGpx}>{t('Fichier GPX')}</button>}
       </ShareSheet>
       <main className="detail">
         <div className="title">
@@ -115,20 +117,26 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
         {act.notes && <p className="description notes"><b>{t('Notes privées')} · </b>{act.notes}</p>}
         <StatsGrid act={act} weight={weight} />
         {cropping && <CropForm track={act.track} range={range} onCancel={() => setCropping(false)} onCrop={crop} />}
-        <section className="card map-card">
-          <TrackMap track={act.track} hover={hover} range={range} />
-        </section>
+        {hasTrack && (
+          <section className="card map-card">
+            <TrackMap track={act.track} hover={hover} range={range} />
+          </section>
+        )}
         <Photos photos={photos} onChange={savePhotos} />
-        <Intervals meta={data.meta} track={act.track} range={range} />
-        <SegmentEfforts meta={activities?.find((a) => a.id === id) ?? data.meta} track={act.track} segments={segments}
-          activities={activities} range={range} onCreate={onSegment} />
-        <section className="card">
-          <h3>{t('Profil')} <span className="legend ele">{t('Altitude')}</span> <span className="legend hr">{t('Cardio')}</span></h3>
-          <ProfileChart track={act.track} hover={hover} />
-        </section>
+        {hasTrack && (
+          <>
+            <Intervals meta={data.meta} track={act.track} range={range} />
+            <SegmentEfforts meta={activities?.find((a) => a.id === id) ?? data.meta} track={act.track} segments={segments}
+              activities={activities} range={range} onCreate={onSegment} />
+            <section className="card">
+              <h3>{t('Profil')} <span className="legend ele">{t('Altitude')}</span> <span className="legend hr">{t('Cardio')}</span></h3>
+              <ProfileChart track={act.track} hover={hover} />
+            </section>
+          </>
+        )}
         <HrZones hist={data.meta.hrTime} hr={hr} />
         {data.meta.powerCurve && <PowerCurve meta={data.meta} activities={activities} ftp={ftp} />}
-        <SplitsTable splits={splits} sport={act.sport} size={splitSize} />
+        {hasTrack && <SplitsTable splits={splits} sport={act.sport} size={splitSize} />}
         <BestEfforts meta={data.meta} activities={activities} />
         <MatchedActivities meta={data.meta} activities={activities} />
       </main>
@@ -199,7 +207,9 @@ function EditForm({ meta, gears, onSave, onDelete, onCrop, onFixElevation }) {
         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} rows={2} placeholder={t('Sensations, météo, nutrition…')} />
         <span className="hint">{t('Jamais partagées ni exportées.')}</span>
       </label>
-      <button type="button" className="ghost" onClick={onCrop}>{t('Recadrer le début ou la fin')}</button>
+      {onCrop
+        ? <button type="button" className="ghost" onClick={onCrop}>{t('Recadrer le début ou la fin')}</button>
+        : meta.source === 'manual' && <a className="button ghost" href={`#/manual/${meta.id}`}>{t('Modifier la date, la durée ou la distance')}</a>}
       {onFixElevation && (
         <label>
           <button type="button" className="ghost" disabled={fixing === 'busy'}

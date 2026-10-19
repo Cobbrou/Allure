@@ -47,6 +47,30 @@ export function cropActivity(meta, points, from, to) {
   return { meta: { ...fresh, ...typed, id: meta.id }, points: kept };
 }
 
+/**
+ * An activity typed in by hand (gym, treadmill, pool, a forgotten watch): no points, the
+ * summary is what the athlete entered. distance and gain are optional (0 / null).
+ */
+export function manualActivity({ id, name, sport = 'run', date, movingTime, distance = 0, gain = null, rpe }) {
+  const meta = {
+    id: id ?? crypto.randomUUID(),
+    name: name || defaultName(sport, date),
+    sport,
+    source: 'manual',
+    date,
+    distance,
+    movingTime,
+    avgPace: distance ? movingTime / (distance / 1000) : null,
+    gain,
+    avgHr: null,
+    preview: [],
+    bestEfforts: {},
+    hrTime: {},
+  };
+  if (rpe) meta.rpe = rpe;
+  return { meta, points: [] };
+}
+
 /** Same start second and distance within 10 m: treated as the same activity on re-import. */
 export const dupKey = (meta) => `${Math.round(meta.date / 1000)}|${Math.round(meta.distance / 10)}`;
 

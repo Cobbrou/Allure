@@ -97,6 +97,7 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
           <div className="setup-toggles">
             <button type="button" className={`round ${autoPause ? 'on' : ''}`} aria-pressed={autoPause} aria-label={t('Pause automatique')} title={t('Pause automatique')} onClick={() => setAutoPause(!autoPause)}><Icon name="pause" /></button>
             <button type="button" className={`round ${audio ? 'on' : ''}`} aria-pressed={audio} aria-label={t('Annonces vocales')} title={t('Annonces vocales')} onClick={() => setAudio(!audio)}><Icon name="volume" /></button>
+            <a className="round" href="#/manual" aria-label={t('Ajouter une activité manuelle')} title={t('Ajouter une activité manuelle')}><Icon name="edit" /></a>
             <button type="button" className="round" aria-label={t("Personnaliser l'écran")} title={t("Personnaliser l'écran")} onClick={() => onEditScreen(sport)}><Icon name="layout" /></button>
           </div>
         </header>

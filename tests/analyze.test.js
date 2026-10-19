@@ -50,3 +50,11 @@ test('moving threshold depends on the sport', () => {
   assert.equal(computeSplits(analyze(climb, 'hike').track, 50, 'hike')[0].time > 0, true);
   assert.equal(analyze(climb).movingTime, 0); // no sport: run threshold
 });
+
+test('analyze: no points (manual activity) gives an empty summary', () => {
+  const a = analyze([], 'run');
+  assert.deepEqual(a.track, []);
+  assert.equal(a.distance, 0);
+  assert.equal(a.date, null);
+  assert.equal(a.movingTime, null);
+});

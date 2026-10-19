@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createActivity, cropActivity, defaultName } from '../src/lib/activity.js';
+import { createActivity, cropActivity, defaultName, manualActivity } from '../src/lib/activity.js';
 import { demoHistory } from '../src/lib/demo.js';
 import { effort, sportFromGpxType } from '../src/lib/sports.js';
 
@@ -57,4 +57,18 @@ test('cropActivity trims the ends, recomputes stats and keeps what was typed', (
   assert.deepEqual(out.meta.laps, [250e3, 400e3]);
   assert.equal(out.meta.efforts, undefined); // redone by saveActivities
   assert.equal(out.meta.avgHr, 150); // the 100 bpm stop is gone
+});
+
+test('manualActivity: summary from what was typed, no points', () => {
+  const date = new Date(2026, 9, 20, 7).getTime();
+  const { meta, points } = manualActivity({ sport: 'run', date, movingTime: 3000, distance: 10000, rpe: 6 });
+  assert.deepEqual(points, []);
+  assert.equal(meta.source, 'manual');
+  assert.equal(meta.avgPace, 300);
+  assert.equal(meta.rpe, 6);
+  assert.equal(meta.name, defaultName('run', date));
+  const gym = manualActivity({ id: 'x', name: 'Gym', sport: 'walk', date, movingTime: 1800 }).meta;
+  assert.equal(gym.id, 'x');
+  assert.equal(gym.avgPace, null);
+  assert.equal(gym.rpe, undefined);
 });

@@ -37,6 +37,7 @@ Route changes run inside `document.startViewTransition` (slide or fade, see
 | `#/`             | `FeedPage` (Home tab) |
 | `#/activity/:id` | `ActivityPage` |
 | `#/record`       | `RecordPage`: setup (sport, route to follow, auto-pause, voice cues, GPS status), then live recording. `#/record/:routeId` preselects a route |
+| `#/manual(/:id)`  | `ManualPage`: add an activity by hand (no GPS), or edit a manual one's date, duration, distance, D+ |
 | `#/log`          | `TrainingLogPage`: week-by-week bubbles, opened from the profile |
 | `#/segment/:id`  | `SegmentPage`: segment map, distance / grade, your efforts fastest first |
 | `#/maps`         | `MapsPage` (tab): full-screen map around you, saved routes nearest first in a bottom carousel, heatmap layer |
@@ -106,7 +107,7 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
 // ActivityMeta: stored in `activities`
 {
   id, name, sport,       // sport: 'run' | 'ride' | 'hike' | 'walk' | 'swim' (lib/sports.js)
-  source,                // 'gpx' (any imported file) | 'demo' | 'record'
+  source,                // 'gpx' (any imported file) | 'demo' | 'record' | 'manual' (typed in, no points)
   date,                  // ms epoch (first point, or import time when no timestamps)
   distance, movingTime, avgPace, gain, avgHr,  // summary, same units as analyze()
   preview,               // ≤ 81 [lon, lat] pairs for feed thumbnails

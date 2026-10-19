@@ -169,7 +169,7 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .description { white-space: pre-line; line-height: 1.45; overflow-wrap: anywhere; }
 .description.notes { color: var(--muted); font-size: 14px; border-left: 2px solid var(--border-strong); padding-left: 10px; }
 .description.notes b { font-weight: 600; }
-.edit fieldset { border: 0; padding: 0; margin: 0; }
+.edit fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .hr-settings { gap: 8px; }
 .hr-settings h3 { margin: 0; }
 .hr-settings .row label, .privacy .row label { flex: 1 1 120px; }
@@ -198,6 +198,9 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .sport-picker label.selected { border-color: var(--accent); background: var(--accent-15); }
 .sport-picker label:focus-within { outline: 2px solid #fff; }
 .sport-picker input { position: absolute; opacity: 0; pointer-events: none; }
+.duration-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.duration-fields label { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; }
+.duration-fields input { min-width: 0; }
 .edit-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .edit-actions > * { flex: 1 1 auto; }
 
@@ -406,6 +409,7 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .setup-toggles { display: flex; gap: 8px; }
 .round, .pill { background: var(--glass); border: 1px solid var(--border); backdrop-filter: blur(8px); color: var(--muted); }
 .round { width: 44px; padding: 0; border-radius: 50%; }
+a.round { display: inline-grid; place-items: center; height: 44px; }
 .round svg { width: 22px; height: 22px; }
 .round.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, var(--glass)); border-color: var(--accent-35); }
 .setup-pills { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 10px 16px; }

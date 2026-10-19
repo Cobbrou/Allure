@@ -23,7 +23,7 @@ const moving = (sport) => {
 /** Compute activity stats and an enriched track (cumulative dist, smoothed ele, grade-adjusted gdist). */
 export function analyze(points, sport) {
   const isMoving = moving(sport);
-  const hasTime = points.every((p) => Number.isFinite(p.time));
+  const hasTime = points.length > 0 && points.every((p) => Number.isFinite(p.time));
   const ele = smoothEle(points);
   let dist = 0, movingTime = 0, gain = 0;
 
