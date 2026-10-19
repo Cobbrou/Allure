@@ -18,6 +18,8 @@
   --hr: #ef4444;
   --danger: #ef4444;
   --good: #22c55e;
+  --warn: #f5b301;
+  --glass: rgba(15, 17, 21, 0.85); /* floating controls over a map */
   --radius: 16px;
   --tabbar-h: 60px;
   /* Capacitor sets --safe-area-inset-* in the Android shell; browsers and iOS use env(). */
@@ -301,7 +303,7 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .totals.seg-totals { grid-template-columns: repeat(3, 1fr); margin-top: 0; }
 .leaderboard li > a:first-child { display: flex; align-items: center; gap: 12px; }
 .rank { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; background: var(--border); flex: none; }
-.rank.first { background: #f5b301; color: #1a1300; }
+.rank.first { background: var(--warn); color: #1a1300; }
 
 /* Intervals */
 .intervals-sum { margin: 10px 0; }
@@ -335,7 +337,7 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .gear-alert { font-size: 11px; font-weight: 800; color: #fca5a5; }
 .gear-wear { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; margin-left: 52px; }
 .gear-wear span { display: block; height: 100%; border-radius: 3px; background: var(--good); transform-origin: left; animation: grow-x 0.6s var(--ease-out) backwards; }
-.gear-wear .warn { background: #f5b301; }
+.gear-wear .warn { background: var(--warn); }
 .gear-wear .over { background: var(--danger); }
 .gear-actions { margin: 10px 0 2px 52px; }
 .gear .retired { opacity: 0.7; }
@@ -383,19 +385,72 @@ table.splits .pace { font-weight: 600; width: 56px; }
 @keyframes grow-y { from { transform: scaleY(0); } }
 
 /* Record */
-.record-button {
-  width: 120px; height: 120px; border-radius: 50%; font-size: 28px; font-weight: 800;
-  box-shadow: 0 0 0 10px var(--accent-15);
-}
-.record-setup { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 8px 0 24px; }
-.record-setup .sport-picker { justify-content: center; }
 .switch { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; }
 .switch input { width: 22px; height: 22px; accent-color: var(--accent); }
-.gps, .record-status { color: var(--muted); font-size: 14px; text-align: center; }
-.gps.good { color: #4ade80; }
-.gps.bad, .record-status.bad { color: #fca5a5; }
-.record-status { font-weight: 700; color: var(--accent); }
+.record-status { font-size: 14px; text-align: center; font-weight: 700; color: var(--accent); }
+.record-status.bad { color: #fca5a5; }
 .route-select { display: grid; gap: 6px; width: min(100%, 340px); font-size: 13px; color: var(--muted); font-weight: 500; }
+/* Setup cockpit: full-bleed map with floating controls, telemetry card, then the start dock. */
+.record-setup {
+  position: fixed; top: 0; left: 0; right: 0; bottom: calc(var(--tabbar-h) + var(--safe-bottom)); max-width: 640px; margin: 0 auto;
+  display: flex; flex-direction: column; background: var(--bg);
+  z-index: 21; /* over the tab bar, so the countdown inside covers it */
+}
+.setup-stage { position: relative; flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+.setup-map { position: absolute; inset: 0; background: var(--card); }
+.setup-map .map.live { height: 100%; }
+/* Keep the map attribution clear of the telemetry card (fixed height: one banner line + one metric row). */
+.setup-map .maplibregl-ctrl-bottom-left, .setup-map .maplibregl-ctrl-bottom-right { bottom: 132px; }
+.setup-top { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: calc(var(--safe-top) + 10px) 16px 0; }
+.setup-top h1 { font-size: 20px; text-shadow: 0 1px 8px var(--bg); }
+.setup-toggles { display: flex; gap: 8px; }
+.round, .pill { background: var(--glass); border: 1px solid var(--border); backdrop-filter: blur(8px); color: var(--muted); }
+.round { width: 44px; padding: 0; border-radius: 50%; }
+.round svg { width: 22px; height: 22px; }
+.round.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, var(--glass)); border-color: var(--accent-35); }
+.setup-pills { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 10px 16px; }
+.pill { min-height: 44px; border-radius: 999px; padding: 0 14px; font-size: 13px; font-weight: 600; color: var(--text); display: inline-flex; align-items: center; gap: 6px; }
+.pill svg { width: 16px; height: 16px; flex: none; color: var(--muted); }
+.pill.warn { border-color: var(--accent-35); }
+.pill.warn svg { color: var(--accent); }
+.pill.on svg { color: var(--good); }
+.pill.hr svg, .pill.hr b { color: #f87171; }
+.pill.bad { color: #fca5a5; }
+.telemetry {
+  position: absolute; left: 16px; right: 16px; bottom: 12px; overflow: hidden; border-radius: var(--radius);
+  background: color-mix(in srgb, var(--card) 95%, transparent); border: 1px solid var(--border); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.gps-banner { display: flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700; color: var(--muted); background: var(--card-2); }
+.gps-banner svg { width: 16px; height: 16px; flex: none; }
+.gps-banner.good { color: #4ade80; background: color-mix(in srgb, var(--good) 15%, transparent); }
+.gps-banner.warn { color: var(--warn); background: color-mix(in srgb, var(--warn) 15%, transparent); }
+.gps-banner.bad { color: #fca5a5; background: color-mix(in srgb, var(--danger) 15%, transparent); }
+.telemetry-grid { display: grid; grid-template-columns: repeat(3, 1fr); padding: 12px 8px 14px; }
+.telemetry-grid .metric { justify-items: center; text-align: center; }
+.telemetry-grid .metric-label { order: 1; }
+.telemetry-grid .metric-value { font-size: clamp(22px, 7vw, 30px); font-weight: 700; }
+.setup-dock {
+  position: relative; display: flex; justify-content: space-around; align-items: center; padding: 18px 8px 12px;
+  background: var(--card); border-top: 1px solid var(--border); border-radius: 24px 24px 0 0;
+}
+.setup-dock .sheet-handle { position: absolute; top: 7px; left: calc(50% - 20px); }
+.dock-side { flex-direction: column; gap: 6px; width: 96px; padding: 0; background: none; border: 0; color: var(--text); font-size: 12px; }
+.dock-round { position: relative; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--card-2); }
+.dock-round svg { width: 26px; height: 26px; }
+.dock-round.sport { background: var(--accent-15); color: var(--accent); }
+.dock-round .dock-badge { position: absolute; top: -2px; right: -2px; width: 20px; height: 20px; padding: 4px; border-radius: 50%; stroke-width: 4; background: var(--accent); color: var(--on-accent); }
+.dock-label { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.dot { display: inline-block; vertical-align: middle; margin: -2px 5px 0 0; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.dock-go { width: 76px; height: 76px; border-radius: 50%; padding: 0; box-shadow: 0 0 0 8px var(--accent-15), 0 8px 24px var(--accent-35); }
+.dock-go svg { width: 32px; height: 32px; margin-left: 4px; color: var(--on-accent); }
+.pick-list { display: grid; gap: 6px; padding-bottom: 12px; }
+.pick-list button { justify-content: flex-start; gap: 12px; min-height: 52px; text-align: left; background: var(--card-2); border-color: var(--border); color: var(--text); }
+.pick-list button.on { background: var(--accent-15); border-color: var(--accent); }
+.pick-list svg { width: 22px; height: 22px; flex: none; color: var(--muted); }
+.pick-list button.on svg { color: var(--accent); }
+.pick-list span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick-list small { color: var(--muted); font-weight: 500; }
+.pick-list a { color: var(--accent); }
 .map-wait { height: 260px; display: grid; place-items: center; }
 /* 3-2-1 before the clock starts: full screen over the setup, tap to skip */
 .countdown {
@@ -571,9 +626,7 @@ ol.splits li.best .split-gap { color: #fff; }
 .checkin-ok { background: var(--good); border-color: var(--good); color: #fff; }
 .chip.lap { border-color: var(--accent); animation: pop 0.35s var(--ease-out) backwards; }
 .chip.hr b { color: #f87171; }
-.strap { display: flex; align-items: center; gap: 8px; font-size: 15px; }
-.strap b { color: #f87171; }
-.chip.seg { border-color: #f5b301; color: var(--text); animation: pop 0.35s var(--ease-out) backwards; }
+.chip.seg { border-color: var(--warn); color: var(--text); animation: pop 0.35s var(--ease-out) backwards; }
 .chip.seg.pr { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .dock {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--safe-bottom) + 16px); z-index: 20;
