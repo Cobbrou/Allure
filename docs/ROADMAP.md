@@ -302,6 +302,64 @@ Production
 - [ ] Self-hosted or paid BRouter: the route builder depends on the public server (rate
       limits, no SLA), like the Carto tiles below
 
+## Phase 8: Second audit (2026-10-20)
+
+Found in a second code review. Ordered by risk: data first. No item needs a backend.
+
+Data safety
+- [ ] Ask for persistent storage (`navigator.storage.persist()` in `db.js`): without it the
+      browser may evict IndexedDB under storage pressure, and with no backend that loses
+      every activity. Show the status in Settings → Données, nudge a backup when refused
+- [ ] Backup reminder: "last backup N days ago" in Settings, a gentle prompt after 30 days
+      or 20 new activities
+- [ ] Undo after deleting an activity (snackbar for a few seconds, delete committed after)
+- [ ] Restoring an older backup skips migrations: metas taken at schema < `VERSION` keep
+      stale derived fields (e.g. v8 moving time). Recompute them from the points on restore
+- [ ] `parseBackup` throws untranslated French ("Ce fichier n'est pas une sauvegarde
+      Allure.", twice): wrap in `t()`
+
+Fixes
+- [ ] Changing an activity's sport keeps the old sport's segment efforts (`ActivityPage`
+      `save` → `updateActivity`, segments are per sport): re-match on sport change
+- [ ] GPS spikes: one bad fix (urban canyon, tunnel exit) adds distance and can fake a best
+      effort or a record. Drop points implying an impossible speed for the sport, on import
+      and while recording; "exclude from records" toggle on an activity for the rest
+- [ ] Duplicate detection needs the same start second and distance within 10 m (`dupKey`):
+      the same session from Health Connect and from a FIT export slips through. Treat
+      overlapping time ranges of the same sport as duplicates
+- [ ] Indoor files are rejected: GPX / TCX / FIT points without coordinates are filtered
+      out (treadmill, home trainer, pool). Import them as track-less activities with time,
+      distance, HR and power from the file; same for Health Connect indoor sessions
+- [ ] Heart-rate strap lost mid-recording stays lost (`sensors.js`): retry
+      `gatt.connect()` a few times on `gattserverdisconnected`, toast if it gives up
+- [ ] Colour tokens: hard-coded colours in `FitnessChart`, `PowerCurve`, `ProfileChart`,
+      `TrackMap`, `MapsPage` and `.toast.error` move to `theme.js` / CSS vars
+- [ ] `.toast` animation uses `both` (Motion rule: `backwards` only)
+
+Records & analysis
+- [ ] Records beyond running: longest ride / hike / swim, biggest climb, fastest 20 / 40 /
+      100 km on the bike (`personalRecords` is run-only)
+- [ ] Pace zones for runners without a strap (from threshold pace or the race predictions),
+      time in zone like HR zones
+- [ ] Compare two activities: overlay on the map, pace / HR charts aligned by distance
+      (starting point: matched activities)
+- [ ] "This year vs last year to date" on the profile (distance, time, D+ per sport)
+- [ ] Commute tag: kept out of goals, challenges and Fitness & Freshness on request,
+      filterable in the feed
+
+Recording
+- [ ] Ghost pacer: race a previous activity or a target pace on the same route, live gap
+      ahead / behind spoken and shown (reuses route following)
+- [ ] Battery saver for long hikes: lower GPS rate and no live map redraws while the
+      screen is off
+- [ ] Android app shortcuts (long-press the icon: "Start a run / ride") opening
+      `#/record` with the sport preset (static `shortcuts.xml`, no plugin)
+
+Routes
+- [ ] Import a GPX file as a route (today a GPX always becomes an activity)
+- [ ] Share a route by link, like friend challenges: URL-safe code in `#/route/…`, no
+      account
+
 ## Cross-cutting
 
 - [x] i18n: English + French (Settings → Langue, device language by default; French
