@@ -13,23 +13,29 @@
 
 <p align="center">
   <img src="docs/screenshots/feed.png" width="200" alt="Activity feed">
-  <img src="docs/screenshots/activity.png" width="200" alt="Activity detail with stats and map">
-  <img src="docs/screenshots/record.png" width="200" alt="Live recording">
+  <img src="docs/screenshots/activity.png" width="200" alt="Activity detail with key stats and map">
+  <img src="docs/screenshots/analysis.png" width="200" alt="Heart-rate zones, Relative Effort and splits">
 </p>
 <p align="center">
-  <img src="docs/screenshots/analysis.png" width="200" alt="Heart-rate zones and splits">
-  <img src="docs/screenshots/heatmap.png" width="200" alt="Personal heatmap">
-  <img src="docs/screenshots/training.png" width="200" alt="Fitness and power curve">
+  <img src="docs/screenshots/record.png" width="200" alt="Live recording screen">
+  <img src="docs/screenshots/maps.png" width="200" alt="Maps tab with the personal heatmap">
+  <img src="docs/screenshots/suggest.png" width="200" alt="Suggested loops around the athlete">
+</p>
+<p align="center">
+  <img src="docs/screenshots/share.png" width="200" alt="Story image to share">
+  <img src="docs/screenshots/goals.png" width="200" alt="Profile with goals and achievements">
+  <img src="docs/screenshots/profile.png" width="200" alt="Fitness and freshness, power curve">
 </p>
 
 Allure aims at the feature set of the big fitness-tracking apps, including what they keep
-behind a subscription (segments, route builder, heatmaps, training load, live features),
-as free software. Your activities stay on your phone: no account, no server, no tracking.
+behind a subscription (segments, route builder, heatmaps, training load, structured
+workouts), as free software. Your activities stay on your phone: no account, no server of
+ours, no tracking.
 
-> **Status:** early development. The features below work today (a few recording ones only
-> in the browser so far, as noted), but the app has not been released yet and the data
-> format may still change. The interface is in French for now; English comes with i18n
-> ([roadmap](docs/ROADMAP.md)).
+> **Status:** early development. Everything below works in the browser today. The Android
+> app runs the same code, but its native parts (screen-off recording, Bluetooth, Health
+> Connect) have not been validated on a device yet, and the app is not on the Play Store.
+> The data format may still change. The interface is available in English and French.
 
 ## Contents
 
@@ -47,44 +53,59 @@ as free software. Your activities stay on your phone: no account, no server, no 
 ## Features
 
 **Record**
-- Live GPS recording with auto-pause, a manual lap button and spoken cues at every km
-  (or 5 km on a bike)
-- Large, high-contrast live screen with a thumb-reachable control dock
-- Follow a planned route: distance left, voice alert when you go off route
-- Live segments: start and finish detection, time against your record
-- Crash-safe autosave of the recording in progress
-- Bluetooth heart-rate straps, lock-screen controls and haptics (in Chrome on Android
-  today; native versions for the app are in progress)
+- Live GPS recording with a 3-2-1 countdown, auto-pause, laps and crash-safe autosave
+- Customizable live screen: pick the big metric and the fields, per sport, with or
+  without the map
+- Voice announcements every split or every few minutes, with the fields you choose, and a
+  high heart-rate alert
+- Structured workouts: warm-up, reps and recovery, followed live with spoken prompts
+- Follow a planned route (distance left, off-route alert) and live segments against your
+  record
+- Bluetooth heart-rate straps, cadence sensors and power meters
+- Manual entry for activities without GPS (gym, treadmill, pool)
 
 **Analyze**
-- Distance, moving time, pace or speed, elevation, heart rate, grade-adjusted pace (GAP)
-- Elevation and heart-rate chart scrubbed by touch, synced with the map
-- Splits, best efforts (1 km to marathon), personal records, race predictions
-- Heart-rate zones and Relative Effort, intervals from laps or auto-detected efforts
-- Cycling power: power curve, Normalized Power, FTP estimate, intensity and TSS
-- Matched activities: the same route over time
+- Distance, moving and elapsed time, pace or speed, elevation, heart rate, calories,
+  grade-adjusted pace (GAP)
+- Elevation and heart-rate chart scrubbed by touch, synced with a 2D or 3D map
+- Splits, best efforts, personal records, race predictions
+- Heart-rate zones and Relative Effort (perceived exertion when there is no heart rate)
+- Cycling power: power curve, FTP estimate
+- Intervals from laps or auto-detected efforts, matched activities on the same route
+- Crop an activity, correct its elevation with terrain data
 
 **Train**
 - Fitness and freshness (CTL / ATL / TSB), training log, weekly and yearly totals
 - Goals per sport (distance, time, elevation, count) with progress rings
+- Achievements and monthly challenges, plus challenges with friends shared as a link
 - Gear: shoe and bike mileage with wear alerts
 
 **Maps and routes**
 - Route builder snapped to roads and trails, with elevation profile and GPX export
-- Suggested loops from your position: distance, flat or hilly, paved or trails, new ground
+- Suggested loops from your position: distance, flat or hilly, road or trails, new ground
 - Personal heatmap of every activity
+- Offline maps for saved routes
 - Segments: create them from an activity, every matching effort is ranked
 
-**Share and stay private**
-- Story image for social media, GPX export, system share sheet
-- Privacy zones hide the start and end of your tracks around home on shared images
+**Share and stay safe**
+- Story images in four templates, over a dark, transparent or photo background
+- Photos on activities, GPX export, system share sheet
+- Privacy zones hide the start and end of your tracks around home on shared images and files
+- Emergency contacts, a check-in when you stop moving, and an SOS button that prepares an
+  SMS with your position
 
-**Import**
-- `.gpx`, `.tcx`, `.fit` (also gzipped), or a whole Strava bulk-export archive (`.zip`),
-  with duplicate detection
+**Import and keep your data**
+- `.gpx`, `.tcx`, `.fit` (also gzipped), indoor files without GPS, or a whole Strava
+  bulk-export archive (`.zip`), with duplicate detection
+- Health Connect on Android: workouts and heart rate from your watch
+- Full backup to a file and restore on another phone
+
+**Make it yours**
+- English or French, metric or imperial units
+- Dark, light or system theme, accent color, map style
 
 See the [roadmap](docs/ROADMAP.md) for what is done and what comes next (accounts and
-sync, social feed, clubs, challenges, offline maps).
+sync, live location sharing, store release).
 
 ## Quick start
 
@@ -97,8 +118,8 @@ npm install
 npm run dev     # http://localhost:5173
 ```
 
-Open the app, then either import your own files (button or drag and drop) or, in
-**Profil → Données de démo**, generate 20 sample activities.
+Open the app, then either import your own files (button or drag and drop) or tap
+**Generate a demo history** on the empty feed to get 20 sample activities.
 
 ```sh
 npm test        # unit tests (node:test, no framework)
@@ -116,9 +137,9 @@ npm run android        # build the web app and copy it into android/
 npm run android:open   # open the project in Android Studio, then Run
 ```
 
-Run it on a phone in developer mode (USB debugging) or on an emulator. Recording with the
-screen off needs a background-location plugin that is not wired yet
-([decisions](docs/DECISIONS.md)).
+Run it on a phone in developer mode (USB debugging) or on an emulator. Screen-off
+recording, Bluetooth sensors and Health Connect use native plugins; they still need to be
+tested on real devices ([release checklist](docs/RELEASE.md)).
 
 ## Development tips
 
@@ -137,12 +158,12 @@ screen off needs a background-location plugin that is not wired yet
 |---|---|
 | UI | React 18, plain JavaScript, plain CSS (design tokens in `src/styles/global.css`) |
 | Build | Vite |
-| Maps | MapLibre GL JS with the CARTO Dark Matter basemap |
+| Maps | MapLibre GL JS with CARTO basemaps, AWS Terrain Tiles for 3D relief |
 | Charts | Recharts |
 | Storage | IndexedDB, through `src/lib/db.js` only |
 | Routing | [BRouter](https://brouter.de) (OpenStreetMap) for the route builder and suggestions |
 | Files | Garmin FIT SDK; hand-written GPX, TCX, CSV and ZIP readers |
-| Native shell | Capacitor 8 (Android) |
+| Native shell | Capacitor 8 (Android): background geolocation, Bluetooth LE, Health Connect |
 | Tests | `node:test` and `node:assert` |
 
 Why these choices: [docs/DECISIONS.md](docs/DECISIONS.md).
@@ -159,7 +180,7 @@ src/
   styles/global.css  design tokens and all styles
 tests/               node:test files for src/lib
 android/             Capacitor Android project
-docs/                roadmap, architecture, decisions, screenshots
+docs/                roadmap, architecture, decisions, release checklist, screenshots
 ```
 
 More detail, including the data model and storage migrations:
@@ -169,14 +190,17 @@ More detail, including the data model and storage migrations:
 
 Allure is local-first. Activities, routes, segments and settings live in your browser's or
 phone's storage. There is no account, no analytics and no server of ours. The app only
-talks to these third-party services:
+talks to these third-party services, which see your IP address:
 
-- **CARTO** basemap tiles and **OpenStreetMap** data, to draw maps
-- **BRouter** (`brouter.de`), when you build or request a route
+- **CARTO** basemap tiles, to draw maps (the area shown)
+- **Amazon Web Services** terrain tiles, for the 3D view and to correct the elevation of
+  your recordings (the area of the track)
+- **BRouter** (`brouter.de`), when you build or request a route (its waypoints)
 - **Google Fonts**, for the Inter typeface
 
-Uninstalling the app (or clearing the site data) deletes everything, so export what you
-want to keep. Cloud sync is on the [roadmap](docs/ROADMAP.md).
+The full privacy policy is in the app (Settings → Privacy policy). Back up your data from
+Settings → My data: uninstalling the app (or clearing the site data) deletes everything.
+Cloud sync is on the [roadmap](docs/ROADMAP.md).
 
 ## Contributing
 
@@ -190,8 +214,9 @@ Contributions are welcome: bug reports, ideas, code and translations.
 
 Project conventions:
 
-- **English** for code, comments, docs, commits and PRs. The UI copy stays French until
-  i18n lands.
+- **English** for code, comments, docs, commits and PRs. UI strings are written in French
+  in the source, wrapped in `t('…')`, with their English version in `src/lib/en.js`
+  (`npm test` fails on a missing one).
 - **Commits** follow [Conventional Commits](https://www.conventionalcommits.org):
   `feat(maps): add offline tiles`, `fix(record): keep laps after a crash`.
 - **Mobile first**: touch targets of at least 44 px, nothing reachable only by hover,
@@ -207,6 +232,8 @@ Project conventions:
 
 - Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL)
 - Basemap © [CARTO](https://carto.com/attributions)
+- Relief from [Terrain Tiles](https://registry.opendata.aws/terrain-tiles/) (Mapzen, AWS
+  Open Data)
 - Routing by [BRouter](https://github.com/abrensch/brouter); the demo loops were routed
   with the FOSSGIS OSRM server
 - Built with [MapLibre GL JS](https://maplibre.org), [React](https://react.dev),
