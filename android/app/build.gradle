@@ -17,8 +17,21 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Release signing from ~/.gradle/gradle.properties (outside the repo, see docs/RELEASE.md).
+    // Without allureStoreFile, release builds come out unsigned.
+    signingConfigs {
+        if (findProperty('allureStoreFile')) {
+            release {
+                storeFile file(findProperty('allureStoreFile'))
+                storePassword findProperty('allureStorePassword')
+                keyAlias findProperty('allureKeyAlias')
+                keyPassword findProperty('allureKeyPassword')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (findProperty('allureStoreFile')) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

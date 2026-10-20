@@ -72,7 +72,7 @@ src/
                       sensors, lockscreen, haptics, health, elevation, shell: native-only, loaded in the app)
   styles/global.css design tokens (CSS vars) + all styles
 tests/              node:test files for src/lib
-docs/               ROADMAP, ARCHITECTURE, DECISIONS
+docs/               ROADMAP, ARCHITECTURE, DECISIONS, RELEASE (store checklist)
 ```
 
 Details and data model: `docs/ARCHITECTURE.md`.
