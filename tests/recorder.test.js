@@ -26,6 +26,15 @@ test('inaccurate fixes and jitter are ignored', () => {
   assert.equal(rec.distance, 0);
 });
 
+test('an inaccurate fix before the first point only sets the position', () => {
+  let rec = addFix(startRecording({}, 0), fix(0, 0, { accuracy: 80 }));
+  assert.equal(rec.pos.accuracy, 80);
+  assert.equal(rec.points.length, 0);
+  rec = addFix(rec, fix(10, 1));
+  assert.equal(rec.points.length, 1);
+  assert.equal(rec.distance, 0);
+});
+
 test('a GPS spike is skipped, a sustained jump is kept', () => {
   let rec = run(startRecording({}, 0), 0, 10, 4);
   rec = addFix(rec, fix(300, 11)); // 260 m in 1 s

@@ -11,7 +11,7 @@ import { isSpike, SPORTS, splitSize } from './sports.js';
 // The clock counts only running time: `active` holds the time banked before the last
 // pause, `runningSince` is when the clock last started (null while paused).
 
-const MAX_ACCURACY = 30; // m: fixes less precise than this are dropped
+export const MAX_ACCURACY = 30; // m: fixes less precise than this are dropped
 const MAX_SPIKES = 5; // fixes in a row skipped as GPS spikes
 const MIN_STEP = 3; // m: smaller moves are GPS jitter, not progress
 // m/s under which the athlete counts as stopped; other sports use their `moving` threshold.
@@ -91,7 +91,8 @@ export function joinDraft(entries) {
 
 /** Feed one GPS fix: { lat, lon, ele?, time, accuracy?, speed? }. */
 export function addFix(rec, fix) {
-  if ((fix.accuracy ?? 0) > MAX_ACCURACY) return rec;
+  // Too imprecise to record, but before the first point it still places the athlete on the map.
+  if ((fix.accuracy ?? 0) > MAX_ACCURACY) return rec.points.length ? rec : { ...rec, pos: fix };
   if (rec.paused) return { ...rec, pos: fix };
   // A GPS spike (urban canyon, tunnel exit) is skipped; after MAX_SPIKES in a row, the jump is real.
   if (rec.points.length && isSpike(rec.points.at(-1), fix, rec.sport)) {

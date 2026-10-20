@@ -12,7 +12,7 @@ import { distUnit, fmtDist, fmtDuration, fmtLength } from '../lib/format.js';
 import { haptic } from '../lib/haptics.js';
 import { hush, speak, watchPosition } from '../lib/location.js';
 import { FIELDS, layoutFor } from '../lib/liveFields.js';
-import { elapsed, lapStatus } from '../lib/recorder.js';
+import { elapsed, lapStatus, MAX_ACCURACY } from '../lib/recorder.js';
 import { getRoute } from '../lib/db.js';
 import { joinLegs } from '../lib/routes.js';
 import { alertText, checkIn, smsUrl } from '../lib/safety.js';
@@ -33,7 +33,7 @@ export default function RecordPage({ recording, contacts, routes, routeId, segme
       )}
       {live
         ? <Live recording={recording} contacts={contacts} layout={layoutFor(prefs.recordScreen, live.sport)} onSaved={onSaved} />
-        : <Setup recording={recording} contacts={contacts} routes={routes} routeId={routeId} segments={segments} activities={activities} prefs={prefs} onEditScreen={setEditing} />}
+        : <Setup recording={recording} contacts={contacts} routes={routes} routeId={routeId} segments={segments} activities={activities} prefs={prefs} onSavePrefs={onSavePrefs} onEditScreen={setEditing} />}
       <BottomSheet open={editing != null} onClose={() => setEditing(null)} title={t("Écran d'enregistrement · {sport}", { sport: SPORTS[editing]?.label })}>
         {editing && (
           <RecordScreenEditor
@@ -46,10 +46,10 @@ export default function RecordPage({ recording, contacts, routes, routeId, segme
   );
 }
 
-function Setup({ recording, contacts, routes, routeId, segments, activities, prefs, onEditScreen }) {
+function Setup({ recording, contacts, routes, routeId, segments, activities, prefs, onSavePrefs, onEditScreen }) {
   const [routeSel, setRouteSel] = useState(routeId ?? '');
   const route = routes?.find((r) => r.id === routeSel);
-  const [sport, setSport] = useState(route?.sport ?? 'run');
+  const [sport, setSport] = useState(route?.sport ?? (SPORTS[prefs?.sport] ? prefs.sport : 'run')); // defaults to the last sport recorded
   const [autoPause, setAutoPause] = useState(prefs?.autoPause ?? true);
   const [audio, setAudio] = useState(prefs?.audio ?? true);
   const [safety, setSafety] = useState(true);
@@ -68,6 +68,7 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
   // which is what Chrome wants for the lock-screen audio.
   const begin = async () => {
     setCount(null);
+    if (sport !== prefs?.sport) onSavePrefs({ ...prefs, sport });
     if (audio) { hush(); speak(t('Enregistrement démarré.')); }
     const full = route && (await getRoute(route.id)); // the list holds metas, not points
     recording.start({ sport, autoPause, audio, safety: safety && contacts.length > 0, route: full && followRoute(full, joinLegs(full.legs)), liveSegs: liveSegments(segments, sport, activities) });
@@ -177,7 +178,9 @@ function Live({ recording, contacts, layout, onSaved }) {
   const ctx = { rec, now, time, bpm: recording.strap?.bpm ?? null };
   const fields = layout.fields.filter((f) => f !== 'hr' || recording.strap); // no strap, no heart rate tile
   const lapNow = lapStatus(rec, now);
-  const status = saving ? t('Enregistrement…') : rec.paused ? t('En pause') : rec.autoPaused ? t('Pause auto') : gpsError ?? (rec.follow?.off ? t("Hors de l'itinéraire") : null);
+  const weak = rec.pos?.accuracy > MAX_ACCURACY && !rec.points.length; // nothing recorded yet: waiting for precision
+  const status = saving ? t('Enregistrement…') : rec.paused ? t('En pause') : rec.autoPaused ? t('Pause auto') : gpsError
+    ?? (weak ? t('Signal GPS faible · précision {dist}', { dist: fmtLength(rec.pos.accuracy) }) : rec.follow?.off ? t("Hors de l'itinéraire") : null);
 
   const finish = async () => {
     setSaving(true);
@@ -196,7 +199,7 @@ function Live({ recording, contacts, layout, onSaved }) {
           </div>
         )}
       </section>
-      {status && <p className={`record-status ${(gpsError || rec.follow?.off) && !rec.paused ? 'bad' : ''}`} role="status">{status}</p>}
+      {status && <p className={`record-status ${(gpsError || weak || rec.follow?.off) && !rec.paused ? 'bad' : ''}`} role="status">{status}</p>}
       {tooShort && <p className="record-status bad" role="alert">{t('Trop court pour être enregistré.')}</p>}
       <section className={layout.map ? 'live-map' : 'live-extras'}>
         {layout.map && (rec.pos ? <LiveMap points={rec.points} pos={rec.pos} route={rec.route?.coords} /> : <p className="map-wait muted">{t('Recherche du GPS…')}</p>)}
