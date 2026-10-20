@@ -3,7 +3,7 @@ import { Map as MapLibre, Marker, setWorkerUrl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 // Same Vite worker fix as TrackMap.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
-import { MAP_STYLE } from '../lib/offline.js';
+import { mapStyle } from '../lib/offline.js';
 import { ACCENT, mapLocale, ROUTE } from '../theme.js';
 
 setWorkerUrl(workerUrl);
@@ -17,7 +17,7 @@ export default function LiveMap({ points, pos, route }) {
   const me = useRef();
 
   useEffect(() => {
-    const m = new MapLibre({ container: el.current, style: MAP_STYLE, locale: mapLocale(), center: [pos.lon, pos.lat], zoom: 16, cooperativeGestures: true });
+    const m = new MapLibre({ container: el.current, style: mapStyle(), locale: mapLocale(), center: [pos.lon, pos.lat], zoom: 16, cooperativeGestures: true });
     m.on('load', () => {
       el.current?.classList.add('ready');
       if (route) {

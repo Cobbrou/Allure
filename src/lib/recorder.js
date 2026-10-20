@@ -3,7 +3,7 @@ import { followStep } from './follow.js';
 import { haversine } from './geo.js';
 import { segmentStep } from './liveSegments.js';
 import { distLen, fmtSpeed, isImperial, shortLen } from './format.js';
-import { isSpike, SPORTS, splitSize } from './sports.js';
+import { displayOf, effort, isSpike, SPORTS, splitSize } from './sports.js';
 
 // Live recording as a pure state machine: every function takes a recording and returns
 // a new one (or the same object when nothing changed). Times are ms epoch.
@@ -21,8 +21,8 @@ const PACE_WINDOW = 30000; // ms of track used for the current pace
 const HR_EVERY = 5000; // ms between heart-rate-only points while no fix is stored
 
 /** route: optional route to follow, from followRoute(). liveSegs: from liveSegments(). safety: check-ins on. */
-export function startRecording({ sport = 'run', autoPause = true, audio = true, safety = false, route = null, liveSegs = [] }, now) {
-  return { sport, autoPause, audio, safety, route, follow: null, followAlt: route && { f: null, r: null, f0: null, r0: null }, liveSegs, seg: null, laps: [], start: now, points: [], distance: 0, active: 0, runningSince: now, paused: false, autoPaused: false, lastMove: now, pos: null };
+export function startRecording({ sport = 'run', autoPause = true, audio = true, voice = VOICE, safety = false, route = null, liveSegs = [] }, now) {
+  return { sport, autoPause, audio, voice, safety, route, follow: null, followAlt: route && { f: null, r: null, f0: null, r0: null }, liveSegs, seg: null, laps: [], start: now, points: [], distance: 0, active: 0, runningSince: now, paused: false, autoPaused: false, lastMove: now, pos: null };
 }
 
 /** Running time in seconds. */
@@ -45,12 +45,15 @@ export function lapStatus(rec, now) {
   return { n: laps.length + 1, time: elapsed(rec, now) - (laps.at(-1)?.at ?? 0) };
 }
 
-/** Spoken summary of a finished lap. */
-export function lapCue(n, seconds) {
+/** Seconds as spoken words: "1 heure 2 minutes 5". */
+function spokenTime(seconds) {
   const s = Math.round(seconds), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
   const hours = h ? `${tn(h, '{n} heure', '{n} heures')} ` : '';
-  return t('Tour {n} : {time}.', { n, time: `${hours}${tn(m, '{n} minute', '{n} minutes')} ${s % 60}` });
+  return `${hours}${tn(m, '{n} minute', '{n} minutes')} ${s % 60}`;
 }
+
+/** Spoken summary of a finished lap. */
+export const lapCue = (n, seconds) => t('Tour {n} : {time}.', { n, time: spokenTime(seconds) });
 
 /** Lap start times (ms) for the saved activity: the start, then each lap press. Null without laps. */
 export const lapStarts = (rec) => (rec.laps?.length ? [rec.points[0]?.time ?? rec.start, ...rec.laps.map((l) => l.time)] : null);
@@ -158,21 +161,60 @@ export function currentPace(rec) {
   return d > 10 && dt > 0 ? dt / (d / 1000) : null;
 }
 
-/** Spoken summary when `next` crosses a split boundary (sport split size), else null. */
-export function splitCue(prev, next, now) {
-  const sport = SPORTS[next.sport] ?? SPORTS.run;
-  const size = splitSize(next.sport);
-  const n = Math.floor(next.distance / size);
-  if (n <= Math.floor(prev.distance / size)) return null;
-  const sPerKm = elapsed(next, now) / (next.distance / 1000);
-  const count = n * sport.split;
-  const dist = sport.display === 'pace100'
-    ? t(isImperial() ? '{n} yards' : '{n} mètres', { n: count })
-    : isImperial() ? tn(count, '{n} mile', '{n} miles') : tn(count, '{n} kilomètre', '{n} kilomètres');
-  if (sport.display === 'speed') {
-    const speed = getLang() === 'fr' ? fmtSpeed(sPerKm).replace('.', ',') : fmtSpeed(sPerKm);
-    return t(isImperial() ? '{dist}. Vitesse moyenne {speed} miles heure.' : '{dist}. Vitesse moyenne {speed} kilomètres heure.', { dist, speed });
+// Voice announcements: at each split (sport split size) or every `every` seconds of running
+// time, the `fields` in order. The defaults speak the split distance and the average effort.
+export const VOICE = { every: 'split', fields: ['distance', 'avg'] };
+export const VOICE_EVERY = ['split', 300, 600, 900]; // s
+export const VOICE_FIELDS = ['time', 'distance', 'avg', 'pace', 'hr'];
+
+const decimal = (s) => (getLang() === 'fr' ? s.replace('.', ',') : s);
+
+/** Effort as spoken words: "{label} 5 minutes 30." or "{label} 12,0 kilomètres heure." sPerKm: s/km. */
+function spokenEffort(sport, sPerKm, label) {
+  if (!sPerKm || !Number.isFinite(sPerKm)) return null;
+  if (displayOf(sport) === 'speed') {
+    const speed = decimal(fmtSpeed(sPerKm));
+    return `${label} ${t(isImperial() ? '{speed} miles heure' : '{speed} kilomètres heure', { speed })}.`;
   }
-  const s = Math.round(sport.display === 'pace100' ? (sPerKm / 10) * shortLen() : (sPerKm * distLen()) / 1000);
-  return t('{dist}. Allure moyenne {m} minutes {s}.', { dist, m: Math.floor(s / 60), s: s % 60 });
+  const s = Math.round(displayOf(sport) === 'pace100' ? (sPerKm / 10) * shortLen() : (sPerKm * distLen()) / 1000);
+  return `${label} ${t('{m} minutes {s}', { m: Math.floor(s / 60), s: s % 60 })}.`;
+}
+
+/** Meters as spoken words: whole splits ("5 kilomètres") or, between splits, two decimals. */
+function spokenDistance(sport, meters) {
+  if (SPORTS[sport]?.display === 'pace100') {
+    return t(isImperial() ? '{n} yards' : '{n} mètres', { n: Math.round(meters / shortLen()) });
+  }
+  const d = meters / distLen(), n = Math.abs(d - Math.round(d)) < 1e-6 ? String(Math.round(d)) : decimal(d.toFixed(2));
+  return isImperial() ? tn(d, '{n} mile', '{n} miles', { n }) : tn(d, '{n} kilomètre', '{n} kilomètres', { n });
+}
+
+/**
+ * Voice announcement due between `prev` and `next`, or null: { text, cued }. Time cues set
+ * `cued`, the count of intervals announced, for the caller to store in the recording.
+ * bpm: fresh heart rate reading or null.
+ */
+export function voiceCue(prev, next, now, bpm = null) {
+  const { every, fields } = { ...VOICE, ...next.voice };
+  const time = elapsed(next, now);
+  let meters = next.distance, cued;
+  if (every === 'split') {
+    const size = splitSize(next.sport);
+    const n = Math.floor(next.distance / size);
+    if (n <= Math.floor(prev.distance / size)) return null;
+    meters = n * size;
+  } else {
+    cued = Math.floor(time / every);
+    if (cued <= (next.cued ?? 0)) return null;
+  }
+  const { label, short } = effort(next.sport);
+  const parts = {
+    time: () => t('Temps {time}.', { time: spokenTime(time) }),
+    distance: () => `${spokenDistance(next.sport, meters)}.`,
+    avg: () => spokenEffort(next.sport, next.distance > 10 ? time / (next.distance / 1000) : null, label),
+    pace: () => spokenEffort(next.sport, currentPace(next), t('{name} actuelle', { name: short })),
+    hr: () => (bpm ? t('Cardio {n}.', { n: bpm }) : null),
+  };
+  const text = fields.map((f) => parts[f]?.()).filter(Boolean).join(' ');
+  return text ? { text, cued } : null;
 }

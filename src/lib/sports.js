@@ -15,6 +15,16 @@ export const SPORTS = {
   swim: { get label() { return t('Natation'); }, icon: '🏊', display: 'pace100', split: 100, moving: 0.2, max: 4 },
 };
 
+// Pace or speed picked per sport in the settings ({ [sport]: 'pace' | 'speed' }); swims stay per 100 m.
+// Like the units in format.js, App sets it before rendering and remounts the tree on change.
+let displays = {};
+export const setDisplays = (d) => { displays = d ?? {}; };
+/** How a sport's effort is shown: the sport's default, or the user's pace / speed choice. */
+export function displayOf(sport) {
+  const own = (SPORTS[sport] ?? SPORTS.run).display;
+  return own !== 'pace100' && ['pace', 'speed'].includes(displays[sport]) ? displays[sport] : own;
+}
+
 /** True when going from point a to b (timed {lat, lon}) means an impossible speed for the sport. */
 export function isSpike(a, b, sport) {
   const dt = (b.time - a.time) / 1000;
@@ -49,7 +59,7 @@ export function sportFromGpxType(type = '') {
 
 /** Average effort for display: speed for rides, pace per km or per 100 m otherwise. sPerKm: seconds per km. */
 export function effort(sport, sPerKm) {
-  switch (SPORTS[sport]?.display) {
+  switch (displayOf(sport)) {
     case 'speed':
       return { label: t('Vitesse moyenne'), short: t('Vitesse'), value: fmtSpeed(sPerKm), unit: speedUnit() };
     case 'pace100':

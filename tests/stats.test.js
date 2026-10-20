@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { analyze } from '../src/lib/analyze.js';
 import { bestEfforts, personalRecords } from '../src/lib/records.js';
-import { byDay, monthGrid, periodStart, startOfWeek, totals, trainingWeeks, weeklyDistance } from '../src/lib/stats.js';
+import { byDay, monthGrid, periodStart, setWeekStart, startOfWeek, totals, trainingWeeks, weekdayInitials, weeklyDistance } from '../src/lib/stats.js';
 
 /** Straight track at constant speed: `km` long, `pace` s/km, one point every 10 m. */
 const steadyRun = (km, pace) =>
@@ -67,6 +67,17 @@ test('monthGrid pads to whole Monday-first weeks', () => {
   assert.equal(new Date(grid[0][3]).getDate(), 1);
   assert.ok(grid.every((w) => w.length === 7));
   assert.equal(grid.flat().filter(Boolean).length, 31);
+});
+
+test('weeks can start on Sunday', () => {
+  setWeekStart(0);
+  try {
+    assert.equal(startOfWeek(new Date(2026, 9, 14, 18).getTime()), new Date(2026, 9, 11).getTime());
+    assert.equal(startOfWeek(new Date(2026, 9, 11, 8).getTime()), new Date(2026, 9, 11).getTime());
+    assert.equal(monthGrid(2026, 9)[0].filter((d) => d === null).length, 4);
+    assert.equal(weekdayInitials()[0], 'D'); // dimanche
+  } finally { setWeekStart(1); }
+  assert.equal(weekdayInitials()[0], 'L');
 });
 
 test('predictRaces: Riegel from recent runs, ignoring short efforts for long races', async () => {

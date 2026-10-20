@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import TabBar from './components/TabBar.jsx';
@@ -12,11 +13,14 @@ import { newlyCompleted } from './lib/challenges.js';
 import { goalLabel, newlyReached } from './lib/goals.js';
 import { healthTasks, importFiles, importTasks } from './lib/importer.js';
 import { estimateFtp } from './lib/power.js';
+import { setDisplays } from './lib/sports.js';
+import { setWeekStart } from './lib/stats.js';
 import { DEFAULT_REST_HR, estimateMaxHr } from './lib/training.js';
 import { useEdgeSwipeBack } from './gestures.js';
 import FeedPage from './pages/FeedPage.jsx';
 import { useRecording } from './recording.js';
 import { back, go, useRoute } from './router.js';
+import { ACCENT, MAP_STYLE, setTheme } from './theme.js';
 
 // The feed is the start screen and ships in the main chunk. The other pages pull in
 // MapLibre and Recharts, so they load as separate chunks, fetched once the app is idle.
@@ -128,9 +132,29 @@ export default function App() {
     document.documentElement.lang = getLang();
     document.title = t('Allure — Analyse de course');
   }, [lang]);
-  const [prefs, setPrefs] = useState({}); // { name?, autoPause?, audio? }
+  const [prefs, setPrefs] = useState({}); // { name?, autoPause?, audio?, voice?, sport?, recordScreen?, theme?, accent?, map?, weekStart?, display? }
   useEffect(() => { getSetting('prefs').then((p) => p && setPrefs(p), () => {}); }, []);
   const savePrefs = async (p) => { await setSetting('prefs', p); setPrefs(p); };
+  const [systemLight, setSystemLight] = useState(() => matchMedia('(prefers-color-scheme: light)').matches);
+  useEffect(() => {
+    const mq = matchMedia('(prefers-color-scheme: light)');
+    const onChange = () => setSystemLight(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  const light = prefs.theme === 'light' || (prefs.theme === 'system' && systemLight);
+  // Read by theme.js, stats.js and sports.js during render, like the units; the page remounts on change.
+  setTheme({ light, accent: prefs.accent, map: prefs.map });
+  setWeekStart(prefs.weekStart);
+  setDisplays(prefs.display);
+  const look = `${light}/${ACCENT}/${MAP_STYLE}/${prefs.weekStart}/${JSON.stringify(prefs.display ?? {})}`;
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.theme = light ? 'light' : 'dark';
+    root.style.setProperty('--accent', ACCENT);
+    document.querySelector('meta[name=theme-color]')?.setAttribute('content', getComputedStyle(root).getPropertyValue('--bg').trim());
+    if (Capacitor.isNativePlatform()) import('./lib/shell.js').then((m) => m.systemBars(light));
+  }, [light, prefs.accent]);
   const [gears, setGears] = useState([]);
   useEffect(() => { getSetting('gear').then((g) => g && setGears(g), () => {}); }, []);
   const saveGears = async (g) => { await setSetting('gear', g); setGears(g); };
@@ -290,7 +314,7 @@ ${cur.text}` } : summary));
           )}
         </div>
       )}
-      <ErrorBoundary key={`${page}/${id ?? ''}/${units}/${lang}`}>
+      <ErrorBoundary key={`${page}/${id ?? ''}/${units}/${lang}/${look}`}>
         <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
       </ErrorBoundary>
       {!(page === 'record' && recording.rec) && <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'manual' ? 'record' : page === 'log' || page === 'settings' || page === 'legal' ? 'profile' : page === 'route' || page === 'suggest' ? 'maps' : page} />}

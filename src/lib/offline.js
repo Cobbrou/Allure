@@ -1,10 +1,11 @@
 // Platform module: offline maps. Every map loads its style through a `cached://` protocol
 // that answers from Cache Storage first, then the network. Downloading a route stores the
-// style, sprite, glyphs and the vector tiles of a corridor around it, one cache per route.
+// styles (every map style offered: they share the vector tiles), sprites, glyphs and the
+// vector tiles of a corridor around it, one cache per route.
 
 import { addProtocol } from 'maplibre-gl';
 import { tilesAlong } from './geo.js';
-import { MAP_STYLE as STYLE_URL } from '../theme.js';
+import { MAP_STYLE as STYLE_URL, MAP_STYLES } from '../theme.js';
 
 const SCHEME = 'cached://';
 const toHttps = (url) => url.replace(SCHEME, 'https://');
@@ -17,8 +18,8 @@ const GLYPH_RANGES = ['0-255', '256-511', '8192-8447']; // Latin, Latin Extended
 const PARALLEL = 6;
 const DONE = '/offline-complete'; // marker entry, see downloadRoute
 
-/** Style URL every map uses. */
-export const MAP_STYLE = toCached(STYLE_URL);
+/** Style URL every map uses: the current map style setting. */
+export const mapStyle = () => toCached(STYLE_URL);
 
 /** Point the style's sources, sprite and glyphs (or a TileJSON's tiles) at the cached scheme. */
 function rewrite(json) {
@@ -51,16 +52,20 @@ const fontstacks = (style) => [...new Set(style.layers.map((l) => l.layout?.['te
 
 /** Every URL the map needs to draw a route's corridor offline. */
 async function urlsFor(points) {
-  const style = await getJson(STYLE_URL);
-  const tileUrls = [];
-  for (const s of Object.values(style.sources)) {
-    if (!s.url) continue;
-    const template = (await getJson(s.url)).tiles[0];
-    tileUrls.push(s.url, ...tilesAlong(points, ZOOMS).map(({ z, x, y }) => template.replace('{z}', z).replace('{x}', x).replace('{y}', y)));
-  }
+  const urls = new Set();
   const ratio = devicePixelRatio > 1 ? '@2x' : '';
-  const glyphs = fontstacks(style).flatMap((f) => GLYPH_RANGES.map((r) => style.glyphs.replace('{fontstack}', f).replace('{range}', r)));
-  return [STYLE_URL, `${style.sprite}${ratio}.json`, `${style.sprite}${ratio}.png`, ...glyphs, ...tileUrls];
+  for (const url of Object.values(MAP_STYLES)) {
+    const style = await getJson(url);
+    for (const s of Object.values(style.sources)) {
+      if (!s.url || urls.has(s.url)) continue;
+      const template = (await getJson(s.url)).tiles[0];
+      urls.add(s.url);
+      tilesAlong(points, ZOOMS).forEach(({ z, x, y }) => urls.add(template.replace('{z}', z).replace('{x}', x).replace('{y}', y)));
+    }
+    fontstacks(style).forEach((f) => GLYPH_RANGES.forEach((r) => urls.add(style.glyphs.replace('{fontstack}', f).replace('{range}', r))));
+    [url, `${style.sprite}${ratio}.json`, `${style.sprite}${ratio}.png`].forEach((u) => urls.add(u));
+  }
+  return [...urls];
 }
 
 /**

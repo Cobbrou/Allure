@@ -16,7 +16,7 @@ import { safeName, shareFile } from '../lib/share.js';
 import { SPORTS } from '../lib/sports.js';
 import { back } from '../router.js';
 import { getRoute } from '../lib/db.js';
-import { downloadRoute, MAP_STYLE, offlineInfo, removeOffline } from '../lib/offline.js';
+import { downloadRoute, mapStyle, offlineInfo, removeOffline } from '../lib/offline.js';
 import { ACCENT, mapLocale } from '../theme.js';
 
 setWorkerUrl(workerUrl);
@@ -200,7 +200,7 @@ function BuilderMap({ center, fit, waypoints, points, hover, onAdd, onMove }) {
 
   useEffect(() => {
     // No cooperativeGestures: the map is the editing surface, so one finger pans it.
-    const m = new MapLibre({ container: el.current, style: MAP_STYLE, locale: mapLocale(), center, zoom: 13 });
+    const m = new MapLibre({ container: el.current, style: mapStyle(), locale: mapLocale(), center, zoom: 13 });
     if (fit?.length > 1) m.fitBounds(fit.reduce((b, c) => b.extend(c), new LngLatBounds(fit[0], fit[0])), { padding: 40, duration: 0 });
     m.addControl(new GeolocateControl({ positionOptions: { enableHighAccuracy: true } }), 'top-right');
     m.on('load', () => {

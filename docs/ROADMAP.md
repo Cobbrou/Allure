@@ -292,6 +292,10 @@ Recording
       lap pace, speed, HR, elevation, elevation gain, cadence, time of day…), choose the
       big hero metric; saved per sport, editable before and during recording, large
       readable fields when the map is hidden (cadence waits for a cadence sensor)
+- [x] Voice announcements: every split or every 5 / 10 / 15 min, with the chosen fields
+      (time, distance, average / current pace or speed, heart rate)
+- [x] Personalization: light / dark / system theme, accent color, map style (Carto dark,
+      light, colorful), pace or speed per sport, week starting Monday or Sunday
 - [ ] HR zone and elevation gain on the live screen
 - [ ] Bluetooth cadence / speed and power sensors (same `sensors.js` path as the HR strap)
 - [ ] Audio cue options: every N km or N minutes, choose metrics, HR alerts

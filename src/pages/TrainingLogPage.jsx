@@ -1,9 +1,9 @@
-import { locale, t, weekdayInitials } from '../lib/i18n.js';
+import { locale, t } from '../lib/i18n.js';
 import { useMemo, useState } from 'react';
 import Segmented from '../components/Segmented.jsx';
 import { distUnit, fmtDist, fmtDuration } from '../lib/format.js';
 import { SPORTS, sportOptions } from '../lib/sports.js';
-import { trainingWeeks } from '../lib/stats.js';
+import { trainingWeeks, weekdayInitials } from '../lib/stats.js';
 import { activityEffort } from '../lib/training.js';
 
 const PAGE = 12; // weeks shown per "load more"
@@ -73,7 +73,7 @@ export default function TrainingLogPage({ activities, hr }) {
   );
 }
 
-/** Monday timestamp -> "12 – 18 oct." or "28 sept. – 4 oct." */
+/** Week start timestamp -> "12 – 18 oct." or "28 sept. – 4 oct." */
 function fmtWeek(start) {
   const s = new Date(start), end = new Date(start);
   end.setDate(end.getDate() + 6);

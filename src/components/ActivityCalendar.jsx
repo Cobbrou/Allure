@@ -1,7 +1,7 @@
-import { locale, t, tn, weekdayInitials } from '../lib/i18n.js';
+import { locale, t, tn } from '../lib/i18n.js';
 import { distUnit, fmtDist } from '../lib/format.js';
 import { useMemo, useState } from 'react';
-import { byDay, monthGrid, startOfDay } from '../lib/stats.js';
+import { byDay, monthGrid, startOfDay, weekdayInitials } from '../lib/stats.js';
 
 /** Month calendar: one dot per active day (size ~ distance), tap opens that day's activity. */
 export default function ActivityCalendar({ activities, sport }) {

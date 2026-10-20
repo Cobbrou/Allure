@@ -1,4 +1,12 @@
-// Aggregations over activity metas for the profile dashboard. Local time, weeks start Monday.
+// Aggregations over activity metas for the profile dashboard. Local time.
+
+import { locale } from './i18n.js';
+
+// First day of the week: 1 = Monday (default), 0 = Sunday. Like the units in format.js,
+// App sets it before rendering and remounts the tree on change.
+let weekStart = 1;
+export const setWeekStart = (day) => { weekStart = day === 0 ? 0 : 1; };
+const dayIndex = (d) => (d.getDay() + 7 - weekStart) % 7; // 0 = first day of the week
 
 export function startOfDay(t) {
   const d = new Date(t);
@@ -8,7 +16,7 @@ export function startOfDay(t) {
 
 export function startOfWeek(t) {
   const d = new Date(startOfDay(t));
-  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  d.setDate(d.getDate() - dayIndex(d));
   return d.getTime();
 }
 
@@ -51,11 +59,11 @@ export function weeklyDistance(metas, now = Date.now(), weeks = 12, sport) {
   return out;
 }
 
-/** Month grid, Monday first: array of weeks, each 7 day-start timestamps or null for padding. */
+/** Month grid, first day of the week first: array of weeks, each 7 day-start timestamps or null for padding. */
 export function monthGrid(year, month) {
   const first = new Date(year, month, 1);
   const days = new Date(year, month + 1, 0).getDate();
-  const cells = Array((first.getDay() + 6) % 7).fill(null);
+  const cells = Array(dayIndex(first)).fill(null);
   for (let d = 1; d <= days; d++) cells.push(new Date(year, month, d).getTime());
   while (cells.length % 7) cells.push(null);
   return Array.from({ length: cells.length / 7 }, (_, i) => cells.slice(i * 7, i * 7 + 7));
@@ -72,10 +80,9 @@ export function byDay(metas, sport) {
   return map;
 }
 
-
 /**
  * Training log rows, newest week first: [{ start, days, totals }], where `days` holds the
- * 7 day lists of activities (Monday first) and `totals` the week's totals().
+ * 7 day lists of activities (first day of the week first) and `totals` the week's totals().
  */
 export function trainingWeeks(metas, weeks, now = Date.now(), sport) {
   const days = byDay(metas, sport);
@@ -93,3 +100,7 @@ export function trainingWeeks(metas, weeks, now = Date.now(), sport) {
   }
   return out;
 }
+
+/** Weekday initials from the first day of the week ("L M M J V S D" / "S M T W T F S"); 2026-01-04 is a Sunday. */
+export const weekdayInitials = () =>
+  Array.from({ length: 7 }, (_, i) => new Date(2026, 0, 4 + weekStart + i).toLocaleDateString(locale(), { weekday: 'narrow' }));

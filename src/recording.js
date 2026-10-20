@@ -8,7 +8,7 @@ import { haptic } from './lib/haptics.js';
 import { segmentCue } from './lib/liveSegments.js';
 import { keepAwake, speak, watchPosition } from './lib/location.js';
 import { lockScreenControls } from './lib/lockscreen.js';
-import { addFix, addHr, elapsed, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, splitCue, startRecording, tick } from './lib/recorder.js';
+import { addFix, addHr, elapsed, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, startRecording, tick, voiceCue } from './lib/recorder.js';
 import { connectHeartRate } from './lib/sensors.js';
 
 const SAVE_EVERY = 5000; // ms between draft autosaves
@@ -29,12 +29,19 @@ export function useRecording({ onStrapLost } = {}) {
   const lock = useRef(null); // lock-screen controls while recording
   const finishing = useRef(null); // the save in progress: a second tap waits for it
 
+  const freshHr = () => {
+    const s = sensor.current;
+    return s?.bpm && Date.now() - s.at < HR_FRESH ? s.bpm : null;
+  };
+
   const update = useCallback((fn) => {
     const prev = ref.current;
-    const next = prev && fn(prev);
+    let next = prev && fn(prev);
     if (!next || next === prev) return;
     if (next.audio) {
-      const cue = followCue(prev, next) ?? segmentCue(prev, next) ?? splitCue(prev, next, Date.now());
+      const voice = voiceCue(prev, next, Date.now(), freshHr());
+      if (voice?.cued != null) next = { ...next, cued: voice.cued };
+      const cue = followCue(prev, next) ?? segmentCue(prev, next) ?? voice?.text;
       if (cue) speak(cue);
     }
     const done = next.seg?.last;
@@ -65,10 +72,6 @@ export function useRecording({ onStrapLost } = {}) {
   useEffect(() => {
     if (!active) return;
     setGpsError(null);
-    const freshHr = () => {
-      const s = sensor.current;
-      return s?.bpm && Date.now() - s.at < HR_FRESH ? s.bpm : null;
-    };
     const stop = watchPosition((fix) => {
       setGpsError(null);
       const hr = freshHr();

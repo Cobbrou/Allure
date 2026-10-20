@@ -3,6 +3,24 @@
 Lightweight decision log. Newest first. Each entry: context, decision, consequences.
 Open questions sit at the bottom until decided.
 
+## 2026-10-20: Theme, accent and map style are settings
+
+**Context**: the owner asked for a light theme, a choice of accent colour and of map style.
+The app was dark only, with the accent fixed to `#ff5500`.
+**Decision**: the `prefs` setting holds `theme` ('dark' by default, 'light' or 'system'),
+`accent` (one of `ACCENTS` in `theme.js`) and `map` ('auto' follows the theme, or a
+Carto style: dark-matter, positron, voyager). CSS reads `data-theme` and an inline
+`--accent` on `<html>`; JS colours are live bindings in `theme.js` reassigned by
+`setTheme()` before render, with the same remount as the units. Every accent offered keeps
+dark `--on-accent` text at WCAG AA; on the light theme, accent text uses `--accent-text`
+(the accent mixed with black). Story images stay dark (`STORY`). Only Carto styles are
+offered: they share the vector tiles, so an offline route map (which now stores the three
+styles) works in any of them. Satellite and topographic maps would need a tile provider with
+a key or raster tiles, left out for now. In the app shell, Capacitor's built-in
+`SystemBars` switches the status bar icons.
+**Consequences**: `#ff5500` is the default accent, not the only one. A new colour token
+needs a light value too.
+
 ## 2026-10-18: Challenges with friends travel as links
 
 **Context**: without accounts, friends still need to see each other's progress on a

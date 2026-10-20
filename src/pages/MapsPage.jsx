@@ -13,7 +13,7 @@ import { watchPosition } from '../lib/location.js';
 import { nearestFirst } from '../lib/routes.js';
 import { sportOptions, SPORTS } from '../lib/sports.js';
 import { FALLBACK_START } from '../lib/suggest.js';
-import { MAP_STYLE } from '../lib/offline.js';
+import { mapStyle } from '../lib/offline.js';
 import { ACCENT, HEAT, mapLocale, ROUTE } from '../theme.js';
 
 setWorkerUrl(workerUrl);
@@ -150,7 +150,7 @@ function ExploreMap({ start, last, pos, heat, routes, picked, focus, onPick }) {
 
   useEffect(() => {
     // No cooperativeGestures: the map fills the screen, nothing to scroll, so one finger pans it.
-    const m = new MapLibre({ container: el.current, style: MAP_STYLE, locale: mapLocale(), center: start, zoom: 12 });
+    const m = new MapLibre({ container: el.current, style: mapStyle(), locale: mapLocale(), center: start, zoom: 12 });
     m.on('dragstart', () => { moved.current = true; });
     m.on('load', () => {
       el.current?.classList.add('ready');

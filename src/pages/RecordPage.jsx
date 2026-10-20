@@ -71,7 +71,7 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
     if (sport !== prefs?.sport) onSavePrefs({ ...prefs, sport });
     if (audio) { hush(); speak(t('Enregistrement démarré.')); }
     const full = route && (await getRoute(route.id)); // the list holds metas, not points
-    recording.start({ sport, autoPause, audio, safety: safety && contacts.length > 0, route: full && followRoute(full, joinLegs(full.legs)), liveSegs: liveSegments(segments, sport, activities) });
+    recording.start({ sport, autoPause, audio, voice: prefs?.voice, safety: safety && contacts.length > 0, route: full && followRoute(full, joinLegs(full.legs)), liveSegs: liveSegments(segments, sport, activities) });
   };
   useEffect(() => {
     if (count == null) return;

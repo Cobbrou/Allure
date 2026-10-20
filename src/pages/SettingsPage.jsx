@@ -7,6 +7,10 @@ import MyData from '../components/MyData.jsx';
 import PrivacyZones from '../components/PrivacyZones.jsx';
 import Segmented from '../components/Segmented.jsx';
 import { deleteActivities } from '../lib/db.js';
+import { FIELDS } from '../lib/liveFields.js';
+import { VOICE, VOICE_EVERY, VOICE_FIELDS } from '../lib/recorder.js';
+import { displayOf, SPORTS } from '../lib/sports.js';
+import { ACCENT, ACCENTS } from '../theme.js';
 import { locationPermission } from '../lib/location.js';
 import { back } from '../router.js';
 import { version } from '../../package.json';
@@ -23,6 +27,32 @@ const LANGUAGES = [
   { id: 'fr', label: 'Français' },
   { id: 'en', label: 'English' },
 ];
+
+const THEMES = [
+  { id: 'system', get label() { return t('Système'); } },
+  { id: 'dark', get label() { return t('Sombre'); } },
+  { id: 'light', get label() { return t('Clair'); } },
+];
+
+// Carto basemaps (theme.js MAP_STYLES); 'auto' follows the theme.
+const MAPS = [
+  { id: 'auto', get label() { return t('Auto'); } },
+  { id: 'dark', get label() { return t('Sombre'); } },
+  { id: 'light', get label() { return t('Clair'); } },
+  { id: 'color', get label() { return t('Couleurs'); } },
+];
+
+const WEEK_STARTS = [
+  { id: 1, get label() { return t('Lundi'); } },
+  { id: 0, get label() { return t('Dimanche'); } },
+];
+
+const EFFORTS = [
+  { id: 'pace', get label() { return t('Allure'); } },
+  { id: 'speed', get label() { return t('Vitesse'); } },
+];
+
+const voiceEvery = () => VOICE_EVERY.map((id) => ({ id, label: id === 'split' ? t('Chaque split') : t('{n} min', { n: id / 60 }) }));
 
 const PERMISSION = {
   get granted() { return t('Autorisée'); },
@@ -76,12 +106,36 @@ export default function SettingsPage({ activities, hr, hrSaved, ftpEstimate, onS
         <section className="card">
           <h3>{t('Unités')}</h3>
           <Segmented label={t('Unités')} options={UNITS} value={units} onChange={onSaveUnits} />
+          <h3 className="small-label">{t('Allure ou vitesse')}</h3>
+          {['run', 'ride', 'hike', 'walk'].map((id) => (
+            <div key={id} className="settings-row">
+              <span>{SPORTS[id].label}</span>
+              <Segmented label={SPORTS[id].label} options={EFFORTS} value={displayOf(id)} onChange={(v) => savePref({ display: { ...prefs.display, [id]: v } })} />
+            </div>
+          ))}
+          <h3 className="small-label">{t('Début de semaine')}</h3>
+          <Segmented label={t('Début de semaine')} options={WEEK_STARTS} value={prefs.weekStart === 0 ? 0 : 1} onChange={(v) => savePref({ weekStart: v })} />
+        </section>
+        <section className="card">
+          <h3>{t('Apparence')}</h3>
+          <h3 className="small-label">{t('Thème')}</h3>
+          <Segmented label={t('Thème')} options={THEMES} value={prefs.theme ?? 'dark'} onChange={(v) => savePref({ theme: v })} />
+          <h3 className="small-label">{t("Couleur d'accent")}</h3>
+          <div className="swatches" role="radiogroup" aria-label={t("Couleur d'accent")}>
+            {ACCENTS.map((a) => (
+              <button key={a.id} type="button" role="radio" aria-checked={a.id === ACCENT} aria-label={a.label} title={a.label}
+                style={{ background: a.id }} onClick={() => savePref({ accent: a.id })} />
+            ))}
+          </div>
+          <h3 className="small-label">{t('Carte')}</h3>
+          <Segmented label={t('Carte')} options={MAPS} value={prefs.map ?? 'auto'} onChange={(v) => savePref({ map: v })} />
         </section>
         <section className="card">
           <h3>{t('Enregistrement')}</h3>
           <p className="muted">{t('Réglages par défaut, modifiables avant chaque sortie.')}</p>
           <label className="switch"><input type="checkbox" checked={prefs.autoPause ?? true} onChange={(e) => savePref({ autoPause: e.target.checked })} />{t('Pause automatique')}</label>
           <label className="switch"><input type="checkbox" checked={prefs.audio ?? true} onChange={(e) => savePref({ audio: e.target.checked })} />{t('Annonces vocales')}</label>
+          {(prefs.audio ?? true) && <VoiceSettings voice={{ ...VOICE, ...prefs.voice }} onChange={(voice) => savePref({ voice })} />}
         </section>
         <HrSettings hr={hr} ftpEstimate={ftpEstimate} saved={hrSaved} onSave={onSaveHr} />
 
@@ -126,6 +180,21 @@ export default function SettingsPage({ activities, hr, hrSaved, ftpEstimate, onS
         </nav>
         <p className="muted settings-version">Allure {version} · {t('logiciel libre (GPL-3.0)')}</p>
       </main>
+    </>
+  );
+}
+
+/** When the voice announcements speak, and what they say, in the fields' order. */
+function VoiceSettings({ voice, onChange }) {
+  const toggle = (f, on) => onChange({ ...voice, fields: on ? VOICE_FIELDS.filter((x) => x === f || voice.fields.includes(x)) : voice.fields.filter((x) => x !== f) });
+  return (
+    <>
+      <h3 className="small-label">{t('Fréquence')}</h3>
+      <Segmented label={t('Fréquence')} options={voiceEvery()} value={voice.every} onChange={(every) => onChange({ ...voice, every })} />
+      <h3 className="small-label">{t('Contenu')}</h3>
+      {VOICE_FIELDS.map((f) => (
+        <label key={f} className="switch"><input type="checkbox" checked={voice.fields.includes(f)} onChange={(e) => toggle(f, e.target.checked)} />{FIELDS[f].name}</label>
+      ))}
     </>
   );
 }

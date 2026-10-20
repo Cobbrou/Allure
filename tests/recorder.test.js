@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { addFix, addHr, currentPace, draftWrites, joinDraft, elapsed, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, splitCue, startRecording, tick } from '../src/lib/recorder.js';
+import { addFix, addHr, currentPace, draftWrites, joinDraft, elapsed, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, voiceCue, startRecording, tick } from '../src/lib/recorder.js';
 
 const M = 1 / 111195; // degrees of latitude per meter
 /** Fix `m` meters north of the origin at second `s`. */
@@ -81,14 +81,24 @@ test('recover pauses with the clock at the last point', () => {
   assert.equal(elapsed(rec, 999_000), 20);
 });
 
-test('splitCue speaks once per split, per sport', () => {
+test('voiceCue speaks once per split, per sport', () => {
   const r = startRecording({}, 0);
-  assert.equal(splitCue({ ...r, distance: 900 }, { ...r, distance: 950 }, 0), null);
-  assert.equal(splitCue({ ...r, distance: 990 }, { ...r, distance: 1001, active: 330_000, runningSince: null }, 0),
+  assert.equal(voiceCue({ ...r, distance: 900 }, { ...r, distance: 950 }, 0), null);
+  assert.equal(voiceCue({ ...r, distance: 990 }, { ...r, distance: 1001, active: 330_000, runningSince: null }, 0).text,
     '1 kilomètre. Allure moyenne 5 minutes 30.');
   const ride = startRecording({ sport: 'ride' }, 0);
-  assert.equal(splitCue({ ...ride, distance: 4990 }, { ...ride, distance: 5000, active: 600_000, runningSince: null }, 0),
+  assert.equal(voiceCue({ ...ride, distance: 4990 }, { ...ride, distance: 5000, active: 600_000, runningSince: null }, 0).text,
     '5 kilomètres. Vitesse moyenne 30,0 kilomètres heure.');
+});
+
+test('voiceCue every few minutes with the chosen fields', () => {
+  const r = startRecording({ voice: { every: 300, fields: ['time', 'distance', 'pace', 'hr'] } }, 0);
+  const at = (sec, distance) => ({ ...r, distance, active: sec * 1000, runningSince: null });
+  assert.equal(voiceCue(at(290, 900), at(299, 950), 0), null);
+  const cue = voiceCue(at(299, 950), at(301, 1005.4), 0, 150);
+  assert.equal(cue.text, 'Temps 5 minutes 1. 1,01 kilomètre. Cardio 150.'); // no current pace without track
+  assert.equal(cue.cued, 1);
+  assert.equal(voiceCue(at(301, 1005), { ...at(320, 1100), cued: 1 }, 0), null); // already spoken
 });
 
 test('laps: lap press, current lap time, saved lap starts and cue', () => {

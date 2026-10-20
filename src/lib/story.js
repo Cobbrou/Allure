@@ -1,10 +1,10 @@
 import { locale, t } from './i18n.js';
-import { ACCENT, BG, GOOD, TEXT, TICK, TRACK } from '../theme.js';
+import { ACCENT, GOOD, STORY } from '../theme.js';
 import { computeSplits } from './analyze.js';
 import { distUnit, elevUnit, fmtDist, fmtDuration, fmtElev, shortUnit } from './format.js';
 import { fitToBox, toPlane } from './geo.js';
 import { hidePrivate } from './privacy.js';
-import { effort, SPORTS, splitSize } from './sports.js';
+import { displayOf, effort, SPORTS, splitSize } from './sports.js';
 import { safeName, shareFile } from './share.js';
 
 // Platform module (canvas): 1080x1920 social story images, in several templates, over a
@@ -47,7 +47,7 @@ export function drawStory(canvas, act, { template = 'track', bg = 'dark', photo,
   else if (bg !== 'clear') drawDark(g);
   // Over a photo or an unknown background, text needs a shadow and a lighter label colour.
   const s = { g, overlay: bg !== 'dark', track: hidePrivate(act.track, zones) };
-  s.muted = s.overlay ? 'rgba(255,255,255,0.8)' : TICK;
+  s.muted = s.overlay ? 'rgba(255,255,255,0.8)' : STORY.TICK;
   g.textBaseline = 'alphabetic';
   ({ track: drawTrackTemplate, sticker: drawSticker, profile: drawProfile, splits: drawSplits })[template](s, act);
 }
@@ -72,7 +72,7 @@ export async function shareStory(canvas, act) {
 
 function drawDark(g) {
   const bg = g.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0, BG);
+  bg.addColorStop(0, STORY.BG);
   bg.addColorStop(1, '#050608');
   g.fillStyle = bg;
   g.fillRect(0, 0, W, H);
@@ -119,7 +119,7 @@ function truncate(g, str, max) {
 function header(s, act) {
   text(s, 'ALLURE', 90, 150, '800 40px', ACCENT);
   s.g.font = `800 76px ${FONT}`;
-  text(s, truncate(s.g, act.name, W - 180), 90, 250, '800 76px', TEXT);
+  text(s, truncate(s.g, act.name, W - 180), 90, 250, '800 76px', STORY.TEXT);
   if (act.date) {
     const d = new Date(act.date).toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     text(s, d, 90, 310, '500 36px', s.muted);
@@ -139,7 +139,7 @@ function stats(act) {
 /** Big distance figure with its unit, left-aligned at x. */
 function distance(s, act, x, y) {
   text(s, 'DISTANCE', x + 6, y - 150, '600 34px', s.muted);
-  const w = text(s, fmtDist(act.distance), x, y, '800 150px', TEXT);
+  const w = text(s, fmtDist(act.distance), x, y, '800 150px', STORY.TEXT);
   text(s, distUnit(), x + w + 20, y, '700 60px', ACCENT);
 }
 
@@ -148,7 +148,7 @@ function statGrid(s, pairs, y) {
   pairs.forEach(([label, value], i) => {
     const x = 90 + (i % 2) * 460, yy = y + Math.floor(i / 2) * 150;
     text(s, label, x, yy, '600 30px', s.muted);
-    text(s, value, x, yy + 72, '700 64px', TEXT);
+    text(s, value, x, yy + 72, '700 64px', STORY.TEXT);
   });
 }
 
@@ -174,7 +174,7 @@ function drawTrack(s, box, width = 14) {
   path();
   g.stroke();
   dot(g, pts[0], GOOD, width);
-  dot(g, pts.at(-1), TEXT, width);
+  dot(g, pts.at(-1), STORY.TEXT, width);
 }
 
 function dot(g, [x, y], color, width) {
@@ -183,7 +183,7 @@ function dot(g, [x, y], color, width) {
   g.fillStyle = color;
   g.fill();
   g.lineWidth = width * 0.43;
-  g.strokeStyle = BG;
+  g.strokeStyle = STORY.BG;
   g.stroke();
 }
 
@@ -202,7 +202,7 @@ function drawSticker(s, act) {
   rows.forEach(([label, value], i) => {
     const y = 560 + i * 250;
     text(s, label, W / 2, y, '600 36px', s.muted, 'center');
-    text(s, value, W / 2, y + 110, '800 104px', TEXT, 'center');
+    text(s, value, W / 2, y + 110, '800 104px', STORY.TEXT, 'center');
   });
   drawTrack(s, { x: W / 2 - 200, y: 1340, w: 400, h: 300 }, 10);
   text(s, 'ALLURE', W / 2, 1760, '800 40px', ACCENT, 'center');
@@ -253,21 +253,21 @@ function drawSplits(s, act) {
   const max = Math.max(...speeds), min = Math.min(...speeds);
   const top = 420, bottom = 1700, row = Math.min(90, (bottom - top) / splits.length);
   const x0 = 220, wMax = W - 90 - x0;
-  const pace = (sp) => { const e = effort(act.sport, sp.pace); return act.sport === 'ride' ? `${e.value} ${e.unit}` : e.value; };
+  const pace = (sp) => { const e = effort(act.sport, sp.pace); return displayOf(act.sport) === 'speed' ? `${e.value} ${e.unit}` : e.value; };
   splits.forEach((sp, i) => {
     const y = top + i * row;
     const w = wMax * (0.35 + 0.65 * ((speeds[i] - min) / (max - min || 1)));
     const h = row * 0.62;
-    g.fillStyle = speeds[i] === max ? ACCENT : s.overlay ? 'rgba(255,255,255,0.35)' : TRACK;
+    g.fillStyle = speeds[i] === max ? ACCENT : s.overlay ? 'rgba(255,255,255,0.35)' : STORY.TRACK;
     g.beginPath();
     g.roundRect(x0, y, w, h, h / 2);
     g.fill();
     const label = `${(i + 1) * step}`;
     const font = `600 ${Math.round(h * 0.6)}px`;
     text(s, label, x0 - 30, y + h * 0.75, font, s.muted, 'right');
-    text(s, pace(sp), x0 + 24, y + h * 0.75, font, TEXT);
+    text(s, pace(sp), x0 + 24, y + h * 0.75, font, STORY.TEXT);
   });
   text(s, (small ? shortUnit() : distUnit()).toUpperCase(), x0 - 30, top - 30, '600 30px', s.muted, 'right');
   const st = stats(act);
-  text(s, `${fmtDist(act.distance)} ${distUnit()} · ${st.time[1]} · ${st.effort[1]}`, 90, 1800, '700 44px', TEXT);
+  text(s, `${fmtDist(act.distance)} ${distUnit()} · ${st.time[1]} · ${st.effort[1]}`, 90, 1800, '700 44px', STORY.TEXT);
 }

@@ -159,7 +159,7 @@ and `lib/sports.js` (`effort()` picks km/h, min/km or min/100 m by sport).
   distance finds the fastest elapsed time over 1 km, 5 km, 10 km, half and full
   marathon, scaled to the exact distance. Personal records = the best of all runs.
 - **Duplicates on import**: same sport and overlapping time ranges, start to start + moving time (`isDuplicate`).
-- **Profile stats** (`lib/stats.js`): local time, weeks start on Monday.
+- **Profile stats** (`lib/stats.js`): local time, weeks start on Monday or Sunday (`setWeekStart`, a setting).
 - **Segment efforts** (`lib/segments.js`): a pass starts at the fix closest to the
   segment start (within 30 m), must reach every segment point in order within 30 m, and
   ends at the fix closest to the end. A track longer than 1.5× the segment between the

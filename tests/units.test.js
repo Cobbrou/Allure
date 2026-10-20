@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
 import { fmtDist, fmtElev, fmtLength, fmtPaceUnit, fmtSpeed, setUnits } from '../src/lib/format.js';
 import { fmtGoalValue, METRICS } from '../src/lib/goals.js';
-import { splitCue, startRecording } from '../src/lib/recorder.js';
-import { effort, splitSize } from '../src/lib/sports.js';
+import { voiceCue, startRecording } from '../src/lib/recorder.js';
+import { displayOf, effort, setDisplays, splitSize } from '../src/lib/sports.js';
 
-afterEach(() => setUnits('metric'));
+afterEach(() => { setUnits('metric'); setDisplays({}); });
 
 test('metric display is unchanged', () => {
   assert.equal(fmtDist(12345), '12.35');
@@ -33,6 +33,17 @@ test('imperial goals and spoken splits', () => {
   assert.equal(METRICS.distance.unit, 'mi');
   assert.equal(fmtGoalValue('distance', Math.round(30 * METRICS.distance.scale)), '30');
   const r = startRecording({}, 0);
-  assert.equal(splitCue({ ...r, distance: 1600 }, { ...r, distance: 1610, active: 480_000, runningSince: null }, 0),
+  assert.equal(voiceCue({ ...r, distance: 1600 }, { ...r, distance: 1610, active: 480_000, runningSince: null }, 0).text,
     '1 mile. Allure moyenne 8 minutes 0.');
+});
+
+test('pace or speed per sport, swims stay per 100 m', () => {
+  assert.equal(displayOf('ride'), 'speed');
+  setDisplays({ run: 'speed', ride: 'pace', swim: 'speed' });
+  assert.deepEqual(effort('run', 300), { label: 'Vitesse moyenne', short: 'Vitesse', value: '12.0', unit: 'km/h' });
+  assert.equal(effort('ride', 120).value, '2:00');
+  assert.equal(displayOf('swim'), 'pace100');
+  const r = startRecording({}, 0);
+  assert.equal(voiceCue({ ...r, distance: 990 }, { ...r, distance: 1000, active: 300_000, runningSince: null }, 0).text,
+    '1 kilomètre. Vitesse moyenne 12,0 kilomètres heure.');
 });

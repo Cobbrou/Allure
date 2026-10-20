@@ -29,7 +29,3 @@ export function tn(n, one, many, vars) {
   const plural = lang === 'en' ? Math.abs(n) !== 1 : Math.abs(n) >= 2;
   return t(plural ? many : one, { n, ...vars });
 }
-
-/** Monday to Sunday initials ("L M M J V S D" / "M T W T F S S"); 2026-01-05 is a Monday. */
-export const weekdayInitials = () =>
-  [5, 6, 7, 8, 9, 10, 11].map((d) => new Date(2026, 0, d).toLocaleDateString(locale(), { weekday: 'narrow' }));
