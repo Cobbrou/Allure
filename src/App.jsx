@@ -58,7 +58,7 @@ export default function App() {
   const [toast, setToast] = useState(null); // { kind: 'error' | 'notice', text }
   const [progress, setProgress] = useState(null); // { done, total }
   const [dragging, setDragging] = useState(false);
-  const recording = useRecording();
+  const recording = useRecording({ onStrapLost: () => setToast({ kind: 'error', text: t('Ceinture cardio perdue : reconnecte-la depuis l’écran d’enregistrement.') }) });
   useEffect(() => {
     const timer = setTimeout(() => Object.values(pages).forEach((load) => load()), 1500);
     return () => clearTimeout(timer);

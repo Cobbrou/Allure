@@ -338,8 +338,9 @@ Fixes
 - [ ] Indoor files are rejected: GPX / TCX / FIT points without coordinates are filtered
       out (treadmill, home trainer, pool). Import them as track-less activities with time,
       distance, HR and power from the file; same for Health Connect indoor sessions
-- [ ] Heart-rate strap lost mid-recording stays lost (`sensors.js`): retry
+- [x] Heart-rate strap lost mid-recording stays lost (`sensors.js`): retry
       `gatt.connect()` a few times on `gattserverdisconnected`, toast if it gives up
+      (retries after 1, 3 and 10 s)
 - [x] Colour tokens: hard-coded colours in `FitnessChart`, `PowerCurve`, `ProfileChart`,
       `TrackMap`, `MapsPage` and `.toast.error` move to `theme.js` / CSS vars
 - [x] `.toast` animation uses `both` (Motion rule: `backwards` only)

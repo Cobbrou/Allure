@@ -10,17 +10,31 @@ export function parseHeartRate(view) {
 
 export const hasBluetooth = () => typeof navigator !== 'undefined' && !!navigator.bluetooth;
 
+const RETRY_DELAYS = [1000, 3000, 10000]; // ms before each reconnect attempt after a drop
+
 /**
- * Let the athlete pick a heart rate strap and stream its bpm to onBpm. onLost fires when
- * it disconnects. Must run from a user gesture. Returns { name, disconnect }.
+ * Let the athlete pick a heart rate strap and stream its bpm to onBpm. A dropped link
+ * (out of range, a body shadowing the signal) is retried after each RETRY_DELAYS; onLost
+ * fires once they all failed. Must run from a user gesture. Returns { name, disconnect }.
  */
 export async function connectHeartRate(onBpm, onLost) {
   const device = await navigator.bluetooth.requestDevice({ filters: [{ services: ['heart_rate'] }] });
-  device.addEventListener('gattserverdisconnected', onLost);
-  const server = await device.gatt.connect();
-  const service = await server.getPrimaryService('heart_rate');
-  const ch = await service.getCharacteristic('heart_rate_measurement');
-  ch.addEventListener('characteristicvaluechanged', (e) => onBpm(parseHeartRate(e.target.value)));
-  await ch.startNotifications();
-  return { name: device.name || t('Ceinture cardio'), disconnect: () => device.gatt.disconnect() };
+  let stopped = false;
+  const subscribe = async () => {
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService('heart_rate');
+    const ch = await service.getCharacteristic('heart_rate_measurement');
+    ch.addEventListener('characteristicvaluechanged', (e) => onBpm(parseHeartRate(e.target.value)));
+    await ch.startNotifications();
+  };
+  device.addEventListener('gattserverdisconnected', async () => {
+    for (const delay of RETRY_DELAYS) {
+      await new Promise((r) => setTimeout(r, delay));
+      if (stopped) return;
+      try { await subscribe(); return; } catch { /* next attempt */ }
+    }
+    if (!stopped) onLost();
+  });
+  await subscribe();
+  return { name: device.name || t('Ceinture cardio'), disconnect: () => { stopped = true; device.gatt.disconnect(); } };
 }

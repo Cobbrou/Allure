@@ -448,6 +448,7 @@ export default {
   'Annonces vocales': 'Voice cues',
   'Alerte si je reste immobile': "Alert if I don't move",
   "Contact d'urgence non configuré": 'No emergency contact set',
+  'Ceinture cardio perdue : reconnecte-la depuis l’écran d’enregistrement.': 'Heart rate strap lost: reconnect it from the recording screen.',
   'Exclure des records': 'Exclude from records',
   'Signal GPS prêt · précision {dist}': 'GPS ready · accuracy {dist}',
   'Signal GPS faible · précision {dist}': 'Weak GPS · accuracy {dist}',

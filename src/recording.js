@@ -17,9 +17,9 @@ const HR_FRESH = 5000; // ms a strap reading stays valid for the next GPS fix
 /**
  * Live recording state, held by App so it survives tab switches.
  * rec: null when idle. gpsError: last GPS error message, if any.
- * strap: connected heart rate strap { name, bpm } or null.
+ * strap: connected heart rate strap { name, bpm } or null. onStrapLost: the strap dropped and could not reconnect.
  */
-export function useRecording() {
+export function useRecording({ onStrapLost } = {}) {
   const [rec, setRec] = useState(null);
   const [gpsError, setGpsError] = useState(null);
   const [strap, setStrap] = useState(null);
@@ -116,7 +116,7 @@ export function useRecording() {
     connectStrap: async () => {
       const c = await connectHeartRate(
         (bpm) => { sensor.current = { ...sensor.current, bpm, at: Date.now() }; setStrap((s) => s && { ...s, bpm }); },
-        () => { sensor.current = null; setStrap(null); },
+        () => { sensor.current = null; setStrap(null); onStrapLost?.(); },
       );
       sensor.current = { disconnect: c.disconnect, bpm: null, at: 0 };
       setStrap({ name: c.name, bpm: null });
