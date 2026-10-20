@@ -1,3 +1,5 @@
+import { locale } from './i18n.js';
+
 /** Seconds to "h:mm:ss" or "m:ss". */
 export function fmtDuration(s) {
   if (s == null) return '—';
@@ -14,13 +16,15 @@ export function fmtPace(sPerKm) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
-import { locale } from './i18n.js';
-
 /** Date and time, e.g. "Mon 12 Oct, 08:30". */
 export const fmtDate = (d) =>
   new Date(d).toLocaleString(locale(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-/** Day, e.g. "12 Oct"; year: 'numeric' or '2-digit' to add it. */
-export const fmtDay = (d, year) => new Date(d).toLocaleDateString(locale(), { day: 'numeric', month: 'short', ...(year && { year }) });
+/**
+ * Day, e.g. "12 Oct"; year: 'numeric' or '2-digit' to add it. Anything else is ignored: as a
+ * chart tickFormatter it gets the tick index as its second argument.
+ */
+export const fmtDay = (d, year) =>
+  new Date(d).toLocaleDateString(locale(), { day: 'numeric', month: 'short', ...((year === 'numeric' || year === '2-digit') && { year }) });
 /** Month, e.g. "October 2026". */
 export const fmtMonth = (d) => new Date(d).toLocaleDateString(locale(), { month: 'long', year: 'numeric' });
 /** Number typed by the athlete, with a decimal comma or point; NaN when it isn't one. */

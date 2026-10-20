@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
-import { fmtDist, fmtElev, fmtLength, fmtPaceUnit, fmtSpeed, parseNum, setUnits } from '../src/lib/format.js';
+import { fmtDay, fmtDist, fmtElev, fmtLength, fmtPaceUnit, fmtSpeed, parseNum, setUnits } from '../src/lib/format.js';
 import { fmtGoalValue, METRICS } from '../src/lib/goals.js';
 import { voiceCue, startRecording } from '../src/lib/recorder.js';
 import { displayOf, effort, setDisplays, splitSize } from '../src/lib/sports.js';
@@ -53,4 +53,11 @@ test('parseNum reads a decimal comma or point, NaN otherwise', () => {
   assert.equal(parseNum(' 12.25 '), 12.25);
   assert.equal(parseNum(7), 7);
   assert.ok(Number.isNaN(parseNum('abc')));
+});
+
+test('fmtDay ignores a tick index passed as its second argument', () => {
+  const d = Date.UTC(2026, 9, 12, 12);
+  assert.equal(fmtDay(d, 89), fmtDay(d));
+  assert.match(fmtDay(d, 'numeric'), /2026/);
+  assert.doesNotMatch(fmtDay(d), /2026/);
 });
