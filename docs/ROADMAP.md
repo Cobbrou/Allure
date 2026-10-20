@@ -297,7 +297,9 @@ Recording
 - [x] Personalization: light / dark / system theme, accent color, map style (Carto dark,
       light, colorful), pace or speed per sport, week starting Monday or Sunday
 - [x] HR zone and elevation gain on the live screen
-- [ ] Bluetooth cadence / speed and power sensors (same `sensors.js` path as the HR strap)
+- [x] Bluetooth cadence and power sensors (same `sensors.js` path as the HR strap): live
+      cadence / power fields, recorded per point, in GPX export and import. Wheel speed
+      sensors wait for indoor recording
 - [ ] Audio cue options: every N km or N minutes, choose metrics, HR alerts
 
 Training

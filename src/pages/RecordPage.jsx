@@ -106,7 +106,9 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
           {contacts.length > 0
             ? <button type="button" className={`pill ${safety ? 'on' : ''}`} aria-pressed={safety} onClick={() => setSafety(!safety)}><Icon name={safety ? 'shieldCheck' : 'shieldAlert'} />{t('Alerte si je reste immobile')}</button>
             : <a className="pill warn" href="#/settings"><Icon name="shieldAlert" />{t("Contact d'urgence non configuré")}</a>}
-          {hasBluetooth() && <StrapButton recording={recording} />}
+          {hasBluetooth() && <SensorButton recording={recording} kind="hr" />}
+          {hasBluetooth() && sport === 'ride' && <SensorButton recording={recording} kind="cadence" />}
+          {hasBluetooth() && sport === 'ride' && <SensorButton recording={recording} kind="power" />}
         </div>
         <section className="telemetry">
           <p className={`gps-banner ${gpsLevel}`} role="status">
@@ -175,8 +177,10 @@ function Live({ recording, contacts, layout, maxHr, onSaved }) {
   }, []);
 
   const time = elapsed(rec, now);
-  const ctx = { rec, now, time, bpm: recording.strap?.bpm ?? null, maxHr };
-  const fields = layout.fields.filter((f) => (f !== 'hr' && f !== 'zone') || recording.strap); // no strap, no heart rate tiles
+  const { sensors } = recording;
+  const ctx = { rec, now, time, bpm: sensors.hr?.hr ?? null, cad: sensors.cadence?.cad ?? sensors.power?.cad ?? null, power: sensors.power?.power ?? null, maxHr };
+  // No sensor, no tile for what it measures.
+  const fields = layout.fields.filter((f) => ((f !== 'hr' && f !== 'zone') || sensors.hr) && (f !== 'cad' || sensors.cadence || sensors.power) && (f !== 'power' || sensors.power));
   const lapNow = lapStatus(rec, now);
   const weak = rec.pos?.accuracy > MAX_ACCURACY && !rec.points.length; // nothing recorded yet: waiting for precision
   const status = saving ? t('Enregistrement…') : rec.paused ? t('En pause') : rec.autoPaused ? t('Pause auto') : gpsError
@@ -285,26 +289,33 @@ function SegmentChip({ rec, now }) {
   return <span className={`chip seg ${pr ? 'pr' : ''}`}>⚡ {seg(last.id).name} <b>{fmtDuration(last.time)}</b>{pr && t(' Record !')}</span>;
 }
 
-/** Pair or drop a Bluetooth heart rate strap; its bpm is recorded with each GPS fix. */
-function StrapButton({ recording }) {
+const SENSOR_PILLS = {
+  hr: { icon: 'heart', className: 'hr', get label() { return t('Ceinture cardio'); }, value: (s) => s.hr, unit: 'bpm' },
+  cadence: { icon: 'ride', className: '', get label() { return t('Cadence'); }, value: (s) => s.cad, unit: 'rpm' },
+  power: { icon: 'zap', className: '', get label() { return t('Puissance'); }, value: (s) => s.power, unit: 'W' },
+};
+
+/** Pair or drop a Bluetooth sensor of a kind; its readings are recorded with each GPS fix. */
+function SensorButton({ recording, kind }) {
   const [state, setState] = useState(null); // null | 'busy' | error message
-  const { strap } = recording;
+  const pill = SENSOR_PILLS[kind];
+  const sensor = recording.sensors[kind];
   const connect = async () => {
     setState('busy');
-    try { await recording.connectStrap(); setState(null); } catch (e) {
+    try { await recording.connectSensor(kind); setState(null); } catch (e) {
       setState(e.name === 'NotFoundError' ? null : t('Connexion impossible.')); // NotFoundError: picker closed
     }
   };
-  if (strap) {
+  if (sensor) {
     return (
-      <button type="button" className="pill on hr" onClick={recording.disconnectStrap} aria-label={t('Déconnecter {name}', { name: strap.name })}>
-        <Icon name="heart" />{strap.name} · <b>{strap.bpm ?? '…'}</b> bpm
+      <button type="button" className={`pill on ${pill.className}`} onClick={() => recording.disconnectSensor(kind)} aria-label={t('Déconnecter {name}', { name: sensor.name })}>
+        <Icon name={pill.icon} />{sensor.name} · <b>{pill.value(sensor) ?? '…'}</b> {pill.unit}
       </button>
     );
   }
   return (
     <button type="button" className={`pill ${state && state !== 'busy' ? 'bad' : ''}`} onClick={connect} disabled={state === 'busy'}>
-      <Icon name="heart" />{state === 'busy' ? t('Recherche…') : state || t('Ceinture cardio')}
+      <Icon name={pill.icon} />{state === 'busy' ? t('Recherche…') : state || pill.label}
     </button>
   );
 }

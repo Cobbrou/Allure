@@ -18,7 +18,7 @@ const MIN_STEP = 3; // m: smaller moves are GPS jitter, not progress
 const STOP_SPEED = { run: 0.6, ride: 1.5 };
 const STOP_DELAY = 5000; // ms of being stopped before auto-pause kicks in
 const PACE_WINDOW = 30000; // ms of track used for the current pace
-const HR_EVERY = 5000; // ms between heart-rate-only points while no fix is stored
+const SENSOR_EVERY = 5000; // ms between sensor-only points while no fix is stored
 
 /** route: optional route to follow, from followRoute(). liveSegs: from liveSegments(). safety: check-ins on. */
 export function startRecording({ sport = 'run', autoPause = true, audio = true, voice = VOICE, safety = false, route = null, liveSegs = [] }, now) {
@@ -131,15 +131,15 @@ export function addFix(rec, fix) {
 }
 
 /**
- * Keep the heart rate while no point is stored (stopped, GPS jitter or lost): every HR_EVERY,
- * a point at the last position with the strap reading. It adds no distance and, at zero
- * speed, no moving time. Called on the 1 s timer; bpm: fresh strap reading or null.
+ * Keep the sensor readings while no point is stored (stopped, GPS jitter or lost): every
+ * SENSOR_EVERY, a point at the last position with them. It adds no distance and, at zero
+ * speed, no moving time. Called on the 1 s timer; data: fresh { hr?, cad?, power? }.
  * ponytail: in a tunnel the time stuck at the entrance reads as stopped, as auto-pause does.
  */
-export function addHr(rec, bpm, now) {
+export function addReadings(rec, data, now) {
   const prev = rec.points.at(-1);
-  if (!bpm || rec.paused || !prev || now - prev.time < HR_EVERY) return rec;
-  return { ...rec, points: [...rec.points, { ...prev, time: now, hr: bpm }] };
+  if (!Object.keys(data).length || rec.paused || !prev || now - prev.time < SENSOR_EVERY) return rec;
+  return { ...rec, points: [...rec.points, point({ lat: prev.lat, lon: prev.lon, ele: prev.ele, time: now, ...data })] };
 }
 
 /** Auto-pause once stopped for STOP_DELAY. Also called on a timer, as fixes can stop coming in. */
@@ -148,7 +148,8 @@ export function tick(rec, now) {
   return { ...stopClock(rec, rec.lastMove), autoPaused: true };
 }
 
-const point = ({ lat, lon, ele, time, hr }) => ({ lat, lon, ele: ele ?? null, time, ...(hr != null && { hr }) });
+const point = ({ lat, lon, ele, time, hr, cad, power }) =>
+  ({ lat, lon, ele: ele ?? null, time, ...(hr != null && { hr }), ...(cad != null && { cad }), ...(power != null && { power }) });
 
 /** Seconds per km over the last PACE_WINDOW, null when stopped or not enough track. */
 export function currentPace(rec) {

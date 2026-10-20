@@ -6,7 +6,7 @@ import { effort } from './sports.js';
 import { ZONES, zoneOf } from './training.js';
 
 // Metrics the live record screen can show. Each field: `name` for the editor, and `get(ctx)`
-// returning { label, value, unit? }. ctx: { rec, now, time (running s), bpm (or null), maxHr }.
+// returning { label, value, unit? }. ctx: { rec, now, time (running s), bpm, cad, power (each or null), maxHr }.
 
 const sPerKm = (seconds, meters) => (meters > 10 ? seconds / (meters / 1000) : null);
 const withEffort = (label, sport, pace) => {
@@ -46,6 +46,9 @@ export const FIELDS = {
       return { label: t('Zone FC'), value, unit };
     },
   },
+  cad: { get name() { return t('Cadence'); }, get: ({ cad }) => ({ label: t('Cadence'), value: cad ?? '—', unit: 'rpm' }) },
+  // ponytail: instant watts jump around; a 3 s average if riders find it unreadable.
+  power: { get name() { return t('Puissance'); }, get: ({ power }) => ({ label: t('Puissance'), value: power ?? '—', unit: 'W' }) },
   ele: {
     get name() { return t('Altitude'); },
     get: ({ rec }) => ({ label: t('Altitude'), value: rec.pos?.ele != null ? fmtElev(rec.pos.ele) : '—', unit: elevUnit() }),

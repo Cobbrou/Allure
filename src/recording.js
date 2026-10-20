@@ -8,30 +8,38 @@ import { haptic } from './lib/haptics.js';
 import { segmentCue } from './lib/liveSegments.js';
 import { keepAwake, speak, watchPosition } from './lib/location.js';
 import { lockScreenControls } from './lib/lockscreen.js';
-import { addFix, addHr, elapsed, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, startRecording, tick, voiceCue } from './lib/recorder.js';
-import { connectHeartRate } from './lib/sensors.js';
+import { addFix, addReadings, elapsed, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, startRecording, tick, voiceCue } from './lib/recorder.js';
+import { connectSensor } from './lib/sensors.js';
 
 const SAVE_EVERY = 5000; // ms between draft autosaves
-const HR_FRESH = 5000; // ms a strap reading stays valid for the next GPS fix
+const FRESH = 5000; // ms a sensor reading stays valid for the next GPS fix
 
 /**
  * Live recording state, held by App so it survives tab switches.
  * rec: null when idle. gpsError: last GPS error message, if any.
- * strap: connected heart rate strap { name, bpm } or null. onStrapLost: the strap dropped and could not reconnect.
+ * sensors: connected Bluetooth sensors by kind ('hr' | 'cadence' | 'power'): { name, hr?, cad?, power? }.
+ * onSensorLost(kind): a sensor dropped and could not reconnect.
  */
-export function useRecording({ onStrapLost } = {}) {
+export function useRecording({ onSensorLost } = {}) {
   const [rec, setRec] = useState(null);
   const [gpsError, setGpsError] = useState(null);
-  const [strap, setStrap] = useState(null);
+  const [sensors, setSensors] = useState({});
   const ref = useRef(null);
   const lastSave = useRef(0);
-  const sensor = useRef(null); // { disconnect, bpm, at }
+  const sensor = useRef({}); // kind → { disconnect, data, at }
   const lock = useRef(null); // lock-screen controls while recording
   const finishing = useRef(null); // the save in progress: a second tap waits for it
 
-  const freshHr = () => {
-    const s = sensor.current;
-    return s?.bpm && Date.now() - s.at < HR_FRESH ? s.bpm : null;
+  /** Latest readings of every sensor, merged: { hr?, cad?, power? }. Stale ones are left out. */
+  const fresh = () => {
+    const out = {};
+    for (const s of Object.values(sensor.current)) if (Date.now() - s.at < FRESH) Object.assign(out, s.data);
+    return out;
+  };
+  const freshHr = () => fresh().hr || null;
+  const drop = (kind) => {
+    delete sensor.current[kind];
+    setSensors(({ [kind]: _, ...rest }) => rest);
   };
 
   const update = useCallback((fn) => {
@@ -74,12 +82,12 @@ export function useRecording({ onStrapLost } = {}) {
     setGpsError(null);
     const stop = watchPosition((fix) => {
       setGpsError(null);
-      const hr = freshHr();
-      update((r) => addFix(r, hr ? { ...fix, hr } : fix));
+      const data = fresh();
+      update((r) => addFix(r, { ...fix, ...data }));
     }, setGpsError, { background: true });
     const timer = setInterval(() => {
       const now = Date.now();
-      update((r) => tick(addHr(r, freshHr(), now), now));
+      update((r) => tick(addReadings(r, fresh(), now), now));
       const r = ref.current;
       lock.current?.update({ title: `${fmtDist(r.distance)} ${distUnit()} · ${fmtDuration(elapsed(r, Date.now()))}`, paused: r.paused || r.autoPaused });
     }, 1000);
@@ -90,7 +98,7 @@ export function useRecording({ onStrapLost } = {}) {
   return {
     rec,
     gpsError,
-    strap,
+    sensors,
     start: (opts) => { haptic('start'); showLock(); return set(startRecording(opts, Date.now())); },
     pause: doPause,
     resume: doResume,
@@ -115,15 +123,22 @@ export function useRecording({ onStrapLost } = {}) {
       await set(null);
       return act.meta.id;
     })().finally(() => { finishing.current = null; })),
-    /** Pair a heart rate strap (from a tap: the browser shows its device picker). */
-    connectStrap: async () => {
-      const c = await connectHeartRate(
-        (bpm) => { sensor.current = { ...sensor.current, bpm, at: Date.now() }; setStrap((s) => s && { ...s, bpm }); },
-        () => { sensor.current = null; setStrap(null); onStrapLost?.(); },
+    /** Pair a sensor of a kind (from a tap: the browser shows its device picker). */
+    connectSensor: async (kind) => {
+      const c = await connectSensor(
+        kind,
+        (data) => {
+          const s = sensor.current[kind];
+          if (!s) return;
+          s.data = { ...s.data, ...data };
+          s.at = Date.now();
+          setSensors((all) => all[kind] ? { ...all, [kind]: { ...all[kind], ...data } } : all);
+        },
+        () => { drop(kind); onSensorLost?.(kind); },
       );
-      sensor.current = { disconnect: c.disconnect, bpm: null, at: 0 };
-      setStrap({ name: c.name, bpm: null });
+      sensor.current[kind] = { disconnect: c.disconnect, data: {}, at: 0 };
+      setSensors((all) => ({ ...all, [kind]: { name: c.name } }));
     },
-    disconnectStrap: () => { sensor.current?.disconnect(); sensor.current = null; setStrap(null); },
+    disconnectSensor: (kind) => { sensor.current[kind]?.disconnect(); drop(kind); },
   };
 }

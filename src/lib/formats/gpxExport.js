@@ -4,7 +4,7 @@ const esc = (s) => String(s).replace(/[<>&"']/g, (c) => ({ '<': '&lt;', '>': '&g
 const iso = (ms) => new Date(ms).toISOString();
 
 /**
- * Serialize an activity to GPX 1.1 with Garmin TrackPointExtension heart rate and Strava-style <power>.
+ * Serialize an activity to GPX 1.1 with Garmin TrackPointExtension heart rate and cadence, and Strava-style <power>.
  * The description goes in <desc>; private notes never leave the app.
  */
 export function toGpx(meta, points) {
@@ -14,7 +14,8 @@ export function toGpx(meta, points) {
     if (p.time != null) inner += `<time>${iso(p.time)}</time>`;
     let ext = '';
     if (p.power != null) ext += `<power>${Math.round(p.power)}</power>`;
-    if (p.hr != null) ext += `<gpxtpx:TrackPointExtension><gpxtpx:hr>${Math.round(p.hr)}</gpxtpx:hr></gpxtpx:TrackPointExtension>`;
+    const tpx = (p.hr != null ? `<gpxtpx:hr>${Math.round(p.hr)}</gpxtpx:hr>` : '') + (p.cad != null ? `<gpxtpx:cad>${Math.round(p.cad)}</gpxtpx:cad>` : '');
+    if (tpx) ext += `<gpxtpx:TrackPointExtension>${tpx}</gpxtpx:TrackPointExtension>`;
     if (ext) inner += `<extensions>${ext}</extensions>`;
     return `<trkpt lat="${p.lat}" lon="${p.lon}">${inner}</trkpt>`;
   });

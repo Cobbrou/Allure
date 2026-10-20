@@ -32,7 +32,7 @@ const FR = {
           <li><b>Localisation</b> : seulement pendant un enregistrement, y compris écran éteint
             (une notification reste affichée tant que l'enregistrement tourne), et pour proposer
             des boucles autour de toi.</li>
-          <li><b>Bluetooth</b> : pour lire une ceinture cardio que tu choisis. Les mesures restent sur le téléphone.</li>
+          <li><b>Bluetooth</b> : pour lire une ceinture cardio, un capteur de cadence ou de puissance que tu choisis. Les mesures restent sur le téléphone.</li>
           <li><b>Health Connect</b> (Android) : lecture des séances d'exercice, de leur trace GPS et de
             la fréquence cardiaque, seulement quand tu lances un import ; et, si tu l'autorises, la
             fréquence cardiaque au repos mesurée par ta montre (30 derniers jours) pour régler tes
@@ -152,7 +152,7 @@ const EN = {
           <li><b>Location</b>: only while recording, including with the screen off
             (a notification stays visible as long as the recording runs), and to suggest
             loops around you.</li>
-          <li><b>Bluetooth</b>: to read a heart rate strap you pick. Readings stay on the phone.</li>
+          <li><b>Bluetooth</b>: to read a heart rate strap, cadence sensor or power meter you pick. Readings stay on the phone.</li>
           <li><b>Health Connect</b> (Android): reads exercise sessions, their GPS track and
             heart rate, only when you start an import; and, if you allow it, the resting heart
             rate your watch measured (last 30 days) to set your heart rate zones. Allure writes
