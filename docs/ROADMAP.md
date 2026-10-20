@@ -93,8 +93,8 @@ Motion & polish
 - [x] Auto-pause
 - [x] Audio cues per km (`speechSynthesis`)
 - [x] Screen Wake Lock while recording, crash-safe autosave of the in-progress track
-- [x] Bluetooth HR strap (Web Bluetooth: Chrome on Android and desktop; native BLE plugin
-      for iOS with the shell)
+- [x] Bluetooth HR strap (Web Bluetooth: Chrome on Android and desktop; native shell:
+      `@capacitor-community/bluetooth-le`, also any watch broadcasting its HR over BLE)
 - [x] Lock-screen / notification controls while recording (Media Session API; a native
       foreground-service notification with the shell)
 

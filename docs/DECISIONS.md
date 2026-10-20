@@ -81,11 +81,12 @@ backends:
 - **Android back button**: done with `@capacitor/app` in `lib/shell.js` (closes an open
   sheet, else `history.back()`, else minimizes the app).
 - **Web APIs the Android WebView lacks**: Web Share (done: `share.js` writes the file to
-  the app cache with `@capacitor/filesystem` and opens `@capacitor/share`), Web Bluetooth (the strap button hides itself), Media Session
+  the app cache with `@capacitor/filesystem` and opens `@capacitor/share`), Web Bluetooth (done: `sensors.js` uses `@capacitor-community/bluetooth-le` in the shell), Media Session
   notifications, and likely `speechSynthesis`. Each sits behind its platform module.
 - **Safe areas**: Capacitor 8's SystemBars plugin exposes `--safe-area-inset-*` CSS
   variables on Android; `--safe-top` / `--safe-bottom` read them before `env()`.
-- **BLE heart-rate straps**: `@capacitor-community/bluetooth-le`.
+- **BLE heart-rate straps**: done with `@capacitor-community/bluetooth-le` (standard
+  Heart Rate service: straps, and watches in HR broadcast mode such as Garmin or Polar).
 - **Startup cost**: on-device JS is parsed at launch, so pages using MapLibre or Recharts
   and the FIT SDK load as lazy chunks (main chunk ~230 kB instead of 2.1 MB).
 
