@@ -3,7 +3,10 @@
 
 import { Capacitor } from '@capacitor/core';
 
-/** Opens the system share sheet on touch devices when supported, otherwise downloads the file. */
+/**
+ * Opens the system share sheet on touch devices when supported, otherwise downloads the file.
+ * Resolves false when the athlete closed the sheet.
+ */
 export async function shareFile(blob, filename) {
   if (Capacitor.isNativePlatform()) return shareNative(blob, filename);
   const file = new File([blob], filename, { type: blob.type });
@@ -12,7 +15,7 @@ export async function shareFile(blob, filename) {
       await navigator.share({ files: [file] });
       return;
     } catch (e) {
-      if (e.name === 'AbortError') return; // user closed the sheet
+      if (e.name === 'AbortError') return false; // user closed the sheet
     }
   }
   const a = document.createElement('a');
@@ -60,6 +63,7 @@ async function shareNative(blob, filename) {
   try {
     await Share.share({ title: filename, files: [uri] });
   } catch (e) {
-    if (!/cancel/i.test(e.message)) throw e; // the athlete closed the sheet
+    if (!/cancel/i.test(e.message)) throw e;
+    return false; // the athlete closed the sheet
   }
 }

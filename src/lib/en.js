@@ -253,6 +253,13 @@ export default {
   'Tout est stocké sur cet appareil. La sauvegarde regroupe tes {n} activités avec leurs traces et photos, réglages, segments et itinéraires dans un fichier à garder ou à restaurer sur un autre téléphone.':
     'Everything is stored on this device. The backup puts your {n} activities, with their tracks and photos, settings, segments and routes in one file to keep or to restore on another phone.',
   'Sauvegarder': 'Back up',
+  'Dernière sauvegarde : {date}': 'Last backup: {date}',
+  'Aucune sauvegarde pour le moment.': 'No backup yet.',
+  "Le navigateur peut effacer ces données s'il manque de place : garde une sauvegarde récente.":
+    'The browser may erase this data when it runs low on space: keep a recent backup.',
+  "Ce fichier n'est pas une sauvegarde Allure.": 'This file is not an Allure backup.',
+  'Tes activités ne sont que sur ce téléphone : pense à les sauvegarder.': 'Your activities are only on this phone: remember to back them up.',
+  'Activité supprimée': 'Activity deleted',
   'Restaurer': 'Restore',
   'Tout effacer ?': 'Erase everything?',
   'Supprimer mes données': 'Delete my data',

@@ -282,6 +282,15 @@ export async function restoreAll({ activities, settings, segments, routes }) {
   });
 }
 
+/**
+ * Ask the browser not to evict the database under storage pressure: with no server, an
+ * eviction loses everything. True when granted, false when refused, null when unsupported.
+ */
+export async function persistStorage() {
+  if (!navigator.storage?.persist) return null;
+  return (await navigator.storage.persisted()) || navigator.storage.persist();
+}
+
 /** Erase the whole local database. The app must reload afterwards. */
 export async function deleteAllData() {
   (await open()).close();

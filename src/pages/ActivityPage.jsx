@@ -27,7 +27,7 @@ import { toGpx } from '../lib/formats/gpxExport.js';
 import { safeName, shareFile } from '../lib/share.js';
 import { go } from '../router.js';
 
-export default function ActivityPage({ id, activities, hr, ftp, weight, zones, segments, onSegment, gears, onChange }) {
+export default function ActivityPage({ id, activities, hr, ftp, weight, zones, segments, onSegment, gears, onChange, onDeleted }) {
   const [data, setData] = useState(); // undefined: loading, null: not found
   const [sheet, setSheet] = useState(null); // null | 'edit' | 'share'
   const [cropping, setCropping] = useState(false);
@@ -80,9 +80,16 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
     onChange();
     return true;
   };
+  // Deleted right away; the undo puts the activity and its photos back (efforts re-matched).
   const remove = async () => {
+    const kept = { meta: data.meta, points: data.points }, pics = photos;
     await deleteActivities([id]);
     await onChange();
+    onDeleted(async () => {
+      await saveActivities([kept]);
+      if (pics.length) await setPhotos(id, pics);
+      await onChange();
+    });
     go('/');
   };
   const savePhotos = async (blobs) => { await setPhotos(id, blobs); setPhotoList(blobs); };

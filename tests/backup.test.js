@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { backupName, makeBackup, parseBackup } from '../src/lib/backup.js';
+import { backupDue, backupName, makeBackup, parseBackup } from '../src/lib/backup.js';
+import { createActivity } from '../src/lib/activity.js';
+import { demoHistory } from '../src/lib/demo.js';
 
 const data = {
   schema: 6,
@@ -32,4 +34,29 @@ test('parseBackup rejects other files and newer schemas', () => {
 
 test('backupName is dated', () => {
   assert.equal(backupName(Date.UTC(2026, 9, 17)), 'allure-sauvegarde-2026-10-17.json');
+});
+
+test('parseBackup recomputes the stats of a backup from an older schema', () => {
+  const [h] = demoHistory(Date.now(), 1);
+  const { meta, points } = createActivity({ ...h, source: 'demo' });
+  const stale = { ...meta, name: 'Mine', movingTime: 1, bestEfforts: {} };
+  const parse = (schema) => parseBackup(JSON.stringify(makeBackup({ ...data, schema, activities: [{ meta: stale, points }] })), 9).activities[0].meta;
+  assert.equal(parse(9).movingTime, 1);
+  const fresh = parse(8);
+  assert.equal(fresh.movingTime, meta.movingTime);
+  assert.deepEqual(fresh.bestEfforts, meta.bestEfforts);
+  assert.equal(fresh.name, 'Mine');
+  assert.equal(fresh.id, meta.id);
+});
+
+test('backupDue after 20 new activities or a month-old backup, weekly at most', () => {
+  const now = Date.UTC(2026, 9, 20), day = 86400e3;
+  const acts = (n, at = now) => Array.from({ length: n }, () => ({ date: at }));
+  assert.equal(backupDue({ activities: acts(19), now }), false);
+  assert.equal(backupDue({ activities: acts(20), now }), true);
+  assert.equal(backupDue({ activities: acts(3, now - 31 * day), now }), true);
+  assert.equal(backupDue({ last: { at: now - 31 * day, count: 3 }, activities: acts(3), now }), false);
+  assert.equal(backupDue({ last: { at: now - 31 * day, count: 3 }, activities: acts(4), now }), true);
+  assert.equal(backupDue({ last: { at: now - day, count: 3 }, activities: acts(23), now }), true);
+  assert.equal(backupDue({ nudged: now - 2 * day, activities: acts(30), now }), false);
 });

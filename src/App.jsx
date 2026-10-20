@@ -2,7 +2,8 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import TabBar from './components/TabBar.jsx';
 import { createActivity } from './lib/activity.js';
-import { deleteRoute, deleteSegment, getSetting, listActivities, listRoutes, listSegments, saveActivities, saveRoute, saveSegment, setSetting } from './lib/db.js';
+import { backupDue } from './lib/backup.js';
+import { deleteRoute, deleteSegment, getSetting, listActivities, listRoutes, listSegments, persistStorage, saveActivities, saveRoute, saveSegment, setSetting } from './lib/db.js';
 import { demoHistory } from './lib/demo.js';
 import { setUnits } from './lib/format.js';
 import { deviceLang, getLang, setLang, t, tn } from './lib/i18n.js';
@@ -158,6 +159,36 @@ export default function App() {
   }, []);
   useEffect(() => { reload(); }, [reload]);
 
+  // Once there is something to lose: ask the browser to keep it, and remind about backups.
+  const backupChecked = useRef(false);
+  useEffect(() => {
+    if (!activities?.length || backupChecked.current) return;
+    backupChecked.current = true;
+    persistStorage().catch(() => {});
+    Promise.all([getSetting('backup'), getSetting('backupNudge')]).then(([last, nudged]) => {
+      if (!backupDue({ last, nudged, activities })) return;
+      setSetting('backupNudge', Date.now());
+      setToast((cur) => cur ?? {
+        kind: 'notice',
+        text: t('Tes activités ne sont que sur ce téléphone : pense à les sauvegarder.'),
+        action: { label: t('Sauvegarder'), run: () => go('/settings') },
+      });
+    }, () => {});
+  }, [activities]);
+
+  // Toasts with a `ttl` (ms) go away on their own.
+  useEffect(() => {
+    if (!toast?.ttl) return;
+    const timer = setTimeout(() => setToast((cur) => (cur === toast ? null : cur)), toast.ttl);
+    return () => clearTimeout(timer);
+  }, [toast]);
+  const onDeleted = (undo) => setToast({
+    kind: 'notice',
+    ttl: 6000,
+    text: t('Activité supprimée'),
+    action: { label: t('Annuler'), run: () => undo().catch((e) => setToast({ kind: 'error', text: e.message })) },
+  });
+
   const onImport = (files) => files.length && runImport((existing, onProgress) => importFiles(files, existing, onProgress));
   const onHealthImport = () => runImport(async (existing, onProgress) => {
     const { readWorkouts } = await import('./lib/health.js');
@@ -192,7 +223,7 @@ ${cur.text}` } : summary));
   };
 
   let content;
-  if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} ftp={ftp} weight={hrSaved?.weight} zones={zones} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} />;
+  if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} ftp={ftp} weight={hrSaved?.weight} zones={zones} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} onDeleted={onDeleted} />;
   else if (page === 'log') content = <TrainingLogPage activities={activities} hr={hr} />;
   else if (page === 'maps') content = <MapsPage activities={activities} routes={routes} />;
   else if (page === 'suggest') content = <SuggestPage activities={activities} onPick={pickRoute} />;
@@ -220,8 +251,13 @@ ${cur.text}` } : summary));
         </div>
       )}
       {!progress && toast && (
-        <div className={`toast ${toast.kind}`} role={toast.kind === 'error' ? 'alert' : 'status'} onClick={() => setToast(null)}>
-          {toast.text}
+        <div className={`toast ${toast.kind} ${toast.action ? 'has-action' : ''}`} role={toast.kind === 'error' ? 'alert' : 'status'} onClick={() => setToast(null)}>
+          <span>{toast.text}</span>
+          {toast.action && (
+            <button type="button" className="ghost small" onClick={(e) => { e.stopPropagation(); setToast(null); toast.action.run(); }}>
+              {toast.action.label}
+            </button>
+          )}
         </div>
       )}
       <ErrorBoundary key={`${page}/${id ?? ''}/${units}/${lang}`}>

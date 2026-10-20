@@ -307,15 +307,19 @@ Production
 Found in a second code review. Ordered by risk: data first. No item needs a backend.
 
 Data safety
-- [ ] Ask for persistent storage (`navigator.storage.persist()` in `db.js`): without it the
+- [x] Ask for persistent storage (`navigator.storage.persist()` in `db.js`): without it the
       browser may evict IndexedDB under storage pressure, and with no backend that loses
       every activity. Show the status in Settings → Données, nudge a backup when refused
-- [ ] Backup reminder: "last backup N days ago" in Settings, a gentle prompt after 30 days
-      or 20 new activities
-- [ ] Undo after deleting an activity (snackbar for a few seconds, delete committed after)
-- [ ] Restoring an older backup skips migrations: metas taken at schema < `VERSION` keep
+      (asked once the first activity exists; refused: a warning under My data)
+- [x] Backup reminder: "last backup N days ago" in Settings, a gentle prompt after 30 days
+      or 20 new activities (toast with a shortcut to Settings, weekly at most; a backup
+      counts once the share sheet or download went through)
+- [x] Undo after deleting an activity (snackbar for a few seconds)
+      (deleted at once; "Annuler" puts it back with its photos, segments re-matched)
+- [x] Restoring an older backup skips migrations: metas taken at schema < `VERSION` keep
       stale derived fields (e.g. v8 moving time). Recompute them from the points on restore
-- [ ] `parseBackup` throws untranslated French ("Ce fichier n'est pas une sauvegarde
+      (`refreshStats`; typed fields, laps and segment efforts kept)
+- [x] `parseBackup` throws untranslated French ("Ce fichier n'est pas une sauvegarde
       Allure.", twice): wrap in `t()`
 
 Fixes

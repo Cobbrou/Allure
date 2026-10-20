@@ -48,6 +48,17 @@ export function cropActivity(meta, points, from, to) {
 }
 
 /**
+ * The meta with every stat recomputed from its points by today's code (e.g. a meta restored
+ * from an older backup); id, name, date, typed fields and laps kept. Track-less activities
+ * come back unchanged.
+ */
+export function refreshStats(meta, points) {
+  if (points.length < 2) return meta;
+  const { id, name, date, source, ...stats } = createActivity({ sport: meta.sport, points, source: meta.source }).meta;
+  return { ...meta, ...stats };
+}
+
+/**
  * An activity typed in by hand (gym, treadmill, pool, a forgotten watch): no points, the
  * summary is what the athlete entered. distance and gain are optional (0 / null).
  */

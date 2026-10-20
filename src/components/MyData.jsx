@@ -1,14 +1,21 @@
 import { t } from '../lib/i18n.js';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ConfirmButton from './ConfirmButton.jsx';
+import { fmtDate } from './ActivityCard.jsx';
 import { backupName, makeBackup, parseBackup } from '../lib/backup.js';
-import { VERSION, deleteAllData, exportAll, restoreAll } from '../lib/db.js';
+import { VERSION, deleteAllData, exportAll, getSetting, persistStorage, restoreAll, setSetting } from '../lib/db.js';
 import { shareFile } from '../lib/share.js';
 
 /** Full backup to a JSON file, restore from one, and erase everything on this device. */
 export default function MyData({ count }) {
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
+  const [last, setLast] = useState(null); // { at, count } of the last backup
+  const [persisted, setPersisted] = useState(null); // false: the browser may evict the data
+  useEffect(() => {
+    getSetting('backup').then(setLast, () => {});
+    persistStorage().then(setPersisted, () => {});
+  }, []);
 
   const run = async (fn) => {
     setBusy(true);
@@ -19,7 +26,11 @@ export default function MyData({ count }) {
   const save = () => run(async () => {
     const data = await exportAll();
     const blob = new Blob([JSON.stringify(makeBackup(data))], { type: 'application/json' });
-    await shareFile(blob, backupName());
+    // ponytail: a plain download counts as done; the browser can't say whether it was kept.
+    if (await shareFile(blob, backupName()) === false) return;
+    const b = { at: Date.now(), count };
+    await setSetting('backup', b);
+    setLast(b);
   });
 
   const restore = (file) => run(async () => {
@@ -41,6 +52,10 @@ export default function MyData({ count }) {
       <p className="muted">
         {t('Tout est stocké sur cet appareil. La sauvegarde regroupe tes {n} activités avec leurs traces et photos, réglages, segments et itinéraires dans un fichier à garder ou à restaurer sur un autre téléphone.', { n: count })}
       </p>
+      <p className="muted">{last ? t('Dernière sauvegarde : {date}', { date: fmtDate(last.at) }) : t('Aucune sauvegarde pour le moment.')}</p>
+      {persisted === false && (
+        <p className="record-status bad">{t("Le navigateur peut effacer ces données s'il manque de place : garde une sauvegarde récente.")}</p>
+      )}
       <div className="row">
         <button type="button" className="ghost" onClick={save} disabled={busy}>{t('Sauvegarder')}</button>
         <label className="button ghost">
