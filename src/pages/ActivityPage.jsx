@@ -24,6 +24,7 @@ import { defaultGear, GEAR_KINDS, gearFor } from '../lib/gear.js';
 import { SPORTS, splitSize as splitSizeOf } from '../lib/sports.js';
 import { rpeLabel } from '../lib/training.js';
 import { toGpx } from '../lib/formats/gpxExport.js';
+import { hidePrivate } from '../lib/privacy.js';
 import { safeName, shareFile } from '../lib/share.js';
 import { go } from '../router.js';
 
@@ -113,7 +114,7 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
   };
   const savePhotos = async (blobs) => { await setPhotos(id, blobs); setPhotoList(blobs); };
   const exportGpx = async () => {
-    await shareFile(new Blob([toGpx(data.meta, data.points)], { type: 'application/gpx+xml' }), `${safeName(act.name)}.gpx`);
+    await shareFile(new Blob([toGpx(data.meta, hidePrivate(data.points, zones))], { type: 'application/gpx+xml' }), `${safeName(act.name)}.gpx`);
     setSheet(null);
   };
 

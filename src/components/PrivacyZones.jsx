@@ -28,7 +28,7 @@ export default function PrivacyZones({ zones, activities, onSave }) {
   return (
     <section className="card edit privacy">
       <h3>{t('Zones de confidentialité')}</h3>
-      <p className="muted">{t("Le départ et l'arrivée situés dans ces zones n'apparaissent pas sur les stories partagées.")}</p>
+      <p className="muted">{t("Le départ et l'arrivée situés dans ces zones n'apparaissent pas sur les stories ni les fichiers GPX partagés.")}</p>
       {zones.length > 0 && (
         <ul className="records">
           {zones.map((z) => (

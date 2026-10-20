@@ -125,8 +125,8 @@ export default {
   'Position introuvable.': 'Position not found.',
   'Zone': 'Zone',
   'Zones de confidentialité': 'Privacy zones',
-  "Le départ et l'arrivée situés dans ces zones n'apparaissent pas sur les stories partagées.":
-    "Starts and finishes inside these zones don't show on shared stories.",
+  "Le départ et l'arrivée situés dans ces zones n'apparaissent pas sur les stories ni les fichiers GPX partagés.":
+    "Starts and finishes inside these zones are hidden from shared stories and GPX files.",
   'Rayon': 'Radius',
   'Ma position': 'My position',
   'Départ de ma dernière activité': 'Start of my last activity',
