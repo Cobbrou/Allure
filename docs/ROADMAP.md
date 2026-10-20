@@ -331,9 +331,10 @@ Fixes
       and while recording; "exclude from records" toggle on an activity for the rest
       (out-and-back jumps dropped in `createActivity`, sustained fast stretches kept; live: up
       to 5 fixes in a row skipped)
-- [ ] Duplicate detection needs the same start second and distance within 10 m (`dupKey`):
+- [x] Duplicate detection needs the same start second and distance within 10 m (`dupKey`):
       the same session from Health Connect and from a FIT export slips through. Treat
       overlapping time ranges of the same sport as duplicates
+      (`isDuplicate`: start + moving time, the elapsed time is not stored)
 - [ ] Indoor files are rejected: GPX / TCX / FIT points without coordinates are filtered
       out (treadmill, home trainer, pool). Import them as track-less activities with time,
       distance, HR and power from the file; same for Health Connect indoor sessions

@@ -1,5 +1,5 @@
 import { t } from './i18n.js';
-import { createActivity, dupKey } from './activity.js';
+import { createActivity, isDuplicate } from './activity.js';
 import { saveActivities } from './db.js';
 import { parseCsv } from './formats/csv.js';
 import { parseGpx } from './formats/gpx.js';
@@ -66,7 +66,7 @@ export async function importFiles(files, existing, onProgress = () => {}) {
 
 /** Run import tasks (see collectTasks, healthTasks) into the store. Same result as importFiles. */
 export async function importTasks(tasks, existing, onProgress = () => {}) {
-  const seen = new Set(existing.map(dupKey));
+  const seen = [...existing];
   const result = { ids: [], duplicates: 0, failed: [], total: tasks.length };
   let batch = [];
   for (const [i, task] of tasks.entries()) {
@@ -75,9 +75,8 @@ export async function importTasks(tasks, existing, onProgress = () => {}) {
     try {
       const { name, type, points, laps, source } = await task.read();
       const item = createActivity({ name, sport: sportFromGpxType(type), points, laps, source });
-      const key = dupKey(item.meta);
-      if (seen.has(key)) { result.duplicates++; continue; }
-      seen.add(key);
+      if (seen.some((m) => isDuplicate(m, item.meta))) { result.duplicates++; continue; }
+      seen.push(item.meta);
       batch.push(item);
       result.ids.push(item.meta.id);
       if (batch.length >= 25) { await saveActivities(batch); batch = []; }

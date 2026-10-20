@@ -235,7 +235,7 @@ can pick.
 **Decision**: `capacitor-health` (MIT, Capacitor 8) reads exercise sessions with their
 route and heart rate samples; `@capgo/capacitor-health` has no workout routes. Settings →
 Données runs the import on demand. Sessions go through the same `importTasks` path as
-files (dedupe by `dupKey`, so re-importing is safe). Only outdoor sports with a GPS route
+files (dedupe by `isDuplicate`, so re-importing is safe). Only outdoor sports with a GPS route
 are kept, because an activity is built from a track. The app manifest strips the plugin's
 unused health permissions (steps, weight, nutrition…) so the consent screen asks for
 exercise, route and heart rate only.

@@ -83,8 +83,12 @@ export function manualActivity({ id, name, sport = 'run', date, movingTime, dist
   return { meta, points: [] };
 }
 
-/** Same start second and distance within 10 m: treated as the same activity on re-import. */
-export const dupKey = (meta) => `${Math.round(meta.date / 1000)}|${Math.round(meta.distance / 10)}`;
+/**
+ * Same sport and overlapping time ranges: the same session, e.g. from Health Connect and from
+ * the watch's FIT file. The range ends after the moving time (the elapsed time is not stored).
+ */
+export const isDuplicate = (a, b) =>
+  a.sport === b.sport && a.date <= b.date + (b.movingTime ?? 0) * 1000 && b.date <= a.date + (a.movingTime ?? 0) * 1000;
 
 /** "Course du matin", "Vélo du soir"… */
 export function defaultName(sport, date) {

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { deflateRawSync, gzipSync } from 'node:zlib';
 import { Encoder, Profile } from '@garmin/fitsdk';
-import { dupKey } from '../src/lib/activity.js';
+import { isDuplicate } from '../src/lib/activity.js';
 import { parseCsv } from '../src/lib/formats/csv.js';
 import { parseFit } from '../src/lib/formats/fit.js';
 import { readZip } from '../src/lib/formats/zip.js';
@@ -83,9 +83,11 @@ test('Strava archive: zip + activities.csv + gzipped FIT', async () => {
   assert.equal(parsed.points.length, 30);
 });
 
-test('dupKey matches same start and distance', () => {
-  assert.equal(dupKey({ date: 1000_400, distance: 5003 }), dupKey({ date: 1000_100, distance: 5001 }));
-  assert.notEqual(dupKey({ date: 1000_000, distance: 5000 }), dupKey({ date: 1000_000, distance: 5100 }));
+test('isDuplicate matches overlapping sessions of the same sport', () => {
+  const fit = { sport: 'run', date: 1_000_000, movingTime: 1800 };
+  assert.ok(isDuplicate(fit, { sport: 'run', date: 1_060_000, movingTime: 1700 })); // Health Connect, a minute later
+  assert.ok(!isDuplicate(fit, { sport: 'ride', date: 1_060_000, movingTime: 1700 }));
+  assert.ok(!isDuplicate(fit, { sport: 'run', date: 1_000_000 + 1801_000, movingTime: 600 })); // right after
 });
 
 test('healthTasks keeps outdoor workouts with a route', () => {
