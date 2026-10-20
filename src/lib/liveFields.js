@@ -3,9 +3,10 @@ import { distUnit, elevUnit, fmtDist, fmtDuration, fmtElev, fmtSpeed, speedUnit 
 import { locale, t } from './i18n.js';
 import { currentPace, lapStatus } from './recorder.js';
 import { effort } from './sports.js';
+import { ZONES, zoneOf } from './training.js';
 
 // Metrics the live record screen can show. Each field: `name` for the editor, and `get(ctx)`
-// returning { label, value, unit? }. ctx: { rec, now, time (running s), bpm (or null) }.
+// returning { label, value, unit? }. ctx: { rec, now, time (running s), bpm (or null), maxHr }.
 
 const sPerKm = (seconds, meters) => (meters > 10 ? seconds / (meters / 1000) : null);
 const withEffort = (label, sport, pace) => {
@@ -37,6 +38,14 @@ export const FIELDS = {
     },
   },
   hr: { get name() { return t('Fréquence cardiaque'); }, get: ({ bpm }) => ({ label: t('Cardio'), value: bpm ?? '—', unit: 'bpm' }) },
+  zone: {
+    get name() { return t('Zone cardiaque'); },
+    get: ({ bpm, maxHr }) => {
+      if (bpm == null) return { label: t('Zone FC'), value: '—' };
+      const [value, unit] = ZONES[zoneOf(bpm, maxHr)].label.split(' ');
+      return { label: t('Zone FC'), value, unit };
+    },
+  },
   ele: {
     get name() { return t('Altitude'); },
     get: ({ rec }) => ({ label: t('Altitude'), value: rec.pos?.ele != null ? fmtElev(rec.pos.ele) : '—', unit: elevUnit() }),

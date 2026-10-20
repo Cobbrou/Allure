@@ -20,7 +20,7 @@ import { hasBluetooth } from '../lib/sensors.js';
 import { SPORTS } from '../lib/sports.js';
 
 /** routeId: route to preselect (from "#/record/<id>"). */
-export default function RecordPage({ recording, contacts, routes, routeId, segments, activities, prefs, onSavePrefs, onSaved }) {
+export default function RecordPage({ recording, contacts, routes, routeId, segments, activities, hr, prefs, onSavePrefs, onSaved }) {
   const [editing, setEditing] = useState(null); // sport whose screen layout is being edited
   const live = recording.rec;
   return (
@@ -32,7 +32,7 @@ export default function RecordPage({ recording, contacts, routes, routeId, segme
         </header>
       )}
       {live
-        ? <Live recording={recording} contacts={contacts} layout={layoutFor(prefs.recordScreen, live.sport)} onSaved={onSaved} />
+        ? <Live recording={recording} contacts={contacts} layout={layoutFor(prefs.recordScreen, live.sport)} maxHr={hr.max} onSaved={onSaved} />
         : <Setup recording={recording} contacts={contacts} routes={routes} routeId={routeId} segments={segments} activities={activities} prefs={prefs} onSavePrefs={onSavePrefs} onEditScreen={setEditing} />}
       <BottomSheet open={editing != null} onClose={() => setEditing(null)} title={t("Écran d'enregistrement · {sport}", { sport: SPORTS[editing]?.label })}>
         {editing && (
@@ -164,7 +164,7 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
 }
 
 /** layout: { map, hero, fields } from layoutFor(). */
-function Live({ recording, contacts, layout, onSaved }) {
+function Live({ recording, contacts, layout, maxHr, onSaved }) {
   const { rec, gpsError } = recording;
   const [now, setNow] = useState(Date.now);
   const [tooShort, setTooShort] = useState(false);
@@ -175,8 +175,8 @@ function Live({ recording, contacts, layout, onSaved }) {
   }, []);
 
   const time = elapsed(rec, now);
-  const ctx = { rec, now, time, bpm: recording.strap?.bpm ?? null };
-  const fields = layout.fields.filter((f) => f !== 'hr' || recording.strap); // no strap, no heart rate tile
+  const ctx = { rec, now, time, bpm: recording.strap?.bpm ?? null, maxHr };
+  const fields = layout.fields.filter((f) => (f !== 'hr' && f !== 'zone') || recording.strap); // no strap, no heart rate tiles
   const lapNow = lapStatus(rec, now);
   const weak = rec.pos?.accuracy > MAX_ACCURACY && !rec.points.length; // nothing recorded yet: waiting for precision
   const status = saving ? t('Enregistrement…') : rec.paused ? t('En pause') : rec.autoPaused ? t('Pause auto') : gpsError
@@ -195,7 +195,7 @@ function Live({ recording, contacts, layout, onSaved }) {
         <StatMetric {...FIELDS[layout.hero].get(ctx)} size="xl" />
         {fields.length > 0 && (
           <div className="live-row">
-            {fields.map((f) => <StatMetric key={f} {...FIELDS[f].get(ctx)} size="lg" className={f === 'hr' ? 'hr' : ''} />)}
+            {fields.map((f) => <StatMetric key={f} {...FIELDS[f].get(ctx)} size="lg" className={f === 'hr' || f === 'zone' ? 'hr' : ''} />)}
           </div>
         )}
       </section>

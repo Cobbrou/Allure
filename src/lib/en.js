@@ -624,6 +624,8 @@ export default {
   'Allure / vitesse du tour': 'Lap pace / speed',
   '{name} du tour': 'Lap {name}',
   'Fréquence cardiaque': 'Heart rate',
+  'Zone cardiaque': 'Heart rate zone',
+  'Zone FC': 'HR zone',
   'Heure': 'Time of day',
   // Manual entry
   'Ajouter une activité manuelle': 'Add a manual activity',

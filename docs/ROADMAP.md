@@ -296,7 +296,7 @@ Recording
       (time, distance, average / current pace or speed, heart rate)
 - [x] Personalization: light / dark / system theme, accent color, map style (Carto dark,
       light, colorful), pace or speed per sport, week starting Monday or Sunday
-- [ ] HR zone and elevation gain on the live screen
+- [x] HR zone and elevation gain on the live screen
 - [ ] Bluetooth cadence / speed and power sensors (same `sensors.js` path as the HR strap)
 - [ ] Audio cue options: every N km or N minutes, choose metrics, HR alerts
 

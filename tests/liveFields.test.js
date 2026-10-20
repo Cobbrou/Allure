@@ -30,3 +30,10 @@ test('lap pace counts only the distance since the last lap', () => {
   const f = FIELDS.lapPace.get({ rec, now: 200_000, time: 200 });
   assert.equal(f.value, '8:20'); // 200 m in 100 s
 });
+
+test('zone field: zone from the strap bpm and max HR, dash without strap', () => {
+  assert.deepEqual(FIELDS.zone.get({ bpm: 150, maxHr: 200 }), { label: 'Zone FC', value: 'Z3', unit: 'Tempo' });
+  assert.equal(FIELDS.zone.get({ bpm: 185, maxHr: 200 }).value, 'Z5');
+  assert.equal(FIELDS.zone.get({ bpm: 90, maxHr: 200 }).value, 'Z1');
+  assert.equal(FIELDS.zone.get({ bpm: null, maxHr: 200 }).value, '—');
+});

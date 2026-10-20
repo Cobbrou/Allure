@@ -57,14 +57,17 @@ export function restingFromWatch(bpms) {
   return Math.round(last.length % 2 ? last[mid] : (last[mid - 1] + last[mid]) / 2);
 }
 
+/** Index in ZONES of a heart rate. */
+export function zoneOf(bpm, maxHr) {
+  let z = ZONES.length - 1;
+  while (z > 0 && bpm < ZONES[z].from * maxHr) z--;
+  return z;
+}
+
 /** Seconds spent in each of the 5 zones. */
 export function timeInZones(hist, maxHr) {
   const out = ZONES.map(() => 0);
-  for (const [bpm, s] of Object.entries(hist ?? {})) {
-    let z = ZONES.length - 1;
-    while (z > 0 && bpm < ZONES[z].from * maxHr) z--;
-    out[z] += s;
-  }
+  for (const [bpm, s] of Object.entries(hist ?? {})) out[zoneOf(bpm, maxHr)] += s;
   return out;
 }
 
