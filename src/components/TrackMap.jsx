@@ -5,7 +5,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 // MapLibre resolves its worker relative to its own module URL, which Vite's dep bundling breaks.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import { MAP_STYLE } from '../lib/offline.js';
-import { ACCENT, mapLocale } from '../theme.js';
+import { ACCENT, CASING, mapLocale } from '../theme.js';
 import Terrain3D from './Terrain3D.js';
 
 setWorkerUrl(workerUrl);
@@ -48,7 +48,7 @@ export default function TrackMap({ track, hover, range }) {
         paint: { 'line-color': ACCENT, 'line-width': 4 } });
       map.addSource('range', { type: 'geojson', data: rangeData() });
       map.addLayer({ id: 'range', type: 'line', source: 'range', layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: { 'line-color': '#fff', 'line-width': 6 } });
+        paint: { 'line-color': CASING, 'line-width': 6 } });
     });
     let selected = null;
     const rangeData = () => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: selected ? coords.slice(selected[0], selected[1] + 1) : [] } });

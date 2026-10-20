@@ -2,7 +2,7 @@ import { locale, t } from '../lib/i18n.js';
 import { useMemo } from 'react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { fitnessSeries } from '../lib/training.js';
-import { ACCENT, GRID, AXIS, TICK } from '../theme.js';
+import { ACCENT, GRID, AXIS, TICK, FATIGUE } from '../theme.js';
 
 const fmtDay = (d) => new Date(d).toLocaleDateString(locale(), { day: 'numeric', month: 'short' });
 
@@ -26,7 +26,7 @@ export default function FitnessChart({ activities, hr }) {
           <YAxis stroke={AXIS} tick={{ fill: TICK, fontSize: 12 }} width={32} allowDecimals={false} />
           <Tooltip content={<Tip />} cursor={{ stroke: TICK, strokeWidth: 1 }} />
           <Line dataKey="fitness" stroke={ACCENT} strokeWidth={2} dot={false} isAnimationActive={false} />
-          <Line dataKey="fatigue" stroke="#a78bfa" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+          <Line dataKey="fatigue" stroke={FATIGUE} strokeWidth={1.5} dot={false} isAnimationActive={false} />
         </LineChart>
       </ResponsiveContainer>
       <p className="muted small-label">{t('Forme : charge moyenne sur 42 jours. Fatigue : sur 7 jours. Fraîcheur : forme − fatigue.')}</p>

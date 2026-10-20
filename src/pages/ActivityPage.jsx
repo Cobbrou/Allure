@@ -55,12 +55,16 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
   const save = async (patch) => {
     const meta = { ...data.meta, ...patch };
     // Another sport, another moving threshold: moving time and pace follow.
+    // Segments are per sport too: saveActivities re-matches them.
     if (meta.sport !== data.meta.sport && data.points.length) {
       const { movingTime, avgPace } = analyze(data.points, meta.sport);
       Object.assign(meta, { movingTime, avgPace });
+      await saveActivities([{ meta, points: data.points }]);
+      setData(await getActivity(id));
+    } else {
+      await updateActivity(meta);
+      setData({ ...data, meta });
     }
-    await updateActivity(meta);
-    setData({ ...data, meta });
     setSheet(null);
     onChange();
   };

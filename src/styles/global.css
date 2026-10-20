@@ -17,6 +17,8 @@
   --accent-60: color-mix(in srgb, var(--accent) 60%, transparent);
   --hr: #ef4444;
   --danger: #ef4444;
+  --danger-text: #fca5a5; /* danger text on dark */
+  --danger-50: color-mix(in srgb, var(--danger) 50%, transparent);
   --good: #22c55e;
   --warn: #f5b301;
   --glass: rgba(15, 17, 21, 0.85); /* floating controls over a map */
@@ -87,14 +89,14 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 .ghost { background: transparent; color: var(--text); border-color: var(--border); }
 .ghost:hover { background: var(--border); }
 .small { min-height: 38px; padding: 0 14px; font-size: 14px; }
-.danger { background: transparent; color: #fca5a5; border-color: rgba(239, 68, 68, 0.5); }
+.danger { background: transparent; color: var(--danger-text); border-color: var(--danger-50); }
 .danger.armed { background: var(--danger); color: #fff; border-color: var(--danger); }
 
 .toast {
   position: fixed; top: calc(var(--safe-top) + 64px); left: 16px; right: 16px; max-width: 608px; margin: 0 auto; z-index: 25;
   padding: 12px 16px; border-radius: 12px; line-height: 1.4; white-space: pre-line; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
-.toast.error { background: #3b1218; border: 1px solid rgba(239, 68, 68, 0.5); color: #fecaca; }
+.toast.error { background: color-mix(in srgb, var(--bg) 78%, var(--danger)); border: 1px solid var(--danger-50); color: var(--danger-text); }
 .toast.notice { background: var(--card-2); border: 1px solid var(--border-strong); color: var(--text); }
 .toast.has-action { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .toast.has-action button { flex-shrink: 0; min-height: 44px; }
@@ -430,7 +432,7 @@ a.round { display: inline-grid; place-items: center; height: 44px; }
 .gps-banner svg { width: 16px; height: 16px; flex: none; }
 .gps-banner.good { color: #4ade80; background: color-mix(in srgb, var(--good) 15%, transparent); }
 .gps-banner.warn { color: var(--warn); background: color-mix(in srgb, var(--warn) 15%, transparent); }
-.gps-banner.bad { color: #fca5a5; background: color-mix(in srgb, var(--danger) 15%, transparent); }
+.gps-banner.bad { color: var(--danger-text); background: color-mix(in srgb, var(--danger) 15%, transparent); }
 .telemetry-grid { display: grid; grid-template-columns: repeat(3, 1fr); padding: 12px 8px 14px; }
 .telemetry-grid .metric { justify-items: center; text-align: center; }
 .telemetry-grid .metric-label { order: 1; }
@@ -696,7 +698,7 @@ button:active:not(:disabled), .button:active, .activity-card:active, .sport-pick
 .detail > :nth-child(n + 5) { animation-delay: 160ms; }
 .map { opacity: 0; transition: opacity 0.5s ease; }
 .map.ready { opacity: 1; }
-.toast { animation: drop 0.25s var(--ease-out) both; }
+.toast { animation: drop 0.25s var(--ease-out) backwards; }
 .bar { transform-origin: left; animation: grow 0.6s var(--ease-out) backwards; }
 @keyframes grow { from { transform: scaleX(0); } }
 

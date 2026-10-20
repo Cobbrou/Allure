@@ -9,6 +9,13 @@ export const GOOD = '#22c55e'; // --good
 export const GRID = '#262a34'; // chart grid lines (--border)
 export const AXIS = '#3a3f4b'; // chart axis lines
 export const TICK = '#8b93a7'; // chart labels (--muted)
+export const HR = '#ef4444'; // --hr
+export const HR_TICK = '#f87171'; // heart-rate axis labels, lighter than the line
+export const ELEVATION = '#cbd5e1'; // elevation profile line
+export const FATIGUE = '#a78bfa'; // Fitness & Freshness: fatigue line
+export const PREVIOUS = '#64748b'; // a previous best drawn behind the current one
+export const CASING = '#ffffff'; // outline under the main GPS track
+export const HEAT = '#ffb38a'; // personal heatmap lines (pale accent)
 export const ROUTE = '#60a5fa'; // planned routes on maps (not the main GPS track)
 export const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 // Relief: AWS Terrain Tiles (Terrarium-encoded elevation, public, CORS enabled).

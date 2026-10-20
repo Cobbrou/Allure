@@ -2,7 +2,7 @@ import { t } from '../lib/i18n.js';
 import { useMemo } from 'react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { bestCurve, CURVE, trainingStress } from '../lib/power.js';
-import { ACCENT, GRID, AXIS, TICK, BG } from '../theme.js';
+import { ACCENT, GRID, AXIS, TICK, BG, TEXT, PREVIOUS } from '../theme.js';
 
 const LABEL = { 5: '5 s', 15: '15 s', 30: '30 s', 60: '1 min', 120: '2 min', 300: '5 min', 600: '10 min', 1200: '20 min', 1800: '30 min', 3600: '1 h' };
 const RECENT = 90 * 86400e3;
@@ -44,9 +44,9 @@ export default function PowerCurve({ meta, activities, ftp }) {
           <CartesianGrid stroke={GRID} vertical={false} />
           <XAxis dataKey="d" stroke={AXIS} tick={{ fill: TICK, fontSize: 11 }} interval="preserveStartEnd" />
           <YAxis stroke={AXIS} tick={{ fill: TICK, fontSize: 12 }} width={36} />
-          <Tooltip contentStyle={{ background: BG, border: `1px solid ${GRID}`, borderRadius: 8 }} labelStyle={{ color: '#f2f4f8' }}
+          <Tooltip contentStyle={{ background: BG, border: `1px solid ${GRID}`, borderRadius: 8 }} labelStyle={{ color: TEXT }}
             formatter={(v, k) => [`${v} W`, t(k === 'w' && meta ? 'Cette sortie' : 'Meilleur 90 j')]} />
-          {meta && <Line dataKey="best" stroke="#64748b" strokeDasharray="4 4" strokeWidth={1.5} dot={false} isAnimationActive={false} />}
+          {meta && <Line dataKey="best" stroke={PREVIOUS} strokeDasharray="4 4" strokeWidth={1.5} dot={false} isAnimationActive={false} />}
           <Line dataKey="w" stroke={ACCENT} strokeWidth={2.5} dot={{ r: 2.5, fill: ACCENT }} isAnimationActive={false} />
         </LineChart>
       </ResponsiveContainer>

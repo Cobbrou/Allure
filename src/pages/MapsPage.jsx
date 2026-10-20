@@ -14,7 +14,7 @@ import { nearestFirst } from '../lib/routes.js';
 import { sportOptions, SPORTS } from '../lib/sports.js';
 import { FALLBACK_START } from '../lib/suggest.js';
 import { MAP_STYLE } from '../lib/offline.js';
-import { ACCENT, mapLocale, ROUTE } from '../theme.js';
+import { ACCENT, HEAT, mapLocale, ROUTE } from '../theme.js';
 
 setWorkerUrl(workerUrl);
 
@@ -160,7 +160,7 @@ function ExploreMap({ start, last, pos, heat, routes, picked, focus, onPick }) {
       m.addLayer({ id: 'heat-glow', type: 'line', source: 'heat', layout: round,
         paint: { 'line-color': ACCENT, 'line-width': width(4), 'line-blur': width(3), 'line-opacity': 0.12 } });
       m.addLayer({ id: 'heat', type: 'line', source: 'heat', layout: round,
-        paint: { 'line-color': '#ffb38a', 'line-width': width(1), 'line-opacity': 0.35 } });
+        paint: { 'line-color': HEAT, 'line-width': width(1), 'line-opacity': 0.35 } });
       m.addSource('routes', { type: 'geojson', data: lineFeatures([], () => []) });
       const on = ['==', ['get', 'id'], ['literal', '']]; // replaced by the picked id below
       m.addLayer({ id: 'routes', type: 'line', source: 'routes', layout: round, paint: { 'line-color': ROUTE, 'line-width': 4, 'line-opacity': 0.7 } });

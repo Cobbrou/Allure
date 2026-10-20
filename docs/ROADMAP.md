@@ -323,8 +323,9 @@ Data safety
       Allure.", twice): wrap in `t()`
 
 Fixes
-- [ ] Changing an activity's sport keeps the old sport's segment efforts (`ActivityPage`
+- [x] Changing an activity's sport keeps the old sport's segment efforts (`ActivityPage`
       `save` → `updateActivity`, segments are per sport): re-match on sport change
+      (goes through `saveActivities`, which re-matches)
 - [ ] GPS spikes: one bad fix (urban canyon, tunnel exit) adds distance and can fake a best
       effort or a record. Drop points implying an impossible speed for the sport, on import
       and while recording; "exclude from records" toggle on an activity for the rest
@@ -336,9 +337,9 @@ Fixes
       distance, HR and power from the file; same for Health Connect indoor sessions
 - [ ] Heart-rate strap lost mid-recording stays lost (`sensors.js`): retry
       `gatt.connect()` a few times on `gattserverdisconnected`, toast if it gives up
-- [ ] Colour tokens: hard-coded colours in `FitnessChart`, `PowerCurve`, `ProfileChart`,
+- [x] Colour tokens: hard-coded colours in `FitnessChart`, `PowerCurve`, `ProfileChart`,
       `TrackMap`, `MapsPage` and `.toast.error` move to `theme.js` / CSS vars
-- [ ] `.toast` animation uses `both` (Motion rule: `backwards` only)
+- [x] `.toast` animation uses `both` (Motion rule: `backwards` only)
 
 Records & analysis
 - [ ] Records beyond running: longest ride / hike / swim, biggest climb, fastest 20 / 40 /
