@@ -300,7 +300,8 @@ Recording
 - [x] Bluetooth cadence and power sensors (same `sensors.js` path as the HR strap): live
       cadence / power fields, recorded per point, in GPX export and import. Wheel speed
       sensors wait for indoor recording
-- [ ] Audio cue options: every N km or N minutes, choose metrics, HR alerts
+- [x] Audio cue options: every split or N minutes, choose metrics, high heart rate alert
+      (spoken and buzzed, once a minute while above)
 
 Training
 - [ ] Structured workouts: build intervals (warm-up, reps, recovery), follow them live

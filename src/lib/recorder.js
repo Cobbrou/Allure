@@ -19,6 +19,7 @@ const STOP_SPEED = { run: 0.6, ride: 1.5 };
 const STOP_DELAY = 5000; // ms of being stopped before auto-pause kicks in
 const PACE_WINDOW = 30000; // ms of track used for the current pace
 const SENSOR_EVERY = 5000; // ms between sensor-only points while no fix is stored
+const HR_ALERT_EVERY = 60000; // ms between two high heart rate alerts
 
 /** route: optional route to follow, from followRoute(). liveSegs: from liveSegments(). safety: check-ins on. */
 export function startRecording({ sport = 'run', autoPause = true, audio = true, voice = VOICE, safety = false, route = null, liveSegs = [] }, now) {
@@ -142,6 +143,13 @@ export function addReadings(rec, data, now) {
   return { ...rec, points: [...rec.points, point({ lat: prev.lat, lon: prev.lon, ele: prev.ele, time: now, ...data })] };
 }
 
+/** voice.hrHigh (bpm) crossed: `hrAlertAt` set to now, again every HR_ALERT_EVERY while above. */
+export function hrAlert(rec, bpm, now) {
+  const high = rec.voice?.hrHigh;
+  if (!high || !(bpm > high) || rec.paused || now - (rec.hrAlertAt ?? 0) < HR_ALERT_EVERY) return rec;
+  return { ...rec, hrAlertAt: now };
+}
+
 /** Auto-pause once stopped for STOP_DELAY. Also called on a timer, as fixes can stop coming in. */
 export function tick(rec, now) {
   if (!rec.autoPause || rec.paused || rec.autoPaused || now - rec.lastMove < STOP_DELAY) return rec;
@@ -164,7 +172,8 @@ export function currentPace(rec) {
 
 // Voice announcements: at each split (sport split size) or every `every` seconds of running
 // time, the `fields` in order. The defaults speak the split distance and the average effort.
-export const VOICE = { every: 'split', fields: ['distance', 'avg'] };
+// hrHigh: bpm above which a heart rate alert is spoken and buzzed (null: off).
+export const VOICE = { every: 'split', fields: ['distance', 'avg'], hrHigh: null };
 export const VOICE_EVERY = ['split', 300, 600, 900]; // s
 export const VOICE_FIELDS = ['time', 'distance', 'avg', 'pace', 'hr'];
 

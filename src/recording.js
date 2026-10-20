@@ -4,11 +4,12 @@ import { clearDraft, loadDraft, saveActivities, saveDraft } from './lib/db.js';
 import { correctElevation } from './lib/elevation.js';
 import { followCue } from './lib/follow.js';
 import { distUnit, fmtDist, fmtDuration } from './lib/format.js';
+import { t } from './lib/i18n.js';
 import { haptic } from './lib/haptics.js';
 import { segmentCue } from './lib/liveSegments.js';
 import { keepAwake, speak, watchPosition } from './lib/location.js';
 import { lockScreenControls } from './lib/lockscreen.js';
-import { addFix, addReadings, elapsed, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, startRecording, tick, voiceCue } from './lib/recorder.js';
+import { addFix, addReadings, elapsed, lap, lapCue, lapStarts, lapStatus, hrAlert, pause, recover, resume, startRecording, tick, voiceCue } from './lib/recorder.js';
 import { connectSensor } from './lib/sensors.js';
 
 const SAVE_EVERY = 5000; // ms between draft autosaves
@@ -46,10 +47,12 @@ export function useRecording({ onSensorLost } = {}) {
     const prev = ref.current;
     let next = prev && fn(prev);
     if (!next || next === prev) return;
+    const alert = next.hrAlertAt !== prev.hrAlertAt;
+    if (alert) haptic('alert');
     if (next.audio) {
       const voice = voiceCue(prev, next, Date.now(), freshHr());
       if (voice?.cued != null) next = { ...next, cued: voice.cued };
-      const cue = followCue(prev, next) ?? segmentCue(prev, next) ?? voice?.text;
+      const cue = (alert ? t('Cardio élevé : {n}.', { n: freshHr() }) : null) ?? followCue(prev, next) ?? segmentCue(prev, next) ?? voice?.text;
       if (cue) speak(cue);
     }
     const done = next.seg?.last;
@@ -87,7 +90,7 @@ export function useRecording({ onSensorLost } = {}) {
     }, setGpsError, { background: true });
     const timer = setInterval(() => {
       const now = Date.now();
-      update((r) => tick(addReadings(r, fresh(), now), now));
+      update((r) => hrAlert(tick(addReadings(r, fresh(), now), now), freshHr(), now));
       const r = ref.current;
       lock.current?.update({ title: `${fmtDist(r.distance)} ${distUnit()} · ${fmtDuration(elapsed(r, Date.now()))}`, paused: r.paused || r.autoPaused });
     }, 1000);

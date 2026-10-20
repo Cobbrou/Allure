@@ -195,6 +195,12 @@ function VoiceSettings({ voice, onChange }) {
       {VOICE_FIELDS.map((f) => (
         <label key={f} className="switch"><input type="checkbox" checked={voice.fields.includes(f)} onChange={(e) => toggle(f, e.target.checked)} />{FIELDS[f].name}</label>
       ))}
+      <div className="edit">
+        <label>{t('Alerte si le cardio dépasse (bpm)')}
+          <input type="number" inputMode="numeric" min="80" max="230" placeholder={t('Désactivée')} value={voice.hrHigh ?? ''}
+            onChange={(e) => onChange({ ...voice, hrHigh: +e.target.value || null })} />
+        </label>
+      </div>
     </>
   );
 }

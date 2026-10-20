@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { addFix, addReadings, currentPace, draftWrites, joinDraft, elapsed, lap, lapCue, lapStarts, lapStatus, pause, recover, resume, voiceCue, startRecording, tick } from '../src/lib/recorder.js';
+import { addFix, addReadings, currentPace, draftWrites, joinDraft, elapsed, lap, lapCue, lapStarts, lapStatus, hrAlert, pause, recover, resume, voiceCue, startRecording, tick } from '../src/lib/recorder.js';
 
 const M = 1 / 111195; // degrees of latitude per meter
 /** Fix `m` meters north of the origin at second `s`. */
@@ -154,4 +154,17 @@ test('a slow steep hike does not auto-pause', () => {
   const at = (sport) => run(startRecording({ sport }, 0), 0, 60, 0.3);
   assert.equal(at('run').autoPaused, true);
   assert.equal(at('hike').autoPaused, false);
+});
+
+test('hrAlert fires above the ceiling, then once a minute while above', () => {
+  const rec = startRecording({ voice: { hrHigh: 170 } }, 0);
+  assert.equal(hrAlert(rec, 165, 1000), rec);
+  assert.equal(hrAlert(rec, null, 1000), rec);
+  const a = hrAlert(rec, 175, 61_000);
+  assert.equal(a.hrAlertAt, 61_000);
+  assert.equal(hrAlert(a, 180, 100_000), a);
+  assert.equal(hrAlert(a, 180, 121_000).hrAlertAt, 121_000);
+  assert.equal(hrAlert(pause(a, 130_000), 180, 200_000).hrAlertAt, 61_000);
+  const off = startRecording({}, 0);
+  assert.equal(hrAlert(off, 200, 100_000), off);
 });
