@@ -2,6 +2,7 @@ import { t } from '../lib/i18n.js';
 import { useEffect, useState } from 'react';
 import { distUnit, fmtDist, fmtDuration, fmtLength } from '../lib/format.js';
 import { createSegment, leaderboard } from '../lib/segments.js';
+import PointSlider from './PointSlider.jsx';
 
 const MIN_LENGTH = 100; // m
 
@@ -70,12 +71,8 @@ function SegmentForm({ meta, track, range, onDone, onCreate }) {
       <label>{t('Nom')}
         <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder={t('Montée du col…')} />
       </label>
-      <label>{t('Départ')} · {at(from)} {distUnit()}
-        <input type="range" min="0" max={last} value={from} onChange={(e) => setFrom(Math.min(Number(e.target.value), to - 1))} />
-      </label>
-      <label>{t('Arrivée')} · {at(to)} {distUnit()}
-        <input type="range" min="0" max={last} value={to} onChange={(e) => setTo(Math.max(Number(e.target.value), from + 1))} />
-      </label>
+      <PointSlider label={t('Départ')} text={`${at(from)} ${distUnit()}`} value={from} last={last} lo={0} hi={to - 1} onChange={setFrom} />
+      <PointSlider label={t('Arrivée')} text={`${at(to)} ${distUnit()}`} value={to} last={last} lo={from + 1} hi={last} onChange={setTo} />
       <p className="muted">{fmtDist(length)} {distUnit()}{length < MIN_LENGTH && ` · ${fmtLength(MIN_LENGTH)} minimum`}</p>
       <div className="edit-actions">
         <button type="button" className="ghost" onClick={onDone}>{t('Annuler')}</button>

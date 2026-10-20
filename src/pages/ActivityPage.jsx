@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import BestEfforts from '../components/BestEfforts.jsx';
 import BottomSheet from '../components/BottomSheet.jsx';
 import ConfirmButton from '../components/ConfirmButton.jsx';
+import PointSlider from '../components/PointSlider.jsx';
 import HrZones from '../components/HrZones.jsx';
 import Intervals from '../components/Intervals.jsx';
 import MatchedActivities from '../components/MatchedActivities.jsx';
@@ -289,12 +290,8 @@ function CropForm({ track, range, onCancel, onCrop }) {
   return (
     <section className="card edit segment-form">
       <h3>{t("Recadrer l'activité")}</h3>
-      <label>{t('Départ')} · {at(from)}
-        <input type="range" min="0" max={last} value={from} onChange={(e) => setFrom(Math.min(Number(e.target.value), to - 1))} />
-      </label>
-      <label>{t('Arrivée')} · {at(to)}
-        <input type="range" min="0" max={last} value={to} onChange={(e) => setTo(Math.max(Number(e.target.value), from + 1))} />
-      </label>
+      <PointSlider label={t('Départ')} text={at(from)} value={from} last={last} lo={0} hi={to - 1} onChange={setFrom} />
+      <PointSlider label={t('Arrivée')} text={at(to)} value={to} last={last} lo={from + 1} hi={last} onChange={setTo} />
       <p className="muted">{t('{dist} {unit} conservés. Les points retirés sont supprimés.', { dist: fmtDist(track[to].dist - track[from].dist), unit: distUnit() })}</p>
       <div className="edit-actions">
         <button type="button" className="ghost" onClick={onCancel}>{t('Annuler')}</button>

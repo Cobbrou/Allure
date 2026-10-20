@@ -9,7 +9,7 @@ import StatMetric from './StatMetric.jsx';
  * Feed card: athlete header, title, the three key metrics, route and an action bar.
  * The title link stretches over the whole card; the action bar sits above it.
  */
-export default function ActivityCard({ a, i = 0, onShare }) {
+export default function ActivityCard({ a, i = 0, name, onShare }) {
   const e = effort(a.sport, a.avgPace);
   const [sharing, setSharing] = useState(false);
   const share = async () => {
@@ -19,9 +19,9 @@ export default function ActivityCard({ a, i = 0, onShare }) {
   return (
     <article className="card activity-card" style={{ '--i': Math.min(i, 8) }}>
       <header className="activity-head">
-        <span className="avatar sm" aria-hidden="true">A</span>
+        <span className="avatar sm" aria-hidden="true">{(name || 'A')[0].toUpperCase()}</span>
         <div>
-          <b>{t('Athlète Allure')}</b>
+          <b>{name || t('Athlète Allure')}</b>
           <span className="muted">{SPORTS[a.sport]?.icon} {SPORTS[a.sport]?.label} · <time>{fmtDate(a.date)}</time></span>
         </div>
       </header>

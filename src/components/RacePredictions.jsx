@@ -1,7 +1,8 @@
 import { t } from '../lib/i18n.js';
-import { fmtDay, fmtDuration, fmtPaceUnit, paceUnit } from '../lib/format.js';
+import { distUnit, fmtDay, fmtDist, fmtDuration, fmtPaceUnit, paceUnit } from '../lib/format.js';
 
-const fmtKm = (m) => `${(m / 1000).toFixed(m % 1000 ? 1 : 0)} km`;
+// Whole km stay whole ("5 km"); miles and odd distances get one decimal.
+const fmtKm = (m) => `${fmtDist(m, distUnit() === 'km' && m % 1000 === 0 ? 0 : 1)} ${distUnit()}`;
 
 /** Predicted race times. predictions: [{ id, label, m, time?, from? }] from predictRaces(). */
 export default function RacePredictions({ predictions }) {

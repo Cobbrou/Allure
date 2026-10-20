@@ -293,7 +293,7 @@ ${cur.text}` } : summary));
   else if (page === 'settings') content = <SettingsPage activities={activities} hr={hr} hrSaved={hrSaved} ftpEstimate={ftpEstimate} onSaveHr={saveHr} units={units} onSaveUnits={saveUnits} lang={lang} onSaveLang={saveLang} prefs={prefs} onSavePrefs={savePrefs} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} onDemo={addDemo} onHealthImport={onHealthImport} onChange={reload} />;
   else if (page === 'legal') content = <LegalPage id={id} />;
   else if (page === 'manual') content = <ManualPage id={id} activities={activities} onSaved={async (mid) => { await reload(); if (id) back(`/activity/${mid}`); else go(`/activity/${mid}`, true); }} />;
-  else content = <FeedPage activities={activities} zones={zones} onRefresh={reload} onImport={onImport} onDemo={addDemo} />;
+  else content = <FeedPage activities={activities} name={prefs.name} zones={zones} onRefresh={reload} onImport={onImport} onDemo={addDemo} />;
 
   return (
     <div
@@ -323,7 +323,7 @@ ${cur.text}` } : summary));
       <ErrorBoundary key={`${page}/${id ?? ''}/${units}/${lang}/${look}`}>
         <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
       </ErrorBoundary>
-      {!(page === 'record' && recording.rec) && <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'manual' ? 'record' : page === 'log' || page === 'settings' || page === 'legal' ? 'profile' : page === 'route' || page === 'suggest' ? 'maps' : page} />}
+      {!(page === 'record' && recording.rec) && <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'manual' ? 'record' : page === 'log' || page === 'settings' || page === 'legal' ? 'profile' : page === 'route' || page === 'suggest' ? 'maps' : page} recording={recording.rec && (recording.rec.paused ? 'paused' : 'live')} />}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { t } from '../lib/i18n.js';
 import { useState } from 'react';
 import ConfirmButton from './ConfirmButton.jsx';
 import { currentPosition } from '../lib/location.js';
+import { fmtLength } from '../lib/format.js';
 import { ZONE_RADII } from '../lib/privacy.js';
 
 /**
@@ -36,7 +37,7 @@ export default function PrivacyZones({ zones, activities, onSave }) {
             <li key={z.id}>
               <span className="rec-label">🔒 {z.name}</span>
               <span>
-                <span className="muted">{z.radius} m</span>
+                <span className="muted">{fmtLength(z.radius)}</span>
                 <ConfirmButton className="ghost small" label={t('Supprimer {name}', { name: z.name })} confirmLabel={t('Supprimer ?')} onConfirm={() => onSave(zones.filter((x) => x.id !== z.id))}>✕</ConfirmButton>
               </span>
             </li>
@@ -47,7 +48,7 @@ export default function PrivacyZones({ zones, activities, onSave }) {
         <label>{t('Nom')}<input value={name} onChange={(e) => setName(e.target.value)} maxLength={40} /></label>
         <label>{t('Rayon')}
           <select value={radius} onChange={(e) => setRadius(Number(e.target.value))}>
-            {ZONE_RADII.map((r) => <option key={r} value={r}>{r} m</option>)}
+            {ZONE_RADII.map((r) => <option key={r} value={r}>{fmtLength(r)}</option>)}
           </select>
         </label>
       </div>

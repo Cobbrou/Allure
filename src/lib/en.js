@@ -705,5 +705,8 @@ export default {
   'Service de routage saturé : réessaie dans une minute.': 'Routing service busy: try again in a minute.',
   'Réessayer': 'Try again',
   'Fermer': 'Close',
+  'Enregistrement en pause': 'Recording paused',
+  '{label} : point précédent': '{label}: previous point',
+  '{label} : point suivant': '{label}: next point',
   "Cette activité n'existe pas ou n'a pas été saisie à la main.": "This activity doesn't exist or wasn't entered by hand.",
 };

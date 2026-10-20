@@ -505,14 +505,21 @@ UI/UX
       screen, so back skips it)
 - [x] `ConfirmButton` on goal, privacy zone and contact deletes [U4]
 - [x] Loading states on the feed, profile and an unknown `#/manual/<id>` [U5]
-- [ ] Type scale and radius tokens: 18 font sizes and 16 radii today, no text under 11 px [U7]
-- [ ] Last hard-coded colours (`.pin.me`, `.danger.armed`) and stories following the
-      accent colour [U8]
-- [ ] Feed cards show the athlete's name instead of "Athlète Allure" [U9]
-- [ ] Imperial units for privacy zone radii and race predictions [U10]
-- [ ] Fine crop and segment sliders by finger: ± buttons or steps in metres [U11]
-- [ ] "Recording in progress" badge on the tab bar, also after a crash recovery [U12]
-- [ ] Arrow-key navigation in `Segmented` (`role="radio"`) [U13]
+- [x] Type scale and radius tokens: 18 font sizes and 16 radii today, no text under 11 px [U7]
+      (`--fs-2xs` 11 px to `--fs-3xl` 24 px, `--radius-sm/md/lg`; left literal on purpose:
+      16 px inputs (iOS zooms below), the big metric figures, thin bars whose radius follows
+      their height, and the goal ring text, 9 units of a 36-unit viewBox)
+- [x] Last hard-coded colours (`.pin.me`, `.danger.armed`) and stories following the
+      accent colour [U8] (`--on-danger`, `--me`, `--pin-ring`; `alpha()` / `shade()` in
+      `theme.js` for the story glow)
+- [x] Feed cards show the athlete's name instead of "Athlète Allure" [U9]
+- [x] Imperial units for privacy zone radii and race predictions [U10]
+- [x] Fine crop and segment sliders by finger: ± buttons or steps in metres [U11]
+      (`PointSlider`: − / + move one point)
+- [x] "Recording in progress" badge on the tab bar, also after a crash recovery [U12]
+      (red pulsing dot while recording, grey when paused)
+- [x] Arrow-key navigation in `Segmented` (`role="radio"`) [U13] (one tab stop, arrows
+      move the choice)
 
 New features
 - [ ] Automatic weekly backup to Documents (`@capacitor/filesystem`, already installed):

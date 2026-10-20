@@ -9,7 +9,7 @@ import { getActivity, getPhotos } from '../lib/db.js';
 
 const PAGE = 30; // cards rendered per scroll step: a big archive doesn't mount every card
 
-export default function FeedPage({ activities, zones, onRefresh, onImport, onDemo }) {
+export default function FeedPage({ activities, name, zones, onRefresh, onImport, onDemo }) {
   const [busy, setBusy] = useState(false);
   const [shared, setShared] = useState(null); // { act: analyzed activity, photos } in the share sheet
   const share = async (id) => {
@@ -56,7 +56,7 @@ export default function FeedPage({ activities, zones, onRefresh, onImport, onDem
       )}
       {activities?.length > 0 && (
         <main className="feed">
-          {activities.slice(0, shown).map((a, i) => <ActivityCard key={a.id} a={a} i={i} onShare={share} />)}
+          {activities.slice(0, shown).map((a, i) => <ActivityCard key={a.id} a={a} i={i} name={name} onShare={share} />)}
           {shown < activities.length && <div ref={more} aria-hidden="true" />}
         </main>
       )}

@@ -8,13 +8,17 @@ const TABS = [
   { id: 'profile', get label() { return t('Profil'); }, icon: <><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></> },
 ];
 
-export default function TabBar({ active }) {
+/** recording: 'live' | 'paused' | null, shown as a dot on the Record tab (a recording recovered after a crash is paused). */
+export default function TabBar({ active, recording }) {
   return (
     <nav className="tabbar">
       {TABS.map((tab) => (
         <a key={tab.id} href={`#/${tab.id}`} className={active === tab.id ? 'active' : ''} aria-current={active === tab.id ? 'page' : undefined}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">{tab.icon}</svg>
           {tab.label}
+          {tab.id === 'record' && recording && (
+            <span className={`tab-badge ${recording}`} role="img" aria-label={t(recording === 'live' ? 'Enregistrement en cours' : 'Enregistrement en pause')} />
+          )}
         </a>
       ))}
     </nav>

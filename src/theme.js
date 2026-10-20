@@ -53,10 +53,13 @@ export let ACCENT, MAP_STYLE, BG, TEXT, TRACK, GRID, AXIS, TICK, HR_TICK, ELEVAT
 export let HEAT; // personal heatmap lines: pale accent on dark, deeper accent on light
 
 /** '#rrggbb' mixed with white (w > 0) or black (w < 0) by |w|. */
-const shade = (hex, w) => '#' + [1, 3, 5].map((i) => {
+export const shade = (hex, w) => '#' + [1, 3, 5].map((i) => {
   const c = parseInt(hex.slice(i, i + 2), 16);
   return Math.round(w > 0 ? c + (255 - c) * w : c * (1 + w)).toString(16).padStart(2, '0');
 }).join('');
+
+/** '#rrggbb' with an alpha (0..1), as '#rrggbbaa'. */
+export const alpha = (hex, a) => hex + Math.round(a * 255).toString(16).padStart(2, '0');
 
 /** Apply the theme settings. light: resolved theme; map: 'auto' (follows the theme) or a MAP_STYLES key. */
 export function setTheme({ light = false, accent, map = 'auto' } = {}) {

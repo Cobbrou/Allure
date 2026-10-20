@@ -1,5 +1,5 @@
 import { locale, t } from './i18n.js';
-import { ACCENT, GOOD, STORY } from '../theme.js';
+import { ACCENT, alpha, GOOD, shade, STORY } from '../theme.js';
 import { computeSplits } from './analyze.js';
 import { distUnit, elevUnit, fmtDist, fmtDuration, fmtElev, shortUnit } from './format.js';
 import { fitToBox, toPlane } from './geo.js';
@@ -77,8 +77,8 @@ function drawDark(g) {
   g.fillStyle = bg;
   g.fillRect(0, 0, W, H);
   const glow = g.createRadialGradient(W / 2, 780, 50, W / 2, 780, 700);
-  glow.addColorStop(0, 'rgba(255,85,0,0.16)');
-  glow.addColorStop(1, 'rgba(255,85,0,0)');
+  glow.addColorStop(0, alpha(ACCENT, 0.16));
+  glow.addColorStop(1, alpha(ACCENT, 0));
   g.fillStyle = glow;
   g.fillRect(0, 0, W, H);
 }
@@ -169,7 +169,7 @@ function drawTrack(s, box, width = 14) {
   path();
   g.stroke();
   g.shadowBlur = 0;
-  g.strokeStyle = '#ffd5c2';
+  g.strokeStyle = shade(ACCENT, 0.75); // bright core of the glowing line
   g.lineWidth = width / 3.5;
   path();
   g.stroke();
@@ -223,8 +223,8 @@ function drawProfile(s, act) {
     g.lineTo(xy.at(-1)[0], base);
     g.closePath();
     const fill = g.createLinearGradient(0, box.y, 0, base);
-    fill.addColorStop(0, 'rgba(255,85,0,0.55)');
-    fill.addColorStop(1, 'rgba(255,85,0,0.05)');
+    fill.addColorStop(0, alpha(ACCENT, 0.55));
+    fill.addColorStop(1, alpha(ACCENT, 0.05));
     g.fillStyle = fill;
     g.fill();
     g.beginPath();
