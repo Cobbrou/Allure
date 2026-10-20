@@ -16,7 +16,7 @@ import SplitsTable from '../components/SplitsTable.jsx';
 import StatsGrid from '../components/StatsGrid.jsx';
 import TrackMap from '../components/TrackMap.jsx';
 import { analyze, computeSplits } from '../lib/analyze.js';
-import { cropActivity } from '../lib/activity.js';
+import { addWatchHr, cropActivity } from '../lib/activity.js';
 import { correctElevation } from '../lib/elevation.js';
 import { deleteActivities, getActivity, getPhotos, saveActivities, setPhotos, updateActivity } from '../lib/db.js';
 import { distUnit, fmtDist, fmtDuration } from '../lib/format.js';
@@ -32,13 +32,15 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
   const [sheet, setSheet] = useState(null); // null | 'edit' | 'share'
   const [cropping, setCropping] = useState(false);
   const [photos, setPhotoList] = useState([]);
+  const [health, setHealth] = useState(false); // Health Connect ready (Android shell)
   const hover = useRef(() => {});
   const range = useRef(() => {});
 
-  useEffect(() => {
-    getActivity(id).then((d) => setData(d ?? null), () => setData(null));
-    getPhotos(id).then(setPhotoList, () => setPhotoList([]));
-  }, [id]);
+  // Reloaded when the watch's heart rate lands in the background (App's fillWatchHr).
+  const listedHr = activities?.find((a) => a.id === id)?.avgHr;
+  useEffect(() => { getActivity(id).then((d) => setData(d ?? null), () => setData(null)); }, [id, listedHr]);
+  useEffect(() => { getPhotos(id).then(setPhotoList, () => setPhotoList([])); }, [id]);
+  useEffect(() => { import('../lib/health.js').then((m) => m.healthStatus()).then((s) => setHealth(s === 'ready')); }, []);
   // Keyed on points only, so renaming doesn't rebuild the map and chart.
   const sport = data?.meta.sport;
   const analysis = useMemo(() => data && analyze(data.points, sport), [data?.points, sport]);
@@ -84,6 +86,19 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
     onChange();
     return true;
   };
+  // Heart rate a watch wrote to Health Connect during a recording made without a strap.
+  // False when there is none (yet: watches sync with a delay).
+  const fetchWatchHr = async () => {
+    const { readHeartRate } = await import('../lib/health.js');
+    const p = data.points;
+    const merged = addWatchHr(data.meta, p, await readHeartRate(p[0].time, p.at(-1).time));
+    if (!merged) return false;
+    await saveActivities([merged]);
+    setData(await getActivity(id));
+    setSheet(null);
+    onChange();
+    return true;
+  };
   // Deleted right away; the undo puts the activity and its photos back (efforts re-matched).
   const remove = async () => {
     const kept = { meta: data.meta, points: data.points }, pics = photos;
@@ -111,6 +126,7 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
       <BottomSheet open={sheet === 'edit'} onClose={() => setSheet(null)} title={t("Modifier l'activité")}>
         <EditForm meta={data.meta} gears={gears} onSave={save} onDelete={remove}
           onFixElevation={hasTrack && data.meta.source !== 'record' && fixElevation}
+          onWatchHr={health && hasTrack && data.meta.source === 'record' && !data.meta.avgHr && fetchWatchHr}
           onCrop={hasTrack && (() => { setSheet(null); setCropping(true); })} />
       </BottomSheet>
       <ShareSheet act={act} zones={zones} photos={photos} open={sheet === 'share'} onClose={() => setSheet(null)}>
@@ -164,8 +180,9 @@ function TopBar({ children }) {
   );
 }
 
-function EditForm({ meta, gears, onSave, onDelete, onCrop, onFixElevation }) {
+function EditForm({ meta, gears, onSave, onDelete, onCrop, onFixElevation, onWatchHr }) {
   const [fixing, setFixing] = useState(null); // null | 'busy' | 'failed'
+  const [watchHr, setWatchHr] = useState(null); // null | 'busy' | message
   const [name, setName] = useState(meta.name);
   const [sport, setSport] = useState(meta.sport);
   const [gear, setGear] = useState(meta.gear ?? '');
@@ -232,6 +249,18 @@ function EditForm({ meta, gears, onSave, onDelete, onCrop, onFixElevation }) {
           <span className="hint">{fixing === 'failed'
             ? t('Relief indisponible (hors ligne ou trace trop longue).')
             : t("Remplace l'altitude du fichier par celle du relief. Inutile pour une montre barométrique.")}</span>
+        </label>
+      )}
+      {onWatchHr && (
+        <label>
+          <button type="button" className="ghost" disabled={watchHr === 'busy'}
+            onClick={async () => {
+              setWatchHr('busy');
+              try { setWatchHr((await onWatchHr()) ? null : t('Pas encore de fréquence cardiaque dans Health Connect pour cette activité : la montre synchronise parfois avec du retard.')); } catch (e) { setWatchHr(e.message); }
+            }}>
+            {watchHr === 'busy' ? t('Récupération…') : t('Récupérer la FC de la montre')}
+          </button>
+          <span className="hint">{watchHr && watchHr !== 'busy' ? watchHr : t('Lit dans Health Connect la fréquence cardiaque mesurée par ta montre pendant cette activité.')}</span>
         </label>
       )}
       <div className="edit-actions">

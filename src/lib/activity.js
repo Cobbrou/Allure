@@ -60,6 +60,34 @@ export function refreshStats(meta, points) {
 }
 
 /**
+ * The points with each one's heart rate from the nearest sample of hrs [{ time, bpm }] (sorted
+ * by time) within `within` ms, else null. Points must be sorted by time.
+ */
+export function withHr(points, hrs, within) {
+  let j = 0;
+  return points.map((p) => {
+    while (j + 1 < hrs.length && Math.abs(hrs[j + 1].time - p.time) <= Math.abs(hrs[j].time - p.time)) j++;
+    return { ...p, hr: hrs[j] && Math.abs(hrs[j].time - p.time) <= within ? hrs[j].bpm : null };
+  });
+}
+
+const WATCH_HR_WITHIN = 60000; // ms: a watch outside an exercise samples heart rate sparsely
+const WATCH_HR_DAYS = 3; // a watch's heart rate can reach Health Connect hours after the run
+
+/** A phone recording without heart rate, recent enough for the watch's to still be coming. */
+export const needsWatchHr = (meta, now) =>
+  meta.source === 'record' && !meta.avgHr && meta.preview?.length > 1 && now - meta.date < WATCH_HR_DAYS * 86400e3;
+
+/**
+ * The activity with a watch's heart rate samples [{ time, bpm }] (sorted) on its points, stats
+ * recomputed and typed fields kept; null when no sample falls on the track.
+ */
+export function addWatchHr(meta, points, hrs) {
+  const merged = withHr(points, hrs, WATCH_HR_WITHIN);
+  return merged.some((p) => p.hr != null) ? cropActivity(meta, merged, 0, merged.length - 1) : null;
+}
+
+/**
  * An activity typed in by hand (gym, treadmill, pool, a forgotten watch): no points, the
  * summary is what the athlete entered. distance and gain are optional (0 / null).
  */

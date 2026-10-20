@@ -4,6 +4,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
@@ -20,9 +21,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
- * Resting heart rate measured by the watch, read from Health Connect (capacitor-health
- * has no resting HR record). read({ days, prompt }) resolves { bpm: [values, oldest first] },
- * empty when access is refused, or not granted and prompt is false.
+ * Heart rate data capacitor-health can't read from Health Connect.
+ * read({ days, prompt }): resting HR measured by the watch, resolves { bpm: [values, oldest
+ * first] }, empty when access is refused, or not granted and prompt is false.
+ * heartRate({ start, end }): every heart rate sample in that range (ms epoch), resolves
+ * { samples: [{ time, bpm }] }. The JS side asks for READ_HEART_RATE first.
  */
 @CapacitorPlugin(name = "RestingHr")
 class RestingHrPlugin : Plugin() {
@@ -49,6 +52,30 @@ class RestingHrPlugin : Plugin() {
                     call.getBoolean("prompt", false) == true -> { pending = call; launcher.launch(setOf(permission)) }
                     else -> call.resolve(JSObject().put("bpm", JSArray()))
                 }
+            } catch (e: Exception) {
+                call.reject(e.message, e)
+            }
+        }
+    }
+
+    @PluginMethod
+    fun heartRate(call: PluginCall) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val range = TimeRangeFilter.between(
+                    Instant.ofEpochMilli(call.getDouble("start")!!.toLong()),
+                    Instant.ofEpochMilli(call.getDouble("end")!!.toLong()),
+                )
+                val samples = JSArray()
+                var page: String? = null
+                do {
+                    val res = client().readRecords(ReadRecordsRequest(HeartRateRecord::class, range, pageToken = page))
+                    res.records.flatMap { it.samples }.forEach {
+                        samples.put(JSObject().put("time", it.time.toEpochMilli()).put("bpm", it.beatsPerMinute))
+                    }
+                    page = res.pageToken
+                } while (page != null)
+                call.resolve(JSObject().put("samples", samples))
             } catch (e: Exception) {
                 call.reject(e.message, e)
             }

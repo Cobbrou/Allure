@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createActivity, cropActivity, defaultName, manualActivity } from '../src/lib/activity.js';
+import { createActivity, cropActivity, defaultName, manualActivity, addWatchHr, needsWatchHr, withHr } from '../src/lib/activity.js';
 import { demoHistory } from '../src/lib/demo.js';
 import { dropSpikes, effort, sportFromGpxType } from '../src/lib/sports.js';
 import { personalRecords } from '../src/lib/records.js';
@@ -93,4 +93,27 @@ test('activities excluded from records give no personal record', () => {
   const base = { sport: 'run', bestEfforts: { '1k': 200 } };
   const [k] = personalRecords([{ ...base, id: 'a', noRecords: true }, { ...base, id: 'b', bestEfforts: { '1k': 250 } }]);
   assert.equal(k.activity.id, 'b');
+});
+
+test('withHr gives each point the nearest heart rate sample within the window', () => {
+  const points = [0, 30, 100, 200].map((s) => ({ lat: 45.9, lon: 6.87, time: s * 1000 }));
+  const hrs = [{ time: 5000, bpm: 120 }, { time: 40000, bpm: 140 }, { time: 95000, bpm: 150 }];
+  assert.deepEqual(withHr(points, hrs, 20000).map((p) => p.hr), [120, 140, 150, null]);
+  assert.deepEqual(withHr(points, [], 20000).map((p) => p.hr), [null, null, null, null]);
+});
+
+test('addWatchHr merges a watch heart rate into a phone recording, needsWatchHr picks recent ones', () => {
+  const t0 = Date.parse('2026-10-01T08:00:00Z');
+  const points = Array.from({ length: 60 }, (_, i) => ({ lat: 45.9 + i * 0.00003, lon: 6.87, ele: 1040, time: t0 + i * 1000 }));
+  const { meta } = createActivity({ points, source: 'record' });
+  meta.name = 'Typed';
+  assert.equal(meta.avgHr, null);
+  assert.ok(needsWatchHr(meta, t0 + 86400e3));
+  assert.ok(!needsWatchHr(meta, t0 + 4 * 86400e3));
+  assert.equal(addWatchHr(meta, points, [{ time: t0 - 600e3, bpm: 70 }]), null);
+  const merged = addWatchHr(meta, points, [{ time: t0 + 10e3, bpm: 140 }, { time: t0 + 40e3, bpm: 150 }]);
+  assert.equal(merged.meta.id, meta.id);
+  assert.equal(merged.meta.name, 'Typed');
+  assert.ok(merged.meta.avgHr >= 140 && merged.meta.avgHr <= 150);
+  assert.ok(!needsWatchHr(merged.meta, t0 + 86400e3));
 });

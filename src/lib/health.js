@@ -9,7 +9,8 @@ import { restingFromWatch } from './training.js';
 const PERMISSIONS = ['READ_WORKOUTS', 'READ_ROUTE', 'READ_HEART_RATE'];
 let Health, RestingHr;
 const plugin = () => (Health ??= registerPlugin('HealthPlugin'));
-// Local plugin (android/app/src/main/java/app/allure/RestingHrPlugin.kt): capacitor-health can't read resting HR.
+// Local plugin (android/app/src/main/java/app/allure/RestingHrPlugin.kt): capacitor-health can't
+// read resting HR, nor heart rate outside an exercise session.
 const restingPlugin = () => (RestingHr ??= registerPlugin('RestingHr'));
 
 /** 'unsupported' (browser, iOS), 'missing' (Health Connect not installed) or 'ready'. */
@@ -29,9 +30,7 @@ export const installHealthConnect = () => plugin().showHealthConnectInPlayStore(
  * and heart rate. Throws when the user refuses access to exercise sessions.
  */
 export async function readWorkouts(days = 365) {
-  const { permissions } = await plugin().requestHealthPermissions({ permissions: PERMISSIONS });
-  // The plugin returns { permissions: { READ_WORKOUTS: true, … } } despite its typings.
-  const granted = Array.isArray(permissions) ? Object.assign({}, ...permissions) : permissions;
+  const granted = await requestAccess(PERMISSIONS);
   if (!granted.READ_WORKOUTS) throw new Error(t('Accès aux séances Health Connect refusé.'));
   const endDate = new Date();
   const startDate = new Date(+endDate - days * 86400e3);
@@ -40,6 +39,27 @@ export async function readWorkouts(days = 365) {
     includeRoute: true, includeHeartRate: true, includeSteps: false,
   });
   return workouts;
+}
+
+/** { READ_WORKOUTS: true, … } once the user answered the access screen; prompt false: no screen. */
+async function requestAccess(permissions, prompt = true) {
+  const r = await plugin()[prompt ? 'requestHealthPermissions' : 'checkHealthPermissions']({ permissions });
+  // The plugin returns { permissions: { READ_WORKOUTS: true, … } } despite its typings.
+  return Array.isArray(r.permissions) ? Object.assign({}, ...r.permissions) : r.permissions;
+}
+
+/**
+ * Heart rate samples [{ time, bpm }] sorted by time, recorded between start and end (ms) by
+ * any source, e.g. a watch worn during an Allure recording. Throws when access is refused.
+ * prompt false: no access screen, and no samples when access isn't granted yet.
+ */
+export async function readHeartRate(start, end, { prompt = true } = {}) {
+  if (!(await requestAccess(['READ_HEART_RATE'], prompt)).READ_HEART_RATE) {
+    if (!prompt) return [];
+    throw new Error(t('Accès à la fréquence cardiaque Health Connect refusé.'));
+  }
+  const { samples } = await restingPlugin().heartRate({ start, end });
+  return samples.sort((a, b) => a.time - b.time);
 }
 
 /** Resting HR from the watch (last 30 days), or null. prompt: ask for access if not granted yet. */

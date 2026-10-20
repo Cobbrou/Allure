@@ -218,6 +218,11 @@ Pixel Watch / Google
       the Pixel Watch (route, heart rate, calories); write Allure activities back
       (import wired via `capacitor-health`: Settings → Données, outdoor sessions with a
       GPS route + heart rate; to verify on a device. Write-back: the plugin can't yet)
+- [x] Heart rate from the watch on a phone recording made without a strap: Health Connect
+      samples over the activity's time range, nearest within 60 s. Automatic when the
+      recording ends, then at launch and on each return to the app for 3 days (watches sync
+      late); manual from Activity → Modifier → « Récupérer la FC de la montre ». Local
+      `RestingHrPlugin.heartRate`; to verify on a device
 - [ ] Google Health API (cloud REST, OAuth): pull Pixel Watch / Fitbit workouts and
       daily metrics (resting HR, sleep) without the native shell
 - [x] Use resting HR and max HR from the watch for HR zones and Relative Effort

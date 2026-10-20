@@ -1,9 +1,9 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import TabBar from './components/TabBar.jsx';
-import { createActivity } from './lib/activity.js';
+import { addWatchHr, createActivity, needsWatchHr } from './lib/activity.js';
 import { backupDue } from './lib/backup.js';
-import { deleteRoute, deleteSegment, getSetting, listActivities, listRoutes, listSegments, persistStorage, saveActivities, saveRoute, saveSegment, setSetting } from './lib/db.js';
+import { deleteRoute, deleteSegment, getActivity, getSetting, listActivities, listRoutes, listSegments, persistStorage, saveActivities, saveRoute, saveSegment, setSetting } from './lib/db.js';
 import { demoHistory } from './lib/demo.js';
 import { setUnits } from './lib/format.js';
 import { deviceLang, getLang, setLang, t, tn } from './lib/i18n.js';
@@ -159,6 +159,36 @@ export default function App() {
   }, []);
   useEffect(() => { reload(); }, [reload]);
 
+  // Heart rate the watch wrote to Health Connect during recent phone recordings made without a
+  // strap. Watches sync with a delay: tried when a recording ends, then at launch and on each
+  // return to the app. prompt: ask for Health Connect access (right after a recording).
+  const fillWatchHr = useCallback(async (metas, prompt) => {
+    const todo = metas.filter((m) => needsWatchHr(m, Date.now()));
+    if (!todo.length) return;
+    const health = await import('./lib/health.js');
+    if (await health.healthStatus() !== 'ready') return;
+    let added = false;
+    for (const m of todo) {
+      const { meta, points } = await getActivity(m.id);
+      const merged = addWatchHr(meta, points, await health.readHeartRate(points[0].time, points.at(-1).time, { prompt }));
+      if (merged) { await saveActivities([merged]); added = true; }
+    }
+    if (added) await reload();
+  }, [reload]);
+  const listed = useRef(null);
+  listed.current = activities;
+  useEffect(() => {
+    const run = () => document.visibilityState === 'visible' && listed.current && fillWatchHr(listed.current, false).catch(() => {});
+    const first = setTimeout(run, 2000); // once the list is loaded
+    document.addEventListener('visibilitychange', run);
+    return () => { clearTimeout(first); document.removeEventListener('visibilitychange', run); };
+  }, [fillWatchHr]);
+  const onRecorded = async (rid) => {
+    await reload();
+    go(`/activity/${rid}`);
+    fillWatchHr(listed.current.filter((a) => a.id === rid), true).catch(() => {});
+  };
+
   // Once there is something to lose: ask the browser to keep it, and remind about backups.
   const backupChecked = useRef(false);
   useEffect(() => {
@@ -230,7 +260,7 @@ ${cur.text}` } : summary));
   else if (page === 'route') content = <RoutePage id={id} activities={activities} onSave={addRoute} onDelete={removeRoute} />;
   else if (page === 'groups' || page === 'challenge') content = <GroupsPage activities={activities} name={prefs.name} incoming={page === 'challenge' ? id : null} />;
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
-  else if (page === 'record') content = <RecordPage recording={recording} contacts={contacts} routes={routes} routeId={id} segments={segments ?? []} activities={activities ?? []} prefs={prefs} onSavePrefs={savePrefs} onSaved={async (rid) => { await reload(); go(`/activity/${rid}`); }} />;
+  else if (page === 'record') content = <RecordPage recording={recording} contacts={contacts} routes={routes} routeId={id} segments={segments ?? []} activities={activities ?? []} prefs={prefs} onSavePrefs={savePrefs} onSaved={onRecorded} />;
   else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} name={prefs.name} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} />;
   else if (page === 'settings') content = <SettingsPage activities={activities} hr={hr} hrSaved={hrSaved} ftpEstimate={ftpEstimate} onSaveHr={saveHr} units={units} onSaveUnits={saveUnits} lang={lang} onSaveLang={saveLang} prefs={prefs} onSavePrefs={savePrefs} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} onDemo={addDemo} onHealthImport={onHealthImport} onChange={reload} />;
   else if (page === 'legal') content = <LegalPage id={id} />;

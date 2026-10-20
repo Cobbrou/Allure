@@ -1,5 +1,5 @@
 import { t } from './i18n.js';
-import { createActivity, indoorActivity, isDuplicate } from './activity.js';
+import { createActivity, indoorActivity, isDuplicate, withHr } from './activity.js';
 import { saveActivities } from './db.js';
 import { parseCsv } from './formats/csv.js';
 import { parseGpx } from './formats/gpx.js';
@@ -109,19 +109,15 @@ export function healthTasks(workouts) {
  * within 10 s. Without a route: { name, type, samples, distance, movingTime, source }.
  */
 export function fromHealthWorkout(w) {
-  const hrs = (w.heartRate ?? []).map((s) => ({ t: Date.parse(s.timestamp), bpm: s.bpm })).sort((a, b) => a.t - b.t);
+  const hrs = (w.heartRate ?? []).map((s) => ({ time: Date.parse(s.timestamp), bpm: s.bpm })).sort((a, b) => a.time - b.time);
   if (!(w.route?.length >= 2)) {
     // ponytail: distance stays undefined while READ_DISTANCE is not requested (AndroidManifest.xml).
-    const samples = [{ time: Date.parse(w.startDate) }, ...hrs.map((s) => ({ time: s.t, hr: s.bpm })), { time: Date.parse(w.endDate) }];
+    const samples = [{ time: Date.parse(w.startDate) }, ...hrs.map((s) => ({ time: s.time, hr: s.bpm })), { time: Date.parse(w.endDate) }];
     return { name: w.title || undefined, type: w.workoutType, samples, distance: w.distance, movingTime: w.duration, source: 'healthconnect' };
   }
-  let j = 0;
-  const points = w.route
+  const route = w.route
     .map((r) => ({ lat: r.lat, lon: r.lng, ele: r.alt ?? null, time: Date.parse(r.timestamp) }))
-    .sort((a, b) => a.time - b.time)
-    .map((p) => {
-      while (j + 1 < hrs.length && Math.abs(hrs[j + 1].t - p.time) <= Math.abs(hrs[j].t - p.time)) j++;
-      return { ...p, hr: hrs[j] && Math.abs(hrs[j].t - p.time) <= 10000 ? hrs[j].bpm : null };
-    });
+    .sort((a, b) => a.time - b.time);
+  const points = withHr(route, hrs, 10000);
   return { name: w.title || undefined, type: w.workoutType, points, source: 'healthconnect' };
 }
