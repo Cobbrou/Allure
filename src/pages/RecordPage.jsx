@@ -225,6 +225,7 @@ function Live({ recording, contacts, layout, maxHr, onSaved }) {
           {rec.laps?.length > 0 && !rec.workout && !fields.includes('lap') && layout.hero !== 'lap' && <span key={rec.laps.length} className="chip lap">{t('Tour {n}', { n: lapNow.n })} <b>{fmtDuration(lapNow.time)}</b></span>}
           <StepChip rec={rec} now={now} />
           <SegmentChip rec={rec} now={now} />
+          {recording.lost.map((kind) => <SensorButton key={kind} recording={recording} kind={kind} />)}
           {rec.route && (
             <span className="chip follow">🧭 <b>{rec.follow?.done ? t('Terminé') : `${fmtDist(Math.max(0, rec.route.distance - (rec.follow?.along ?? 0)))} ${distUnit()}`}</b></span>
           )}

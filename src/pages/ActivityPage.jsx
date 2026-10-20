@@ -130,7 +130,7 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
           onWatchHr={health && hasTrack && data.meta.source === 'record' && !data.meta.avgHr && fetchWatchHr}
           onCrop={hasTrack && (() => { setSheet(null); setCropping(true); })} />
       </BottomSheet>
-      <ShareSheet act={act} zones={zones} photos={photos} open={sheet === 'share'} onClose={() => setSheet(null)}>
+      <ShareSheet key={id} act={act} zones={zones} photos={photos} open={sheet === 'share'} onClose={() => setSheet(null)}>
         {hasTrack && <button type="button" className="ghost" onClick={exportGpx}>{t('Fichier GPX')}</button>}
       </ShareSheet>
       <main className="detail">

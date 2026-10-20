@@ -179,6 +179,7 @@ export default function App() {
         ...unlocked.map((a) => t('🏅 Succès débloqué : {title}', { title: a.title })),
       ];
       if (news.length) setToast({ kind: 'notice', goal: true, text: news.join(' · ') });
+      return list;
     } catch (e) {
       setToast({ kind: 'error', text: t('Stockage indisponible : {error}', { error: e.message }) });
     }
@@ -210,9 +211,9 @@ export default function App() {
     return () => { clearTimeout(first); document.removeEventListener('visibilitychange', run); };
   }, [fillWatchHr]);
   const onRecorded = async (rid) => {
-    await reload();
+    const list = await reload(); // not listed.current: React hasn't rendered the new list yet
     go(`/activity/${rid}`);
-    fillWatchHr(listed.current.filter((a) => a.id === rid), true).catch(() => {});
+    fillWatchHr((list ?? []).filter((a) => a.id === rid), true).catch(() => {});
   };
 
   // Once there is something to lose: ask the browser to keep it, and remind about backups.

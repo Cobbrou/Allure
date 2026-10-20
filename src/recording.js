@@ -20,12 +20,14 @@ const FRESH = 5000; // ms a sensor reading stays valid for the next GPS fix
  * Live recording state, held by App so it survives tab switches.
  * rec: null when idle. gpsError: last GPS error message, if any.
  * sensors: connected Bluetooth sensors by kind ('hr' | 'cadence' | 'power'): { name, hr?, cad?, power? }.
+ * lost: kinds of sensors that dropped during this recording and are not back yet.
  * onSensorLost(kind): a sensor dropped and could not reconnect.
  */
 export function useRecording({ onSensorLost } = {}) {
   const [rec, setRec] = useState(null);
   const [gpsError, setGpsError] = useState(null);
   const [sensors, setSensors] = useState({});
+  const [lost, setLost] = useState([]);
   const ref = useRef(null);
   const lastSave = useRef(0);
   const sensor = useRef({}); // kind → { disconnect, data, at }
@@ -105,7 +107,8 @@ export function useRecording({ onSensorLost } = {}) {
     rec,
     gpsError,
     sensors,
-    start: (opts) => { haptic('start'); showLock(); return set(startRecording(opts, Date.now())); },
+    lost,
+    start: (opts) => { haptic('start'); showLock(); setLost([]); return set(startRecording(opts, Date.now())); },
     pause: doPause,
     resume: doResume,
     discard: () => { hideLock(); return set(null); },
@@ -141,10 +144,11 @@ export function useRecording({ onSensorLost } = {}) {
           s.at = Date.now();
           setSensors((all) => all[kind] ? { ...all, [kind]: { ...all[kind], ...data } } : all);
         },
-        () => { drop(kind); onSensorLost?.(kind); },
+        () => { drop(kind); setLost((l) => l.includes(kind) ? l : [...l, kind]); onSensorLost?.(kind); },
       );
       sensor.current[kind] = { disconnect: c.disconnect, data: {}, at: 0 };
       setSensors((all) => ({ ...all, [kind]: { name: c.name } }));
+      setLost((l) => l.filter((k) => k !== kind));
     },
     disconnectSensor: (kind) => { sensor.current[kind]?.disconnect(); drop(kind); },
   };

@@ -9,7 +9,7 @@ const fmtDay = (d) => new Date(d).toLocaleDateString(locale(), { day: 'numeric',
 /** Fitness & Freshness over the last 90 days. */
 export default function FitnessChart({ activities, hr }) {
   const data = useMemo(() => fitnessSeries(activities, hr, 90), [activities, hr]);
-  if (!activities.some((a) => a.hrTime && Object.keys(a.hrTime).length)) return null;
+  if (!activities.some((a) => a.rpe || (a.hrTime && Object.keys(a.hrTime).length))) return null;
   const today = data.at(-1);
   return (
     <section className="card">

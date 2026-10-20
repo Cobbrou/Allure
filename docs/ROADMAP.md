@@ -419,13 +419,13 @@ Privacy & safety (critical)
       notification to do)
 
 Broken flows
-- [ ] Watch heart rate never fetched after a recording [I1]: `App.jsx` filters the stale
+- [x] Watch heart rate never fetched after a recording [I1]: `App.jsx` filters the stale
       `listed.current` after `reload()`; have `reload` return the list
-- [ ] Fitness & Freshness hidden without HR [I2]: `FitnessChart` checks `hrTime` only,
+- [x] Fitness & Freshness hidden without HR [I2]: `FitnessChart` checks `hrTime` only,
       add `|| a.rpe`
-- [ ] Sensor lost mid-recording cannot be reconnected [I3]: the toast points to the
+- [x] Sensor lost mid-recording cannot be reconnected [I3]: the toast points to the
       record screen, but `SensorButton` is only on the setup screen; add it to the live one
-- [ ] Story shared from the feed can reuse another activity's photo [I4] (may publish a
+- [x] Story shared from the feed can reuse another activity's photo [I4] (may publish a
       private photo): `key={shared?.id}` on `ShareSheet` and pass the activity's `photos`
 
 Reliability

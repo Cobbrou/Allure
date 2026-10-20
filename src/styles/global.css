@@ -648,6 +648,7 @@ ol.splits li.best .split-gap { color: var(--on-accent); }
 .live-map { position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); background: var(--card); }
 .map.live { height: max(240px, calc(100vh - 430px - var(--safe-top) - var(--safe-bottom))); }
 .live-chips { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
+.live-chips .pill { pointer-events: auto; }
 .chip {
   display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 12px; color: var(--muted);
   background: color-mix(in srgb, var(--bg) 82%, transparent); border: 1px solid var(--border); backdrop-filter: blur(8px);

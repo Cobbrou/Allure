@@ -5,16 +5,16 @@ import ImportButton from '../components/ImportButton.jsx';
 import ShareSheet from '../components/ShareSheet.jsx';
 import { usePullToRefresh } from '../gestures.js';
 import { analyze } from '../lib/analyze.js';
-import { getActivity } from '../lib/db.js';
+import { getActivity, getPhotos } from '../lib/db.js';
 
 const PAGE = 30; // cards rendered per scroll step: a big archive doesn't mount every card
 
 export default function FeedPage({ activities, zones, onRefresh, onImport, onDemo }) {
   const [busy, setBusy] = useState(false);
-  const [shared, setShared] = useState(null); // analyzed activity in the share sheet
+  const [shared, setShared] = useState(null); // { act: analyzed activity, photos } in the share sheet
   const share = async (id) => {
-    const d = await getActivity(id);
-    if (d) setShared({ ...analyze(d.points, d.meta.sport), ...d.meta });
+    const [d, photos] = await Promise.all([getActivity(id), getPhotos(id).catch(() => [])]);
+    if (d) setShared({ act: { ...analyze(d.points, d.meta.sport), ...d.meta }, photos });
   };
   const ptr = usePullToRefresh(onRefresh);
   const [shown, setShown] = useState(PAGE);
@@ -57,7 +57,8 @@ export default function FeedPage({ activities, zones, onRefresh, onImport, onDem
           {shown < activities.length && <div ref={more} aria-hidden="true" />}
         </main>
       )}
-      <ShareSheet act={shared} zones={zones} open={!!shared} onClose={() => setShared(null)} />
+      {/* Keyed by activity: a photo picked for one share must never become another's background. */}
+      <ShareSheet key={shared?.act.id} act={shared?.act} zones={zones} photos={shared?.photos} open={!!shared} onClose={() => setShared(null)} />
     </>
   );
 }
