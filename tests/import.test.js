@@ -6,7 +6,7 @@ import { indoorActivity, isDuplicate } from '../src/lib/activity.js';
 import { parseCsv } from '../src/lib/formats/csv.js';
 import { parseFit } from '../src/lib/formats/fit.js';
 import { readZip } from '../src/lib/formats/zip.js';
-import { collectTasks, fromHealthWorkout, healthTasks } from '../src/lib/importer.js';
+import { collectTasks, fromHealthWorkout, healthTasks, stravaColumns } from '../src/lib/importer.js';
 
 /** Small FIT activity: `n` records 1 s apart heading north from Chamonix, two laps. */
 function fitFile(n = 30, sport = 'cycling', gps = true) {
@@ -81,6 +81,16 @@ test('Strava archive: zip + activities.csv + gzipped FIT', async () => {
   assert.equal(parsed.name, 'Col des "Montets"');
   assert.equal(parsed.type, 'Ride');
   assert.equal(parsed.points.length, 30);
+});
+
+test('stravaColumns reads English, French and unknown-language headers', () => {
+  const en = parseCsv('Activity ID,Activity Date,Activity Name,Activity Type,Filename\n1,d,Morning,Run,activities/1.gpx\n');
+  assert.deepEqual(stravaColumns(en), { file: 'Filename', name: 'Activity Name', type: 'Activity Type' });
+  const fr = parseCsv("ID de l'activité,Date de l'activité,Nom de l'activité,Type d'activité,Nom du fichier\n1,d,Sortie,Vélo,activities/1.gpx\n");
+  assert.deepEqual(stravaColumns(fr), { file: 'Nom du fichier', name: "Nom de l'activité", type: "Type d'activité" });
+  const de = parseCsv('Aktivitäts-ID,Datum,Name,Typ,Beschreibung,Dateiname\n1,d,Lauf,Laufen,,activities/1.gpx\n2,d,Yoga,Yoga,,\n');
+  assert.deepEqual(stravaColumns(de), { file: 'Dateiname', name: 'Name', type: 'Typ' });
+  assert.deepEqual(stravaColumns([]), { file: undefined, name: undefined, type: undefined });
 });
 
 test('isDuplicate matches overlapping sessions of the same sport', () => {

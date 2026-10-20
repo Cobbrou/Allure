@@ -65,6 +65,16 @@ export default function App() {
   const recording = useRecording({
     onSensorLost: (kind) => setToast({ kind: 'error', text: kind === 'hr' ? t('Ceinture cardio perdue : reconnecte-la depuis l’écran d’enregistrement.') : t('Capteur perdu : reconnecte-le depuis l’écran d’enregistrement.') }),
   });
+  // Safety net: an async failure nobody caught still says something.
+  useEffect(() => {
+    const onReject = (e) => {
+      const err = e.reason;
+      if (err?.name === 'AbortError' || err?.name === 'NotFoundError') return; // share sheet or device picker closed
+      setToast({ kind: 'error', text: t('Une erreur est survenue : {error}', { error: err?.message ?? String(err) }) });
+    };
+    window.addEventListener('unhandledrejection', onReject);
+    return () => window.removeEventListener('unhandledrejection', onReject);
+  }, []);
   useEffect(() => {
     const timer = setTimeout(() => Object.values(pages).forEach((load) => load()), 1500);
     return () => clearTimeout(timer);

@@ -53,9 +53,10 @@ test('auto-pause stops the clock while stopped, resumes on movement', () => {
   assert.equal(rec.autoPaused, true);
   assert.equal(elapsed(rec, 200_000), 60); // clock held at the last move
   assert.equal(currentPace(rec), null);
-  rec = run(rec, 200, 210, 4, 240); // first fix is a 0 m step, the clock restarts on the second (201 s)
+  // Resumes once 15 m from the stop point (204 s), the clock backdated to when it left (200 s).
+  rec = run(rec, 200, 210, 4, 240);
   assert.equal(rec.autoPaused, false);
-  assert.equal(elapsed(rec, 210_000), 60 + 9);
+  assert.equal(elapsed(rec, 210_000), 60 + 10);
 });
 
 test('auto-pause off keeps the clock running', () => {
@@ -167,4 +168,26 @@ test('hrAlert fires above the ceiling, then once a minute while above', () => {
   assert.equal(hrAlert(pause(a, 130_000), 180, 200_000).hrAlertAt, 61_000);
   const off = startRecording({}, 0);
   assert.equal(hrAlert(off, 200, 100_000), off);
+});
+
+test('standing-still GPS jitter during auto-pause adds no distance', () => {
+  let rec = run(startRecording({ autoPause: true }, 0), 0, 20, 4); // 80 m
+  for (let s = 21; s <= 30; s++) rec = addFix(rec, fix(80, s)); // stopped
+  assert.equal(rec.autoPaused, true);
+  const { distance, points } = rec;
+  // Jitter: 8 m jumps (8 m/s, above the stop speed) around the stop point.
+  for (let s = 31; s <= 60; s++) rec = addFix(rec, fix(80 + (s % 2 ? 8 : -8), s));
+  assert.equal(rec.autoPaused, true);
+  assert.equal(rec.distance, distance);
+  assert.equal(rec.points.length, points.length);
+  rec = run(rec, 61, 80, 4, 80); // moving off again
+  assert.equal(rec.autoPaused, false);
+  assert.ok(Math.abs(rec.distance - 156) < 2, rec.distance);
+});
+
+test('a slow fix is not stored and adds no distance', () => {
+  let rec = run(startRecording({}, 0), 0, 10, 4); // 40 m
+  rec = addFix(rec, fix(44, 20)); // 4 m in 10 s: 0.4 m/s, under the run stop speed
+  assert.equal(rec.points.length, 11);
+  assert.ok(Math.abs(rec.distance - 40) < 1, rec.distance);
 });

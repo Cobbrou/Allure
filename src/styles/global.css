@@ -192,7 +192,7 @@ table.splits .pace { font-weight: 600; width: 56px; }
 
 /* Edit form */
 .edit { display: grid; gap: 16px; }
-.edit label { display: grid; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 500; }
+.edit label, .edit .field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 500; }
 .edit input:not([type='radio']), .edit select, .edit textarea, .route-select select, .screen-editor > select {
   font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--border);
   border-radius: 10px; min-height: 44px; padding: 0 12px;

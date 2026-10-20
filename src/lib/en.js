@@ -688,4 +688,7 @@ export default {
   "Couleur d'accent": 'Accent color',
   'Fréquence': 'How often',
   'Contenu': 'What to say',
+  'Une erreur est survenue : {error}': 'Something went wrong: {error}',
+  "Enregistrement impossible : {error}. La sortie n'est pas perdue, réessaie.": "Couldn't save: {error}. The activity is not lost, try again.",
+  "Remplacer l'altitude ?": 'Replace elevation?',
 };

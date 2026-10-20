@@ -25,6 +25,28 @@ export async function parseActivityFile(name, bytes) {
   throw new Error(t('Format non supporté (.gpx, .tcx, .fit, .gz ou archive .zip).'));
 }
 
+// Strava writes activities.csv headers in the account's language.
+const STRAVA_COLS = {
+  file: ['Filename', 'Nom du fichier'],
+  name: ['Activity Name', "Nom de l'activité"],
+  type: ['Activity Type', "Type d'activité"],
+};
+
+/**
+ * Header keys of the file, name and type columns of a Strava activities.csv (rows from
+ * parseCsv). Unknown language: the file column is the one holding "activities/…" paths,
+ * name and type are the 3rd and 4th columns, Strava's fixed order.
+ */
+export function stravaColumns(rows) {
+  const head = Object.keys(rows[0] ?? {});
+  const pick = (names, fallback) => names.find((n) => head.includes(n)) ?? fallback;
+  return {
+    file: pick(STRAVA_COLS.file, head.find((h) => rows.some((r) => /^activities\//.test(r[h])))),
+    name: pick(STRAVA_COLS.name, head[2]),
+    type: pick(STRAVA_COLS.type, head[3]),
+  };
+}
+
 /**
  * Expand picked files into import tasks: [{ label, read(): Promise<{ name?, type?, points }> }].
  * A .zip is treated as a Strava bulk export: activity files inside it are imported, with
@@ -40,7 +62,8 @@ export async function collectTasks(files) {
     const entries = await readZip(file);
     const csv = entries.find((e) => /(^|\/)activities\.csv$/i.test(e.name));
     const rows = csv ? parseCsv(utf8(await csv.bytes())) : [];
-    const byFile = new Map(rows.map((r) => [r.Filename, r]));
+    const col = stravaColumns(rows);
+    const byFile = new Map(rows.map((r) => [r[col.file], r]));
     for (const e of entries.filter((x) => ACTIVITY_FILE.test(x.name))) {
       // Archives re-zipped by the user may add a root folder: "export_123/activities/1.gpx".
       const row = byFile.get(e.name) ?? byFile.get(e.name.slice(e.name.indexOf('/') + 1));
@@ -48,7 +71,7 @@ export async function collectTasks(files) {
         label: e.name,
         read: async () => {
           const parsed = await parseActivityFile(e.name, await e.bytes());
-          return row ? { ...parsed, name: row['Activity Name'] || parsed.name, type: row['Activity Type'] || parsed.type } : parsed;
+          return row ? { ...parsed, name: row[col.name] || parsed.name, type: row[col.type] || parsed.type } : parsed;
         },
       });
     }

@@ -429,17 +429,23 @@ Broken flows
       private photo): `key={shared?.id}` on `ShareSheet` and pass the activity's `photos`
 
 Reliability
-- [ ] Async failures show nothing [I5]: global `unhandledrejection` listener → error
+- [x] Async failures show nothing [I5]: global `unhandledrejection` listener → error
       toast, plus `catch` on finishing a recording (quota error) and the other bare async
-      calls listed in the audit
-- [ ] Elevation correction triggered by a tap on its hint and impossible to undo [I6]:
+      calls listed in the audit (the other calls already reset their busy state in a
+      `finally`: the global toast covers them)
+- [x] Elevation correction triggered by a tap on its hint and impossible to undo [I6]:
       `<div>` instead of the wrapping `<label>` (same for watch HR), `ConfirmButton`
 - [ ] Keep the original track before a crop or an elevation correction, so both can be
       undone
-- [ ] GPS drift while auto-paused adds distance [I7]: don't add stopped jitter to the
+- [x] GPS drift while auto-paused adds distance [I7]: don't add stopped jitter to the
       distance, so the live clock and the saved activity agree (size it on a device)
-- [ ] Strava archive from a French account [I8] (*to verify with a real archive*): map
+      (fixes under the stop speed are not stored; an auto-pause ends 15 m from the stop
+      point, the clock backdated to when it left. Jitter before auto-pause kicks in, or with
+      it off, still counts: to measure on a device)
+- [x] Strava archive from a French account [I8] (*to verify with a real archive*): map
       French and English `activities.csv` headers, or fall back to column positions
+      (`stravaColumns`: known headers, else the column holding `activities/…` paths and
+      Strava's 3rd / 4th columns)
 - [ ] IndexedDB migrations untested [I12]: extract the pure patch functions from `db.js`
       and test them (`fake-indexeddb` for integration: new dependency, to approve)
 - [ ] `exportAll` reads keys and values in two transactions [B2]: use one

@@ -185,6 +185,7 @@ function Live({ recording, contacts, layout, maxHr, onSaved }) {
   const [now, setNow] = useState(Date.now);
   const [tooShort, setTooShort] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(null);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
@@ -202,9 +203,14 @@ function Live({ recording, contacts, layout, maxHr, onSaved }) {
 
   const finish = async () => {
     setSaving(true);
-    const id = await recording.finish().finally(() => setSaving(false));
-    if (id) onSaved(id);
-    else setTooShort(true);
+    setFailed(null);
+    try {
+      const id = await recording.finish();
+      if (id) onSaved(id);
+      else setTooShort(true);
+    } catch (e) {
+      setFailed(e.message); // storage full or unavailable: the recording and its draft stay
+    } finally { setSaving(false); }
   };
 
   return (
@@ -219,6 +225,7 @@ function Live({ recording, contacts, layout, maxHr, onSaved }) {
       </section>
       {status && <p className={`record-status ${(gpsError || weak || rec.follow?.off) && !rec.paused ? 'bad' : ''}`} role="status">{status}</p>}
       {tooShort && <p className="record-status bad" role="alert">{t('Trop court pour être enregistré.')}</p>}
+      {failed && <p className="record-status bad" role="alert">{t("Enregistrement impossible : {error}. La sortie n'est pas perdue, réessaie.", { error: failed })}</p>}
       <section className={layout.map ? 'live-map' : 'live-extras'}>
         {layout.map && (rec.pos ? <LiveMap points={rec.points} pos={rec.pos} route={rec.route?.coords} /> : <p className="map-wait muted">{t('Recherche du GPS…')}</p>)}
         <div className="live-chips">

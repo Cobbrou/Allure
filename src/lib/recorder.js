@@ -17,6 +17,7 @@ const MIN_STEP = 3; // m: smaller moves are GPS jitter, not progress
 // m/s under which the athlete counts as stopped; other sports use their `moving` threshold.
 const STOP_SPEED = { run: 0.6, ride: 1.5 };
 const STOP_DELAY = 5000; // ms of being stopped before auto-pause kicks in
+const RESUME_RADIUS = 15; // m from the stop point before an auto-pause ends: standing-still GPS jitter wanders less
 const PACE_WINDOW = 30000; // ms of track used for the current pace
 const SENSOR_EVERY = 5000; // ms between sensor-only points while no fix is stored
 const HR_ALERT_EVERY = 60000; // ms between two high heart rate alerts
@@ -124,13 +125,14 @@ export function addFix(rec, fix) {
   const last = rec.pos ?? prev;
   const dt = last ? (fix.time - last.time) / 1000 : 0;
   const speed = fix.speed ?? (dt > 0 ? haversine(last, fix) / dt : 0);
-  const moving = !prev || speed >= stopSpeed;
-  let next = { ...rec, pos: fix, points: [...rec.points, point(fix)], distance: rec.distance + d };
-  if (moving) {
-    next.lastMove = fix.time;
-    // Moving again after an auto-pause: the clock restarts now.
-    if (next.autoPaused) next = { ...next, autoPaused: false, runningSince: fix.time };
-  }
+  const moving = !prev || (speed >= stopSpeed && !(rec.autoPaused && d < RESUME_RADIUS));
+  // Stopped: nothing stored, so standing-still jitter adds no distance and the saved
+  // activity agrees with the live clock. The next real move is measured from the stop point.
+  // ponytail: jitter before auto-pause kicks in (STOP_DELAY) or with auto-pause off still counts.
+  if (!moving) return tick({ ...rec, pos: fix }, fix.time);
+  let next = { ...rec, pos: fix, points: [...rec.points, point(fix)], distance: rec.distance + d, lastMove: fix.time };
+  // Moving again after an auto-pause: the clock restarts when the athlete left the stop point.
+  if (next.autoPaused) next = { ...next, autoPaused: false, runningSince: Math.max(rec.lastMove, Math.round(fix.time - (d / speed) * 1000)) };
   return tick(next, fix.time);
 }
 

@@ -241,19 +241,24 @@ function EditForm({ meta, gears, onSave, onDelete, onCrop, onFixElevation, onWat
       {onCrop
         ? <button type="button" className="ghost" onClick={onCrop}>{t('Recadrer le début ou la fin')}</button>
         : meta.source === 'manual' && <a className="button ghost" href={`#/manual/${meta.id}`}>{t('Modifier la date, la durée ou la distance')}</a>}
+      {/* <div>, not <label>: a tap on the hint must not run the action. */}
       {onFixElevation && (
-        <label>
-          <button type="button" className="ghost" disabled={fixing === 'busy'}
-            onClick={async () => { setFixing('busy'); setFixing((await onFixElevation()) ? null : 'failed'); }}>
-            {fixing === 'busy' ? t('Correction…') : t("Corriger l'altitude")}
-          </button>
+        <div className="field">
+          {fixing === 'busy'
+            ? <button type="button" className="ghost" disabled>{t('Correction…')}</button>
+            : (
+              <ConfirmButton className="ghost" confirmLabel={t("Remplacer l'altitude ?")}
+                onConfirm={async () => { setFixing('busy'); try { setFixing((await onFixElevation()) ? null : 'failed'); } catch (e) { setFixing(null); throw e; } }}>
+                {t("Corriger l'altitude")}
+              </ConfirmButton>
+            )}
           <span className="hint">{fixing === 'failed'
             ? t('Relief indisponible (hors ligne ou trace trop longue).')
             : t("Remplace l'altitude du fichier par celle du relief. Inutile pour une montre barométrique.")}</span>
-        </label>
+        </div>
       )}
       {onWatchHr && (
-        <label>
+        <div className="field">
           <button type="button" className="ghost" disabled={watchHr === 'busy'}
             onClick={async () => {
               setWatchHr('busy');
@@ -262,7 +267,7 @@ function EditForm({ meta, gears, onSave, onDelete, onCrop, onFixElevation, onWat
             {watchHr === 'busy' ? t('Récupération…') : t('Récupérer la FC de la montre')}
           </button>
           <span className="hint">{watchHr && watchHr !== 'busy' ? watchHr : t('Lit dans Health Connect la fréquence cardiaque mesurée par ta montre pendant cette activité.')}</span>
-        </label>
+        </div>
       )}
       <div className="edit-actions">
         <ConfirmButton onConfirm={onDelete} confirmLabel={t('Confirmer')}>{t('Supprimer')}</ConfirmButton>
