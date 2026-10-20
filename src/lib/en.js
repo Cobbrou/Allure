@@ -448,6 +448,7 @@ export default {
   'Annonces vocales': 'Voice cues',
   'Alerte si je reste immobile': "Alert if I don't move",
   "Contact d'urgence non configuré": 'No emergency contact set',
+  'Exclure des records': 'Exclude from records',
   'Signal GPS prêt · précision {dist}': 'GPS ready · accuracy {dist}',
   'Signal GPS faible · précision {dist}': 'Weak GPS · accuracy {dist}',
   'Sport : {sport}': 'Sport: {sport}',

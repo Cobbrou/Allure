@@ -326,9 +326,11 @@ Fixes
 - [x] Changing an activity's sport keeps the old sport's segment efforts (`ActivityPage`
       `save` → `updateActivity`, segments are per sport): re-match on sport change
       (goes through `saveActivities`, which re-matches)
-- [ ] GPS spikes: one bad fix (urban canyon, tunnel exit) adds distance and can fake a best
+- [x] GPS spikes: one bad fix (urban canyon, tunnel exit) adds distance and can fake a best
       effort or a record. Drop points implying an impossible speed for the sport, on import
       and while recording; "exclude from records" toggle on an activity for the rest
+      (out-and-back jumps dropped in `createActivity`, sustained fast stretches kept; live: up
+      to 5 fixes in a row skipped)
 - [ ] Duplicate detection needs the same start second and distance within 10 m (`dupKey`):
       the same session from Health Connect and from a FIT export slips through. Treat
       overlapping time ranges of the same sport as duplicates

@@ -1,17 +1,42 @@
 import { distLen, fmtPace, fmtPaceUnit, fmtSpeed, paceUnit, shortLen, shortUnit, speedUnit } from './format.js';
+import { haversine } from './geo.js';
 import { t } from './i18n.js';
 
 // display: how average effort is shown. 'speed' = km/h, 'pace' = min/km, 'pace100' = min/100 m
 // (mi/h, min/mi and min/100 yd in imperial units).
 // split: split length in display units (km or mi; m or yd for swims), see splitSize.
 // moving: m/s above which the athlete counts as moving (a steep climb on foot is ~0.3).
+// max: m/s no athlete reaches in that sport: a faster move between two fixes is a GPS spike.
 export const SPORTS = {
-  run: { get label() { return t('Course'); }, icon: '🏃', display: 'pace', split: 1, moving: 0.5 },
-  ride: { get label() { return t('Vélo'); }, icon: '🚴', display: 'speed', split: 5, moving: 0.5 },
-  hike: { get label() { return t('Randonnée'); }, icon: '🥾', display: 'pace', split: 1, moving: 0.2 },
-  walk: { get label() { return t('Marche'); }, icon: '🚶', display: 'pace', split: 1, moving: 0.25 },
-  swim: { get label() { return t('Natation'); }, icon: '🏊', display: 'pace100', split: 100, moving: 0.2 },
+  run: { get label() { return t('Course'); }, icon: '🏃', display: 'pace', split: 1, moving: 0.5, max: 12 },
+  ride: { get label() { return t('Vélo'); }, icon: '🚴', display: 'speed', split: 5, moving: 0.5, max: 30 },
+  hike: { get label() { return t('Randonnée'); }, icon: '🥾', display: 'pace', split: 1, moving: 0.2, max: 8 },
+  walk: { get label() { return t('Marche'); }, icon: '🚶', display: 'pace', split: 1, moving: 0.25, max: 8 },
+  swim: { get label() { return t('Natation'); }, icon: '🏊', display: 'pace100', split: 100, moving: 0.2, max: 4 },
 };
+
+/** True when going from point a to b (timed {lat, lon}) means an impossible speed for the sport. */
+export function isSpike(a, b, sport) {
+  const dt = (b.time - a.time) / 1000;
+  return dt > 0 && haversine(a, b) / dt > (SPORTS[sport] ?? SPORTS.run).max;
+}
+
+const SPIKE_RUN = 5; // a jump longer than this many points is real movement (a wrong sport, a car), not a spike
+
+/**
+ * The points without GPS spikes: a point too fast to reach from the last one kept is dropped
+ * when the track comes back within SPIKE_RUN points (an out-and-back jump). A sustained fast
+ * stretch is kept: a ride imported as a run must not lose its track.
+ */
+export function dropSpikes(points, sport) {
+  const out = [];
+  points.forEach((p, i) => {
+    const last = out.at(-1);
+    const back = last && isSpike(last, p, sport) && points.slice(i + 1, i + 1 + SPIKE_RUN).some((q) => !isSpike(last, q, sport));
+    if (!back) out.push(p);
+  });
+  return out.length === points.length ? points : out;
+}
 
 /** Map a GPX/TCX/FIT sport value (Strava, Garmin, numeric codes…) to a sport id. */
 export function sportFromGpxType(type = '') {

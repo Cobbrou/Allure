@@ -117,6 +117,7 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
   laps,                  // device lap start times (ms), from FIT / TCX; only when 2+ laps
   description, notes,    // free text; notes are private (never exported)
   rpe,                   // perceived exertion 1-10; effort source without heart rate (training.js)
+  noRecords,             // true: left out of personal records and race predictions
   gear,                  // gear id (settings `gear`); `saveActivities` sets the sport's default
   avgPower, np,          // W, rides with a power meter only (lib/power.js)
   powerCurve,            // { [seconds]: best average W } for 5 s … 1 h

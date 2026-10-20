@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createActivity, cropActivity, defaultName, manualActivity } from '../src/lib/activity.js';
 import { demoHistory } from '../src/lib/demo.js';
-import { effort, sportFromGpxType } from '../src/lib/sports.js';
+import { dropSpikes, effort, sportFromGpxType } from '../src/lib/sports.js';
+import { personalRecords } from '../src/lib/records.js';
 
 test('createActivity builds a lightweight meta record', () => {
   const [h] = demoHistory(Date.now(), 1);
@@ -71,4 +72,25 @@ test('manualActivity: summary from what was typed, no points', () => {
   assert.equal(gym.id, 'x');
   assert.equal(gym.avgPace, null);
   assert.equal(gym.rpe, undefined);
+});
+
+const north = (m, s) => ({ lat: 45 + m / 111195, lon: 6, time: s * 1000 });
+
+test('dropSpikes removes an out-and-back jump, keeps a sustained fast stretch', () => {
+  const run = Array.from({ length: 20 }, (_, s) => north(s * 4, s));
+  run[10] = north(400, 10);
+  const clean = dropSpikes(run, 'run');
+  assert.equal(clean.length, 19);
+  assert.ok(!clean.includes(run[10]));
+  // A 15 m/s ride imported as a run: every point stays.
+  const ride = Array.from({ length: 20 }, (_, s) => north(s * 15, s));
+  assert.equal(dropSpikes(ride, 'run'), ride);
+  const { meta } = createActivity({ sport: 'run', points: run });
+  assert.ok(meta.distance < 80, meta.distance);
+});
+
+test('activities excluded from records give no personal record', () => {
+  const base = { sport: 'run', bestEfforts: { '1k': 200 } };
+  const [k] = personalRecords([{ ...base, id: 'a', noRecords: true }, { ...base, id: 'b', bestEfforts: { '1k': 250 } }]);
+  assert.equal(k.activity.id, 'b');
 });

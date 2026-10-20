@@ -3,7 +3,7 @@ import { followStep } from './follow.js';
 import { haversine } from './geo.js';
 import { segmentStep } from './liveSegments.js';
 import { distLen, fmtSpeed, isImperial, shortLen } from './format.js';
-import { SPORTS, splitSize } from './sports.js';
+import { isSpike, SPORTS, splitSize } from './sports.js';
 
 // Live recording as a pure state machine: every function takes a recording and returns
 // a new one (or the same object when nothing changed). Times are ms epoch.
@@ -12,6 +12,7 @@ import { SPORTS, splitSize } from './sports.js';
 // pause, `runningSince` is when the clock last started (null while paused).
 
 const MAX_ACCURACY = 30; // m: fixes less precise than this are dropped
+const MAX_SPIKES = 5; // fixes in a row skipped as GPS spikes
 const MIN_STEP = 3; // m: smaller moves are GPS jitter, not progress
 // m/s under which the athlete counts as stopped; other sports use their `moving` threshold.
 const STOP_SPEED = { run: 0.6, ride: 1.5 };
@@ -92,6 +93,11 @@ export function joinDraft(entries) {
 export function addFix(rec, fix) {
   if ((fix.accuracy ?? 0) > MAX_ACCURACY) return rec;
   if (rec.paused) return { ...rec, pos: fix };
+  // A GPS spike (urban canyon, tunnel exit) is skipped; after MAX_SPIKES in a row, the jump is real.
+  if (rec.points.length && isSpike(rec.points.at(-1), fix, rec.sport)) {
+    if ((rec.spikes ?? 0) < MAX_SPIKES) return { ...rec, spikes: (rec.spikes ?? 0) + 1 };
+  }
+  if (rec.spikes) rec = { ...rec, spikes: 0 };
   if (rec.route) {
     const s = followStep(rec.route, rec.follow, rec.followAlt, fix);
     rec = { ...rec, route: s.route, follow: s.follow, followAlt: s.alt };

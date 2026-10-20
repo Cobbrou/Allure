@@ -26,6 +26,16 @@ test('inaccurate fixes and jitter are ignored', () => {
   assert.equal(rec.distance, 0);
 });
 
+test('a GPS spike is skipped, a sustained jump is kept', () => {
+  let rec = run(startRecording({}, 0), 0, 10, 4);
+  rec = addFix(rec, fix(300, 11)); // 260 m in 1 s
+  rec = addFix(rec, fix(44, 12));
+  assert.equal(rec.points.length, 12);
+  assert.ok(Math.abs(rec.distance - 44) < 1, rec.distance);
+  for (let s = 13; s <= 19; s++) rec = addFix(rec, fix(1000 + s, s)); // moved for real (a car while paused…)
+  assert.ok(rec.points.at(-1).lat > 45 + 1000 * M);
+});
+
 test('auto-pause stops the clock while stopped, resumes on movement', () => {
   let rec = run(startRecording({}, 0), 0, 60); // 240 m in 60 s
   rec = tick(rec, 64_000);

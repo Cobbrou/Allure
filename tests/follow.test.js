@@ -46,9 +46,9 @@ test('recording a followed route raises spoken cues', () => {
   let rec = startRecording({ route: outAndBack }, 0);
   const step = (north, east, s) => { const prev = rec; rec = addFix(rec, { ...at(north, east), time: s * 1000, accuracy: 5 }); return followCue(prev, rec); };
   assert.equal(step(0, 0, 0), null);
-  assert.equal(step(20, 0, 5), null);
-  assert.match(step(40, 100, 10), /quitté/);
-  assert.match(step(60, 0, 15), /retour/);
+  assert.equal(step(20, 0, 10), null);
+  assert.match(step(40, 100, 20), /quitté/);
+  assert.match(step(60, 0, 30), /retour/);
 });
 
 // Point to point: 1 km north.

@@ -29,12 +29,12 @@ export function bestEfforts(track) {
   return out;
 }
 
-/** Best time per record distance across run activities: [{ ...distance, time, activity }]. */
+/** Best time per record distance across run activities (but those excluded from records): [{ ...distance, time, activity }]. */
 export function personalRecords(metas) {
   return RECORD_DISTANCES.map((r) => {
     let best = null;
     for (const a of metas) {
-      const t = a.sport === 'run' ? a.bestEfforts?.[r.id] : undefined;
+      const t = a.sport === 'run' && !a.noRecords ? a.bestEfforts?.[r.id] : undefined;
       if (t && (!best || t < best.time)) best = { time: t, activity: a };
     }
     return { ...r, ...best };
@@ -52,7 +52,7 @@ const MIN_SOURCE = 1 / 4; // a source must cover this share of the target: Riege
 export function predictRaces(metas, now = Date.now(), days = 90) {
   const sources = [];
   for (const a of metas) {
-    if (a.sport !== 'run' || a.date < now - days * 86400e3) continue;
+    if (a.sport !== 'run' || a.noRecords || a.date < now - days * 86400e3) continue;
     for (const r of RECORD_DISTANCES) if (a.bestEfforts?.[r.id]) sources.push({ m: r.m, time: a.bestEfforts[r.id], activity: a });
     if (a.movingTime && a.distance > 1000) sources.push({ m: a.distance, time: a.movingTime, activity: a });
   }
