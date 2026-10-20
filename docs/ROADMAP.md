@@ -397,10 +397,12 @@ Found in a third full review (`docs/AUDIT.md`, IDs in brackets). Ordered by risk
 and safety first. *To verify* = needs an Android device. No item needs a backend.
 
 Privacy & safety (critical)
-- [ ] Privacy zones can be reversed by triangulation [C1]: the cut is exactly on a circle
+- [x] Privacy zones can be reversed by triangulation [C1]: the cut is exactly on a circle
       centred on the home (`privacy.js`). Store a random centre offset when the zone is
       created and cut at a random extra distance beyond the radius
-- [ ] Privacy policy matches the code [C2] (store rejection, GDPR):
+      (offset and extra cut derived from the zone id, so old zones need no migration and
+      repeated shares give the same cut; see `DECISIONS.md`)
+- [x] Privacy policy matches the code [C2] (store rejection, GDPR):
       - disclose that the DEM tiles of every recorded track are fetched from AWS
         (`correctElevation` on finish), not only "the area shown in 3D"
       - "location only while recording" is false: Maps tab (`lastPos`), record setup,
@@ -408,11 +410,13 @@ Privacy & safety (critical)
         `LegalPage.jsx` (both languages) and `SettingsPage.jsx`
       - `android:allowBackup="true"` may copy IndexedDB to Google Drive: explicit
         `dataExtractionRules`, or disclose it (*to verify*)
+      (policy updated in both languages; `allowBackup="false"`, see `DECISIONS.md`)
 - [ ] Safety check-in that works with the screen off [C3] (*to verify*): it lives in the
       live screen component, on throttled WebView timers, and Android 10+ blocks opening
       the SMS from the background, while it is on by default. Test on a device; if it
       fails, a native full-screen local notification (plugin, to approve) and an honest
-      warning text
+      warning text (warning done under Emergency contacts; device test and native
+      notification to do)
 
 Broken flows
 - [ ] Watch heart rate never fetched after a recording [I1]: `App.jsx` filters the stale

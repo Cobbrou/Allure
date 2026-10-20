@@ -4,7 +4,7 @@ import { back } from '../router.js';
 // Legal texts shown in the app. Keep them in sync with what the app actually sends out:
 // every new network service or permission must be listed in the privacy policy, in both
 // languages (FR and EN below say the same thing).
-const UPDATED = { fr: '17 octobre 2026', en: '17 October 2026' };
+const UPDATED = { fr: '20 octobre 2026', en: '20 October 2026' };
 const REPO = 'https://github.com/Cobbrou/Allure';
 
 const Ext = ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>;
@@ -29,9 +29,12 @@ const FR = {
         </ul>
         <h3>Autorisations</h3>
         <ul>
-          <li><b>Localisation</b> : seulement pendant un enregistrement, y compris écran éteint
-            (une notification reste affichée tant que l'enregistrement tourne), et pour proposer
-            des boucles autour de toi.</li>
+          <li><b>Localisation</b> : pendant un enregistrement, y compris écran éteint (une
+            notification reste affichée tant que l'enregistrement tourne). Quand l'app est ouverte,
+            aussi pour te situer sur la carte (onglet Cartes, écran d'enregistrement, tracé
+            d'itinéraire), proposer des boucles autour de toi et placer une zone de confidentialité
+            à ta position. Ta dernière position connue est gardée sur le téléphone pour centrer la
+            carte. Jamais en arrière-plan hors enregistrement.</li>
           <li><b>Bluetooth</b> : pour lire une ceinture cardio, un capteur de cadence ou de puissance que tu choisis. Les mesures restent sur le téléphone.</li>
           <li><b>Health Connect</b> (Android) : lecture des séances d'exercice, de leur trace GPS et de
             la fréquence cardiaque, seulement quand tu lances un import ; et, si tu l'autorises, la
@@ -42,16 +45,20 @@ const FR = {
         <p>Certaines fonctions interrogent des services tiers. Ils reçoivent ton adresse IP et les informations listées :</p>
         <ul>
           <li><b>CARTO</b> (fond de carte) : la zone de carte affichée.</li>
-          <li><b>Amazon Web Services</b> (relief de la vue 3D) : la zone affichée en 3D.</li>
+          <li><b>Amazon Web Services</b> (relief) : la zone affichée en 3D ; et, à la fin de chaque
+            enregistrement ou quand tu corriges l'altitude d'une activité, les tuiles de relief
+            (environ 10 km de côté) couvertes par sa trace, pour corriger son altitude.</li>
           <li><b>BRouter</b> (brouter.de, tracé d'itinéraires et boucles suggérées) : les points de passage de l'itinéraire.</li>
           <li><b>Google Fonts</b> (police de caractères) : une requête au démarrage.</li>
         </ul>
-        <p>Aucune activité, aucun nom et aucune donnée de santé ne leur est envoyé.</p>
+        <p>Ni ton nom, ni tes données de santé, ni tes traces ne leur sont envoyés : seulement les zones et points listés.</p>
         <h3>Partage</h3>
         <p>
           Rien ne quitte ton téléphone sans action de ta part : export GPX, image de partage,
           sauvegarde ou SMS d'alerte vers tes contacts d'urgence passent par l'application que
-          tu choisis. Les zones de confidentialité masquent le départ et l'arrivée des images partagées.
+          tu choisis. Les zones de confidentialité masquent le départ et l'arrivée des images et
+          fichiers GPX partagés. Les données de l'app sont exclues de la sauvegarde automatique
+          d'Android (Google Drive) : seule ta propre sauvegarde les copie.
         </p>
         <h3>Tes droits</h3>
         <p>
@@ -149,9 +156,11 @@ const EN = {
         </ul>
         <h3>Permissions</h3>
         <ul>
-          <li><b>Location</b>: only while recording, including with the screen off
-            (a notification stays visible as long as the recording runs), and to suggest
-            loops around you.</li>
+          <li><b>Location</b>: while recording, including with the screen off (a notification
+            stays visible as long as the recording runs). While the app is open, also to show
+            where you are on the map (Maps tab, record screen, route builder), suggest loops
+            around you and place a privacy zone at your position. Your last known position is
+            kept on the phone to centre the map. Never in the background outside a recording.</li>
           <li><b>Bluetooth</b>: to read a heart rate strap, cadence sensor or power meter you pick. Readings stay on the phone.</li>
           <li><b>Health Connect</b> (Android): reads exercise sessions, their GPS track and
             heart rate, only when you start an import; and, if you allow it, the resting heart
@@ -162,16 +171,19 @@ const EN = {
         <p>Some features query third-party services. They receive your IP address and the information listed:</p>
         <ul>
           <li><b>CARTO</b> (basemap): the map area shown.</li>
-          <li><b>Amazon Web Services</b> (relief of the 3D view): the area shown in 3D.</li>
+          <li><b>Amazon Web Services</b> (relief): the area shown in 3D; and, at the end of each
+            recording or when you correct an activity's elevation, the relief tiles (about 10 km
+            across) its track covers, to correct its elevation.</li>
           <li><b>BRouter</b> (brouter.de, route drawing and suggested loops): the route's waypoints.</li>
           <li><b>Google Fonts</b> (typeface): one request at startup.</li>
         </ul>
-        <p>No activity, name or health data is sent to them.</p>
+        <p>Your name, health data and tracks are never sent to them: only the areas and points listed.</p>
         <h3>Sharing</h3>
         <p>
           Nothing leaves your phone without you acting: GPX export, share image, backup or
           alert SMS to your emergency contacts go through the app you choose. Privacy zones
-          hide the start and finish of shared images.
+          hide the start and finish of shared images and GPX files. The app's data is left out
+          of Android's automatic backup (Google Drive): only your own backup copies it.
         </p>
         <h3>Your rights</h3>
         <p>

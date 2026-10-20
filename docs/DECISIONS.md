@@ -3,6 +3,31 @@
 Lightweight decision log. Newest first. Each entry: context, decision, consequences.
 Open questions sit at the bottom until decided.
 
+## 2026-10-20: Privacy zones are shifted circles with a jittered cut
+
+**Context**: shared tracks were cut exactly where they crossed a circle centred on the
+home. Two or three shared stories or GPX files are enough to rebuild that circle and its
+centre.
+**Decision**: the hidden circle's centre is moved 25 to 50 % of the radius away from the
+saved point, in a direction derived from the zone id (FNV-1a hash, `zoneCentre`). Each
+track is also cut 0 to 50 % of the radius further along, derived from the zone id and the
+track's start. Both are deterministic: sharing the same activity twice gives the same cut,
+so repeated shares can't be averaged.
+**Consequences**: nothing to migrate (old zones already have an id). The home sits at
+least half a radius inside the circle, so the smallest zone (200 m) hides at least 100 m
+around it. Someone who knows the zone id could undo the shift, but it never leaves the
+phone.
+
+## 2026-10-20: No Android Auto Backup
+
+**Context**: `android:allowBackup="true"` let Android copy the WebView's IndexedDB (GPS
+tracks, heart rate) to Google Drive, while the privacy policy says nothing leaves the phone.
+**Decision**: `allowBackup="false"`. The in-app backup (Settings → My data) stays the only
+way data leaves the device.
+**Consequences**: a new phone restored from Google does not bring Allure's activities
+back. An automatic backup to Documents (ROADMAP phase 9) would cover that without a
+cloud copy.
+
 ## 2026-10-20: Theme, accent and map style are settings
 
 **Context**: the owner asked for a light theme, a choice of accent colour and of map style.

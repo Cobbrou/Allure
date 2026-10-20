@@ -143,7 +143,7 @@ export default function SettingsPage({ activities, hr, hrSaved, ftpEstimate, onS
         <section className="card">
           <h3>{t('Autorisations')}</h3>
           <p><b>{t('Localisation')}</b></p>
-          <p className="muted">{PERMISSION[location] ?? PERMISSION.prompt} {t('Utilisée seulement pendant un enregistrement, y compris écran éteint.')}</p>
+          <p className="muted">{PERMISSION[location] ?? PERMISSION.prompt} {t("Pendant un enregistrement, y compris écran éteint, et pour te situer sur la carte quand l'app est ouverte.")}</p>
         </section>
         <PrivacyZones zones={zones} activities={list} onSave={onSaveZones} />
         <EmergencyContacts contacts={contacts} onSave={onSaveContacts} />

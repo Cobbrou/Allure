@@ -25,6 +25,7 @@ export default function EmergencyContacts({ contacts, onSave }) {
     <form className="card edit" onSubmit={add}>
       <h3>{t("Contacts d'urgence")}</h3>
       <p className="muted">{t("Si tu restes immobile pendant un enregistrement et ne réponds pas, l'app prépare un SMS avec ta position pour ces contacts.")}</p>
+      <p className="muted">{t("Limites : l'alerte ne fonctionne que si Allure reste au premier plan, écran allumé. Téléphone verrouillé ou autre app ouverte, elle peut ne jamais se déclencher. Le SMS n'est pas envoyé tout seul : il faut appuyer sur Envoyer. Ce n'est pas un service d'urgence.")}</p>
       {contacts.length > 0 && (
         <ul className="records">
           {contacts.map((c) => (

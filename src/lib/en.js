@@ -117,6 +117,8 @@ export default {
   // Emergency contacts, privacy zones
   'Numéro invalide.': 'Invalid number.',
   "Contacts d'urgence": 'Emergency contacts',
+  "Limites : l'alerte ne fonctionne que si Allure reste au premier plan, écran allumé. Téléphone verrouillé ou autre app ouverte, elle peut ne jamais se déclencher. Le SMS n'est pas envoyé tout seul : il faut appuyer sur Envoyer. Ce n'est pas un service d'urgence.":
+    "Limits: the alert only works while Allure stays in the foreground with the screen on. With the phone locked or another app open, it may never go off. The SMS is not sent on its own: someone has to tap Send. This is not an emergency service.",
   "Si tu restes immobile pendant un enregistrement et ne réponds pas, l'app prépare un SMS avec ta position pour ces contacts.":
     "If you stay still during a recording and don't answer, the app prepares a text with your position for these contacts.",
   'Téléphone': 'Phone',
@@ -615,7 +617,7 @@ export default {
   'Confidentialité et sécurité': 'Privacy and safety',
   'Autorisations': 'Permissions',
   'Localisation': 'Location',
-  'Utilisée seulement pendant un enregistrement, y compris écran éteint.': 'Used only while recording, including with the screen off.',
+  "Pendant un enregistrement, y compris écran éteint, et pour te situer sur la carte quand l'app est ouverte.": 'While recording, including with the screen off, and to show where you are on the map while the app is open.',
   'Données': 'Data',
   'Importe les séances enregistrées par ta montre (Pixel Watch, Fitbit…) : course, vélo, rando, marche et natation, avec trace GPS et fréquence cardiaque, ou en salle sans trace. Les séances déjà importées sont ignorées.':
     'Import the sessions your watch recorded (Pixel Watch, Fitbit…): run, ride, hike, walk and swim, with GPS track and heart rate, or indoors without a track. Sessions already imported are skipped.',
