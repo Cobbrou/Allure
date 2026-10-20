@@ -346,6 +346,14 @@ Records & analysis
 - [ ] "This year vs last year to date" on the profile (distance, time, D+ per sport)
 - [ ] Commute tag: kept out of goals, challenges and Fitness & Freshness on request,
       filterable in the feed
+- [ ] Yearly best efforts: best time per distance for each calendar year, next to the
+      all-time records (Strava "Annual Best Efforts", 2026)
+- [ ] Animated activity replay: the route drawn with a moving marker and the stats ticking
+      along, exportable as a short video for stories
+
+Strength training
+- [ ] Strength workouts: exercises, sets, reps and load, typed in or from a template;
+      a muscle map shaded by the volume per muscle group over the week (Strava, 2026)
 
 Recording
 - [ ] Ghost pacer: race a previous activity or a target pace on the same route, live gap
