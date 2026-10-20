@@ -670,6 +670,8 @@ ol.splits li.best .split-gap { color: var(--on-accent); }
 .checkin-ok { background: var(--good); border-color: var(--good); color: #fff; }
 .chip.lap { border-color: var(--accent); animation: pop 0.35s var(--ease-out) backwards; }
 .chip.hr b { color: var(--hr-text); }
+.chip.step { border-color: var(--accent); animation: pop 0.35s var(--ease-out) backwards; }
+.chip.step.rest, .chip.step.warmup, .chip.step.cooldown { border-color: var(--good); }
 .chip.seg { border-color: var(--warn); color: var(--text); animation: pop 0.35s var(--ease-out) backwards; }
 .chip.seg.pr { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .dock {

@@ -6,6 +6,7 @@ import Icon from '../components/Icon.jsx';
 import LiveMap from '../components/LiveMap.jsx';
 import RecordScreenEditor from '../components/RecordScreenEditor.jsx';
 import StatMetric from '../components/StatMetric.jsx';
+import WorkoutEditor, { workoutSummary } from '../components/WorkoutEditor.jsx';
 import { followRoute } from '../lib/follow.js';
 import { liveSegments } from '../lib/liveSegments.js';
 import { distUnit, fmtDist, fmtDuration, fmtLength } from '../lib/format.js';
@@ -18,6 +19,7 @@ import { joinLegs } from '../lib/routes.js';
 import { alertText, checkIn, smsUrl } from '../lib/safety.js';
 import { hasBluetooth } from '../lib/sensors.js';
 import { SPORTS } from '../lib/sports.js';
+import { DEFAULT_WORKOUT, startWorkout, stepLabel, stepStatus } from '../lib/workout.js';
 
 /** routeId: route to preselect (from "#/record/<id>"). */
 export default function RecordPage({ recording, contacts, routes, routeId, segments, activities, hr, prefs, onSavePrefs, onSaved }) {
@@ -53,6 +55,8 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
   const [autoPause, setAutoPause] = useState(prefs?.autoPause ?? true);
   const [audio, setAudio] = useState(prefs?.audio ?? true);
   const [safety, setSafety] = useState(true);
+  const [withWorkout, setWithWorkout] = useState(false);
+  const workout = { ...DEFAULT_WORKOUT, ...prefs?.workout };
   const [gps, setGps] = useState(null); // last fix { lat, lon, accuracy… } | { error }
 
   // Warm up the GPS so the first recorded fix is precise. An error keeps the last position on the map.
@@ -71,7 +75,7 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
     if (sport !== prefs?.sport) onSavePrefs({ ...prefs, sport });
     if (audio) { hush(); speak(t('Enregistrement démarré.')); }
     const full = route && (await getRoute(route.id)); // the list holds metas, not points
-    recording.start({ sport, autoPause, audio, voice: prefs?.voice, safety: safety && contacts.length > 0, route: full && followRoute(full, joinLegs(full.legs)), liveSegs: liveSegments(segments, sport, activities) });
+    recording.start({ sport, autoPause, audio, voice: prefs?.voice, safety: safety && contacts.length > 0, route: full && followRoute(full, joinLegs(full.legs)), liveSegs: liveSegments(segments, sport, activities), workout: withWorkout ? startWorkout(workout) : null });
   };
   useEffect(() => {
     if (count == null) return;
@@ -84,7 +88,7 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
     return () => clearTimeout(timer);
   }, [count]);
 
-  const [sheet, setSheet] = useState(null); // 'sport' | 'route' picker open
+  const [sheet, setSheet] = useState(null); // 'sport' | 'route' picker or 'workout' editor open
   const pickRoute = (r) => { setRouteSel(r?.id ?? ''); if (r) setSport(r.sport); setSheet(null); };
   const gpsLevel = gps?.error ? 'bad' : !gps ? '' : gps.accuracy <= 20 ? 'good' : 'warn';
   const zero = { rec: { sport, distance: 0, points: [] }, time: 0 }; // the live fields, before the start
@@ -106,6 +110,9 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
           {contacts.length > 0
             ? <button type="button" className={`pill ${safety ? 'on' : ''}`} aria-pressed={safety} onClick={() => setSafety(!safety)}><Icon name={safety ? 'shieldCheck' : 'shieldAlert'} />{t('Alerte si je reste immobile')}</button>
             : <a className="pill warn" href="#/settings"><Icon name="shieldAlert" />{t("Contact d'urgence non configuré")}</a>}
+          <button type="button" className={`pill ${withWorkout ? 'on' : ''}`} onClick={() => setSheet('workout')}>
+            <Icon name="timer" />{withWorkout ? workoutSummary(workout) : t('Séance')}
+          </button>
           {hasBluetooth() && <SensorButton recording={recording} kind="hr" />}
           {hasBluetooth() && sport === 'ride' && <SensorButton recording={recording} kind="cadence" />}
           {hasBluetooth() && sport === 'ride' && <SensorButton recording={recording} kind="power" />}
@@ -139,6 +146,13 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
               <Icon name={sid} />{s.label}
             </button>
           ))}
+        </div>
+      </BottomSheet>
+      <BottomSheet open={sheet === 'workout'} onClose={() => setSheet(null)} title={t('Séance structurée')}>
+        <WorkoutEditor workout={workout} onChange={(w) => onSavePrefs({ ...prefs, workout: w })} />
+        <div className="edit-actions">
+          {withWorkout && <button type="button" className="ghost" onClick={() => { setWithWorkout(false); setSheet(null); }}>{t('Sans séance')}</button>}
+          <button type="button" onClick={() => { setWithWorkout(true); setSheet(null); }}>{t('Suivre cette séance')}</button>
         </div>
       </BottomSheet>
       <BottomSheet open={sheet === 'route'} onClose={() => setSheet(null)} title={t('Itinéraire à suivre')}>
@@ -208,7 +222,8 @@ function Live({ recording, contacts, layout, maxHr, onSaved }) {
       <section className={layout.map ? 'live-map' : 'live-extras'}>
         {layout.map && (rec.pos ? <LiveMap points={rec.points} pos={rec.pos} route={rec.route?.coords} /> : <p className="map-wait muted">{t('Recherche du GPS…')}</p>)}
         <div className="live-chips">
-          {rec.laps?.length > 0 && !fields.includes('lap') && layout.hero !== 'lap' && <span key={rec.laps.length} className="chip lap">{t('Tour {n}', { n: lapNow.n })} <b>{fmtDuration(lapNow.time)}</b></span>}
+          {rec.laps?.length > 0 && !rec.workout && !fields.includes('lap') && layout.hero !== 'lap' && <span key={rec.laps.length} className="chip lap">{t('Tour {n}', { n: lapNow.n })} <b>{fmtDuration(lapNow.time)}</b></span>}
+          <StepChip rec={rec} now={now} />
           <SegmentChip rec={rec} now={now} />
           {rec.route && (
             <span className="chip follow">🧭 <b>{rec.follow?.done ? t('Terminé') : `${fmtDist(Math.max(0, rec.route.distance - (rec.follow?.along ?? 0)))} ${distUnit()}`}</b></span>
@@ -294,6 +309,18 @@ const SENSOR_PILLS = {
   cadence: { icon: 'ride', className: '', get label() { return t('Cadence'); }, value: (s) => s.cad, unit: 'rpm' },
   power: { icon: 'zap', className: '', get label() { return t('Puissance'); }, value: (s) => s.power, unit: 'W' },
 };
+
+/** Current workout step and what is left of it. */
+function StepChip({ rec, now }) {
+  if (!rec.workout) return null;
+  const s = stepStatus(rec, now);
+  if (!s) return <span className="chip step">{t('Séance terminée')}</span>;
+  return (
+    <span key={rec.workout.i} className={`chip step ${s.step.kind}`}>
+      {stepLabel(s.step, rec.workout.reps)} <b>{s.step.type === 'time' ? fmtDuration(s.left) : fmtLength(s.left)}</b>
+    </span>
+  );
+}
 
 /** Pair or drop a Bluetooth sensor of a kind; its readings are recorded with each GPS fix. */
 function SensorButton({ recording, kind }) {

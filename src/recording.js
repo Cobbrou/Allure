@@ -11,6 +11,7 @@ import { keepAwake, speak, watchPosition } from './lib/location.js';
 import { lockScreenControls } from './lib/lockscreen.js';
 import { addFix, addReadings, elapsed, lap, lapCue, lapStarts, lapStatus, hrAlert, pause, recover, resume, startRecording, tick, voiceCue } from './lib/recorder.js';
 import { connectSensor } from './lib/sensors.js';
+import { nextStep, stepCue, workoutStep } from './lib/workout.js';
 
 const SAVE_EVERY = 5000; // ms between draft autosaves
 const FRESH = 5000; // ms a sensor reading stays valid for the next GPS fix
@@ -49,10 +50,12 @@ export function useRecording({ onSensorLost } = {}) {
     if (!next || next === prev) return;
     const alert = next.hrAlertAt !== prev.hrAlertAt;
     if (alert) haptic('alert');
+    const step = next.workout && next.workout.i !== prev.workout?.i;
+    if (step) haptic('lap');
     if (next.audio) {
       const voice = voiceCue(prev, next, Date.now(), freshHr());
       if (voice?.cued != null) next = { ...next, cued: voice.cued };
-      const cue = (alert ? t('Cardio élevé : {n}.', { n: freshHr() }) : null) ?? followCue(prev, next) ?? segmentCue(prev, next) ?? voice?.text;
+      const cue = (step ? stepCue(next) : null) ?? (alert ? t('Cardio élevé : {n}.', { n: freshHr() }) : null) ?? followCue(prev, next) ?? segmentCue(prev, next) ?? voice?.text;
       if (cue) speak(cue);
     }
     const done = next.seg?.last;
@@ -90,7 +93,7 @@ export function useRecording({ onSensorLost } = {}) {
     }, setGpsError, { background: true });
     const timer = setInterval(() => {
       const now = Date.now();
-      update((r) => hrAlert(tick(addReadings(r, fresh(), now), now), freshHr(), now));
+      update((r) => hrAlert(workoutStep(tick(addReadings(r, fresh(), now), now), now), freshHr(), now));
       const r = ref.current;
       lock.current?.update({ title: `${fmtDist(r.distance)} ${distUnit()} · ${fmtDuration(elapsed(r, Date.now()))}`, paused: r.paused || r.autoPaused });
     }, 1000);
@@ -108,6 +111,7 @@ export function useRecording({ onSensorLost } = {}) {
     discard: () => { hideLock(); return set(null); },
     lap: () => {
       const now = Date.now();
+      if (ref.current.workout?.steps[ref.current.workout.i]) return update((r) => nextStep(r, now)); // skips to the next step
       const done = lapStatus(ref.current, now);
       haptic('lap');
       set(lap(ref.current, now));

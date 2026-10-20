@@ -21,9 +21,12 @@ const PACE_WINDOW = 30000; // ms of track used for the current pace
 const SENSOR_EVERY = 5000; // ms between sensor-only points while no fix is stored
 const HR_ALERT_EVERY = 60000; // ms between two high heart rate alerts
 
-/** route: optional route to follow, from followRoute(). liveSegs: from liveSegments(). safety: check-ins on. */
-export function startRecording({ sport = 'run', autoPause = true, audio = true, voice = VOICE, safety = false, route = null, liveSegs = [] }, now) {
-  return { sport, autoPause, audio, voice, safety, route, follow: null, followAlt: route && { f: null, r: null, f0: null, r0: null }, liveSegs, seg: null, laps: [], start: now, points: [], distance: 0, active: 0, runningSince: now, paused: false, autoPaused: false, lastMove: now, pos: null };
+/**
+ * route: optional route to follow, from followRoute(). liveSegs: from liveSegments(). safety: check-ins on.
+ * workout: optional structured workout, from startWorkout().
+ */
+export function startRecording({ sport = 'run', autoPause = true, audio = true, voice = VOICE, safety = false, route = null, liveSegs = [], workout = null }, now) {
+  return { sport, autoPause, audio, voice, safety, route, workout, follow: null, followAlt: route && { f: null, r: null, f0: null, r0: null }, liveSegs, seg: null, laps: [], start: now, points: [], distance: 0, active: 0, runningSince: now, paused: false, autoPaused: false, lastMove: now, pos: null };
 }
 
 /** Running time in seconds. */
@@ -47,7 +50,7 @@ export function lapStatus(rec, now) {
 }
 
 /** Seconds as spoken words: "1 heure 2 minutes 5". */
-function spokenTime(seconds) {
+export function spokenTime(seconds) {
   const s = Math.round(seconds), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
   const hours = h ? `${tn(h, '{n} heure', '{n} heures')} ` : '';
   return `${hours}${tn(m, '{n} minute', '{n} minutes')} ${s % 60}`;

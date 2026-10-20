@@ -304,8 +304,9 @@ Recording
       (spoken and buzzed, once a minute while above)
 
 Training
-- [ ] Structured workouts: build intervals (warm-up, reps, recovery), follow them live
-      with spoken / haptic prompts, compare plan vs done
+- [x] Structured workouts: build intervals (warm-up, reps, recovery), follow them live
+      with spoken / haptic prompts, compare plan vs done (each step is a lap; the lap button
+      skips a step). Next: several saved workouts, pace targets per step
 - [ ] Training plans (5 km → marathon) generated from goals and current fitness
 - [ ] Weekly streaks and a year-in-sport recap (shareable story)
 - [ ] Feed search and filters (sport, date range, distance, name)
