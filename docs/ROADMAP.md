@@ -391,6 +391,109 @@ Routes
 - [ ] Share a route by link, like friend challenges: URL-safe code in `#/route/…`, no
       account
 
+## Phase 9: Third audit (2026-10-20)
+
+Found in a third full review (`docs/AUDIT.md`, IDs in brackets). Ordered by risk: privacy
+and safety first. *To verify* = needs an Android device. No item needs a backend.
+
+Privacy & safety (critical)
+- [ ] Privacy zones can be reversed by triangulation [C1]: the cut is exactly on a circle
+      centred on the home (`privacy.js`). Store a random centre offset when the zone is
+      created and cut at a random extra distance beyond the radius
+- [ ] Privacy policy matches the code [C2] (store rejection, GDPR):
+      - disclose that the DEM tiles of every recorded track are fetched from AWS
+        (`correctElevation` on finish), not only "the area shown in 3D"
+      - "location only while recording" is false: Maps tab (`lastPos`), record setup,
+        route builder and privacy zone "Ma position" use it too; fix the text in
+        `LegalPage.jsx` (both languages) and `SettingsPage.jsx`
+      - `android:allowBackup="true"` may copy IndexedDB to Google Drive: explicit
+        `dataExtractionRules`, or disclose it (*to verify*)
+- [ ] Safety check-in that works with the screen off [C3] (*to verify*): it lives in the
+      live screen component, on throttled WebView timers, and Android 10+ blocks opening
+      the SMS from the background, while it is on by default. Test on a device; if it
+      fails, a native full-screen local notification (plugin, to approve) and an honest
+      warning text
+
+Broken flows
+- [ ] Watch heart rate never fetched after a recording [I1]: `App.jsx` filters the stale
+      `listed.current` after `reload()`; have `reload` return the list
+- [ ] Fitness & Freshness hidden without HR [I2]: `FitnessChart` checks `hrTime` only,
+      add `|| a.rpe`
+- [ ] Sensor lost mid-recording cannot be reconnected [I3]: the toast points to the
+      record screen, but `SensorButton` is only on the setup screen; add it to the live one
+- [ ] Story shared from the feed can reuse another activity's photo [I4] (may publish a
+      private photo): `key={shared?.id}` on `ShareSheet` and pass the activity's `photos`
+
+Reliability
+- [ ] Async failures show nothing [I5]: global `unhandledrejection` listener → error
+      toast, plus `catch` on finishing a recording (quota error) and the other bare async
+      calls listed in the audit
+- [ ] Elevation correction triggered by a tap on its hint and impossible to undo [I6]:
+      `<div>` instead of the wrapping `<label>` (same for watch HR), `ConfirmButton`
+- [ ] Keep the original track before a crop or an elevation correction, so both can be
+      undone
+- [ ] GPS drift while auto-paused adds distance [I7]: don't add stopped jitter to the
+      distance, so the live clock and the saved activity agree (size it on a device)
+- [ ] Strava archive from a French account [I8] (*to verify with a real archive*): map
+      French and English `activities.csv` headers, or fall back to column positions
+- [ ] IndexedDB migrations untested [I12]: extract the pure patch functions from `db.js`
+      and test them (`fake-indexeddb` for integration: new dependency, to approve)
+- [ ] `exportAll` reads keys and values in two transactions [B2]: use one
+- [ ] `onversionchange` keeps a closed `dbPromise` [B3]: reset it and ask for a reload
+- [ ] Two close `read({ prompt: true })` calls lose the first promise in
+      `RestingHrPlugin.kt` [B4]
+- [ ] Validation [B8]: HR alert threshold range, workouts with ≥ 1 rep, no negative
+      manual values, no double submit, `#/manual/<id>` refused for a GPS activity
+- [ ] BRouter [B9]: suggestions fire 12 requests at once (likely 429, misleading
+      "connection" message): limit concurrency, tell rate limits apart; retry a failed leg
+      in the route builder
+- [ ] Content Security Policy in `index.html` [B10]
+
+Performance & battery
+- [ ] Live map sends the whole track and re-centres every second [I9, U6]: send a thinned
+      track or its tail, and stop re-centring while the athlete pans (button to recentre)
+- [ ] Maps tab and suggestions read every full track on each open [I10]: cache thinned
+      lines by id, or store a thinned polyline on the meta
+- [ ] Backup built entirely in memory [I11]: export and restore in chunks (NDJSON);
+      measure with 1,000 activities
+- [ ] Live elevation gain re-smooths the whole track every second from GPS altitude [B7]:
+      incremental, and closer to the DEM-corrected final value
+- [ ] Demo data (58 KB) in the start-up bundle [B6]: dynamic `import()`
+- [ ] Self-hosted Inter font: no Google request (helps C2), right font offline in the app
+
+Code health
+- [ ] `useSetting(key, default)` hook to shrink `App.jsx` and `SettingsPage`'s 18 props [I13]
+- [ ] One `createMap()` helper (four MapLibre setups), date formatters and one `num()` in
+      `lib/format.js` [B5]
+- [ ] Untranslated strings outside `t()` [B1]: `location.js`, `formats/fit.js`,
+      `formats/tcx.js`, `formats/zip.js`, `story.js`, `demo.js`, the drop-zone `content:`
+      in `global.css`
+
+UI/UX
+- [ ] Tap targets ≥ 44 px [U1]: `.segmented button` (36), `.small` (38), `.icon` (40)
+- [ ] Toasts expire after 5 s by default, errors stay; toast as a real button [U2]
+- [ ] Back navigation returns to where the activity was opened from (training log,
+      calendar, segment…) with its scroll position; edge swipe on Settings and Legal [U3]
+- [ ] `ConfirmButton` on goal, privacy zone and contact deletes [U4]
+- [ ] Loading states on the feed, profile and an unknown `#/manual/<id>` [U5]
+- [ ] Type scale and radius tokens: 18 font sizes and 16 radii today, no text under 11 px [U7]
+- [ ] Last hard-coded colours (`.pin.me`, `.danger.armed`) and stories following the
+      accent colour [U8]
+- [ ] Feed cards show the athlete's name instead of "Athlète Allure" [U9]
+- [ ] Imperial units for privacy zone radii and race predictions [U10]
+- [ ] Fine crop and segment sliders by finger: ± buttons or steps in metres [U11]
+- [ ] "Recording in progress" badge on the tab bar, also after a crash recovery [U12]
+- [ ] Arrow-key navigation in `Segmented` (`role="radio"`) [U13]
+
+New features
+- [ ] Automatic weekly backup to Documents (`@capacitor/filesystem`, already installed):
+      the only real protection against data loss without a backend
+- [ ] "Hide the map" option when sharing a story or a file
+- Already planned, raised again by the audit: feed search and filters (phase 7), records
+  beyond running (phase 8), import a GPX as a route (phase 8), pace zones (phase 8),
+  compare two activities and ghost pacer (phase 8), weather at the start (phase 7),
+  indoor recording (phase 7)
+
 ## Cross-cutting
 
 - [x] i18n: English + French (Settings → Langue, device language by default; French
