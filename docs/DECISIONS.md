@@ -3,6 +3,22 @@
 Lightweight decision log. Newest first. Each entry: context, decision, consequences.
 Open questions sit at the bottom until decided.
 
+## 2026-10-20: Backups are NDJSON, written and restored in batches
+
+**Context**: the backup loaded every track and photo, then ran one `JSON.stringify` over
+all of it, and restore read the whole file with `file.text()` and one `JSON.parse`. A big
+archive with photos risks running the WebView out of memory, on the only protection
+against data loss.
+**Decision**: the file is NDJSON: a header line (`app`, `format: 'ndjson'`, `schema`,
+settings, segments, routes), then one line per activity. Export reads 50 activities per
+transaction and turns each batch into a Blob part; restore streams the file, splits lines
+and writes 50 activities per transaction (`backupBatches` in `lib/backup.js`). The file
+keeps the `.json` name and type so Android pickers still offer it. Single-object backups
+made before this are still restored.
+**Consequences**: a restore cut short leaves the batches written so far (same ids are
+replaced, so restoring again is safe). A broken activity line is skipped. JSON tools no
+longer open the file as one document.
+
 ## 2026-10-20: Privacy zones are shifted circles with a jittered cut
 
 **Context**: shared tracks were cut exactly where they crossed a circle centred on the

@@ -5,7 +5,7 @@ import Segmented from '../components/Segmented.jsx';
 import TrackMap from '../components/TrackMap.jsx';
 import { preview } from '../lib/activity.js';
 import { analyze } from '../lib/analyze.js';
-import { forEachTrack } from '../lib/db.js';
+import { thinTracks } from '../lib/db.js';
 import { distUnit, elevUnit, fmtDist, fmtElev, isImperial } from '../lib/format.js';
 import { currentPosition } from '../lib/location.js';
 import { createRoute, fetchRoute, splitLegs } from '../lib/routes.js';
@@ -39,10 +39,14 @@ export default function SuggestPage({ activities, onPick }) {
         : last ? { coords: last, label: t('départ de ta dernière activité') }
         : { coords: FALLBACK_START, label: 'Chamonix' });
     });
-    // ~100 m cells covered by past tracks, for the "new ground" preference.
-    const set = new Set();
-    forEachTrack((_, points) => points?.forEach((p) => set.add(cellKey(p.lon, p.lat)))).then(() => { cells.current = set; }, () => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps -- once, on open
+  // ~100 m cells covered by past tracks, for the "new ground" preference (thinned tracks: points every 15 m).
+  useEffect(() => {
+    if (!activities) return;
+    thinTracks(activities).then((lines) => {
+      cells.current = new Set(lines.flatMap((l) => l.coords.map(([lon, lat]) => cellKey(lon, lat))));
+    }, () => {});
+  }, [activities]);
 
   const pickSport = (s) => { setSport(s); setKm(KM[s][2]); };
 

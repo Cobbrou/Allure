@@ -54,6 +54,14 @@ const ManualPage = lazy(pages.manual);
 // Detail pages and where "back" lands when the app was opened on them (deep link).
 const BACK_TO = { activity: '/', manual: '/record', log: '/profile', segment: '/profile', route: '/maps', suggest: '/maps' };
 
+/** A stored setting as state: [value, save]. `initial` until loaded, or when never saved. */
+function useSetting(key, initial) {
+  const [value, setValue] = useState(initial);
+  useEffect(() => { getSetting(key).then((v) => v != null && setValue(v), () => {}); }, [key]);
+  const save = useCallback(async (v) => { await setSetting(key, v); setValue(v); }, [key]);
+  return [value, save];
+}
+
 export default function App() {
   const [page, id] = useRoute();
   const swipeBack = useCallback(() => back(BACK_TO[page]), [page]);
@@ -79,20 +87,16 @@ export default function App() {
     const timer = setTimeout(() => Object.values(pages).forEach((load) => load()), 1500);
     return () => clearTimeout(timer);
   }, []);
-  const [hrSaved, setHrSaved] = useState(null); // { max?, rest? } set by the athlete
-  useEffect(() => { getSetting('hr').then(setHrSaved, () => {}); }, []);
-  const [watchRest, setWatchRest] = useState(null); // resting HR measured by the watch (Health Connect)
+  const [hrSaved, saveHr] = useSetting('hr', null); // { max?, rest?, ftp?, weight? } set by the athlete
+  const [watchRest, saveWatchRest] = useSetting('watchRest', null); // resting HR measured by the watch (Health Connect)
   // prompt: ask for Health Connect access; without it, only refresh when already granted.
   const syncRestingHr = useCallback(async (prompt) => {
     const health = await import('./lib/health.js');
     if (await health.healthStatus() !== 'ready') return;
     const rest = await health.readRestingHr({ prompt });
-    if (rest) { setWatchRest(rest); await setSetting('watchRest', rest); }
-  }, []);
-  useEffect(() => {
-    getSetting('watchRest').then((r) => r && setWatchRest(r), () => {});
-    syncRestingHr(false).catch(() => {});
-  }, [syncRestingHr]);
+    if (rest) await saveWatchRest(rest);
+  }, [saveWatchRest]);
+  useEffect(() => { syncRestingHr(false).catch(() => {}); }, [syncRestingHr]);
   const hr = useMemo(
     () => ({
       max: hrSaved?.max || estimateMaxHr(activities ?? []),
@@ -106,9 +110,7 @@ export default function App() {
     () => (hrSaved?.ftp ? { watts: hrSaved.ftp, manual: true } : ftpEstimate && { watts: ftpEstimate, manual: false }),
     [hrSaved, ftpEstimate],
   );
-  const saveHr = async (v) => { await setSetting('hr', v); setHrSaved(v); };
-  const [goals, setGoals] = useState([]);
-  useEffect(() => { getSetting('goals').then((g) => g && setGoals(g), () => {}); }, []);
+  const [goals, saveGoals] = useSetting('goals', []);
   const [segments, setSegments] = useState(null);
   const loadSegments = () => listSegments().then(setSegments, () => setSegments([]));
   useEffect(() => { loadSegments(); }, []);
@@ -125,28 +127,17 @@ export default function App() {
   const addRoute = async (r) => { await saveRoute(r); await loadRoutes(); back('/maps'); };
   const pickRoute = async (r) => { await saveRoute(r); await loadRoutes(); go(`/route/${r.id}`); };
   const removeRoute = async (rid) => { await deleteRoute(rid); await loadRoutes(); back('/maps'); };
-  const saveGoals = async (g) => { await setSetting('goals', g); setGoals(g); };
-  const [zones, setZones] = useState([]); // privacy zones
-  useEffect(() => { getSetting('privacy').then((z) => z && setZones(z), () => {}); }, []);
-  const saveZones = async (z) => { await setSetting('privacy', z); setZones(z); };
-  const [contacts, setContacts] = useState([]); // emergency contacts
-  useEffect(() => { getSetting('contacts').then((c) => c && setContacts(c), () => {}); }, []);
-  const saveContacts = async (c) => { await setSetting('contacts', c); setContacts(c); };
-  const [units, setUnitsState] = useState('metric'); // 'metric' | 'imperial'
-  useEffect(() => { getSetting('units').then((u) => u && setUnitsState(u), () => {}); }, []);
-  const saveUnits = async (u) => { await setSetting('units', u); setUnitsState(u); };
+  const [zones, saveZones] = useSetting('privacy', []); // privacy zones
+  const [contacts, saveContacts] = useSetting('contacts', []); // emergency contacts
+  const [units, saveUnits] = useSetting('units', 'metric'); // 'metric' | 'imperial'
   setUnits(units); // read by format.js during render; the page remounts on change (key below)
-  const [lang, setLangState] = useState(deviceLang); // 'fr' | 'en'
-  useEffect(() => { getSetting('lang').then((l) => l && setLangState(l), () => {}); }, []);
-  const saveLang = async (l) => { await setSetting('lang', l); setLangState(l); };
+  const [lang, saveLang] = useSetting('lang', deviceLang); // 'fr' | 'en'
   setLang(lang); // read by t() during render, like the units
   useEffect(() => {
     document.documentElement.lang = getLang();
     document.title = t('Allure — Analyse de course');
   }, [lang]);
-  const [prefs, setPrefs] = useState({}); // { name?, autoPause?, audio?, voice?, sport?, recordScreen?, theme?, accent?, map?, weekStart?, display? }
-  useEffect(() => { getSetting('prefs').then((p) => p && setPrefs(p), () => {}); }, []);
-  const savePrefs = async (p) => { await setSetting('prefs', p); setPrefs(p); };
+  const [prefs, savePrefs] = useSetting('prefs', {}); // { name?, autoPause?, audio?, voice?, sport?, recordScreen?, theme?, accent?, map?, weekStart?, display? }
   const [systemLight, setSystemLight] = useState(() => matchMedia('(prefers-color-scheme: light)').matches);
   useEffect(() => {
     const mq = matchMedia('(prefers-color-scheme: light)');
@@ -167,9 +158,7 @@ export default function App() {
     document.querySelector('meta[name=theme-color]')?.setAttribute('content', getComputedStyle(root).getPropertyValue('--bg').trim());
     if (Capacitor.isNativePlatform()) import('./lib/shell.js').then((m) => m.systemBars(light));
   }, [light, prefs.accent]);
-  const [gears, setGears] = useState([]);
-  useEffect(() => { getSetting('gear').then((g) => g && setGears(g), () => {}); }, []);
-  const saveGears = async (g) => { await setSetting('gear', g); setGears(g); };
+  const [gears, saveGears] = useSetting('gear', []);
 
   // Reloading after a save, import or demo is when a goal can be crossed: celebrate it.
   const goalsRef = useRef(goals);

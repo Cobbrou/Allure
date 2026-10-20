@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { backupDue, backupName, makeBackup, parseBackup } from '../src/lib/backup.js';
+import { backupBatches, backupDue, backupHeader, backupName, parseBackup, splitLines } from '../src/lib/backup.js';
 import { createActivity } from '../src/lib/activity.js';
 import { demoHistory } from '../src/lib/demo.js';
 
+/** Single-object backup, the format before NDJSON. */
+const makeBackup = (d) => ({ app: 'allure', exported: 0, ...d });
 const data = {
   schema: 6,
   activities: [{ meta: { id: 'a1', name: 'Run' }, points: [{ lat: 45, lon: 6 }] }, { meta: {}, points: [] }],
@@ -13,7 +15,7 @@ const data = {
 };
 
 test('parseBackup round-trips a backup and drops malformed entries', () => {
-  const out = parseBackup(JSON.stringify(makeBackup(data, 0)), 6);
+  const out = parseBackup(JSON.stringify(makeBackup(data)), 6);
   assert.deepEqual(out.activities, [data.activities[0]]);
   assert.deepEqual(out.settings, { hr: { max: 190 } });
   assert.deepEqual(out.segments, [{ id: 's1' }]);
@@ -59,4 +61,34 @@ test('backupDue after 20 new activities or a month-old backup, weekly at most', 
   assert.equal(backupDue({ last: { at: now - 31 * day, count: 3 }, activities: acts(4), now }), true);
   assert.equal(backupDue({ last: { at: now - day, count: 3 }, activities: acts(23), now }), true);
   assert.equal(backupDue({ nudged: now - 2 * day, activities: acts(30), now }), false);
+});
+
+/** NDJSON backup lines: header, then one line per activity. */
+const ndjson = (d) => [backupHeader(d, 0), ...d.activities.map((a) => JSON.stringify(a))];
+const collect = async (gen) => { const out = []; for await (const b of gen) out.push(b); return out; };
+
+test('backupBatches restores an NDJSON backup in batches, extras on the first only', async () => {
+  const acts = Array.from({ length: 5 }, (_, i) => ({ meta: { id: `a${i}` }, points: [] }));
+  const batches = await collect(backupBatches([...ndjson({ ...data, activities: acts }), '', '{broken'], 6, 2));
+  assert.deepEqual(batches.map((b) => b.activities.map((a) => a.meta.id)), [['a0', 'a1'], ['a2', 'a3'], ['a4']]);
+  assert.deepEqual(batches[0].settings, { hr: { max: 190 } });
+  assert.deepEqual(batches[0].routes, [{ id: 'r1' }]);
+  assert.deepEqual(batches[1].settings, {});
+  assert.deepEqual(batches[2].segments, []);
+});
+
+test('backupBatches: settings alone, a single-object backup, other files', async () => {
+  const empty = await collect(backupBatches(ndjson({ ...data, activities: [] }), 6));
+  assert.equal(empty.length, 1);
+  assert.deepEqual(empty[0].segments, [{ id: 's1' }]);
+  const legacy = await collect(backupBatches([JSON.stringify(makeBackup(data))], 6));
+  assert.deepEqual(legacy[0].activities, [data.activities[0]]);
+  await assert.rejects(collect(backupBatches(['not json'], 6)), /sauvegarde Allure/);
+  await assert.rejects(collect(backupBatches([], 6)), /sauvegarde Allure/);
+  await assert.rejects(collect(backupBatches(ndjson({ ...data, schema: 7 }), 6)), /plus récente/);
+});
+
+test('splitLines rebuilds lines across chunks', async () => {
+  assert.deepEqual(await collect(splitLines(['ab', 'c\nd', 'e\n', '\nf', 'g'])), ['abc', 'de', '', 'fg']);
+  assert.deepEqual(await collect(splitLines(['x\n'])), ['x']);
 });

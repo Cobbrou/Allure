@@ -691,4 +691,5 @@ export default {
   'Une erreur est survenue : {error}': 'Something went wrong: {error}',
   "Enregistrement impossible : {error}. La sortie n'est pas perdue, réessaie.": "Couldn't save: {error}. The activity is not lost, try again.",
   "Remplacer l'altitude ?": 'Replace elevation?',
+  'Recentrer sur ma position': 'Recenter on my position',
 };

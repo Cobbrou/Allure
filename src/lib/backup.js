@@ -1,44 +1,98 @@
 // Full local backup: every activity with its track and photos (as data URLs), settings,
-// segments and routes in one JSON file the athlete keeps, restores on another phone, or
-// reads elsewhere.
+// segments and routes in one file the athlete keeps, restores on another phone, or reads
+// elsewhere.
+//
+// The file is NDJSON: a header line (settings, segments, routes), then one line per
+// activity, so a big archive is written and restored a few activities at a time instead of
+// as one huge string. Older backups are a single JSON object, still restored.
 
 import { t } from './i18n.js';
 import { refreshStats } from './activity.js';
 
 const DAY = 86400e3;
+export const BATCH = 50; // activities per restore transaction
 
-/** Backup object from the stores' contents. `schema` is the db VERSION it was taken at. */
-export const makeBackup = ({ schema, activities, settings, segments, routes }, now = Date.now()) => ({
-  app: 'allure',
-  schema,
-  exported: now,
-  activities,
-  settings,
-  segments,
-  routes,
+/** First line of a backup. `schema` is the db VERSION it was taken at. */
+export const backupHeader = ({ schema, settings, segments, routes }, now = Date.now()) =>
+  JSON.stringify({ app: 'allure', format: 'ndjson', schema, exported: now, settings, segments, routes });
+
+const notBackup = () => new Error(t("Ce fichier n'est pas une sauvegarde Allure."));
+
+/** Throws a translated message unless `data` is a header this app can read; true when its schema is older. */
+function checkHeader(data, schema) {
+  if (data?.app !== 'allure') throw notBackup();
+  if (data.schema > schema) throw new Error(t("Sauvegarde faite avec une version plus récente d'Allure : mets l'app à jour."));
+  return !(data.schema >= schema);
+}
+
+/** A backed-up activity, cleaned (image data URLs only), or null when malformed. A backup from an older schema missed the migrations since: its stats are recomputed. */
+function cleanActivity(a, old) {
+  if (!a?.meta?.id || !Array.isArray(a.points)) return null;
+  const meta = old ? refreshStats(a.meta, a.points) : a.meta;
+  const pics = Array.isArray(a.photos) ? a.photos.filter((u) => typeof u === 'string' && u.startsWith('data:image/')) : [];
+  return pics.length ? { meta, points: a.points, photos: pics } : { meta, points: a.points };
+}
+
+const extras = (data) => ({
+  settings: data.settings && typeof data.settings === 'object' ? data.settings : {},
+  segments: (data.segments ?? []).filter((s) => s?.id),
+  routes: (data.routes ?? []).filter((r) => r?.id),
 });
 
-/**
- * Validate a backup file's text against the current db VERSION; throws a translated message.
- * A backup from an older schema missed the migrations since: its stats are recomputed.
- */
+/** Validate a single-object (pre-NDJSON) backup's text against the current db VERSION. */
 export function parseBackup(text, schema) {
   let data;
-  try { data = JSON.parse(text); } catch { throw new Error(t("Ce fichier n'est pas une sauvegarde Allure.")); }
-  if (data?.app !== 'allure' || !Array.isArray(data.activities)) throw new Error(t("Ce fichier n'est pas une sauvegarde Allure."));
-  if (data.schema > schema) throw new Error(t("Sauvegarde faite avec une version plus récente d'Allure : mets l'app à jour."));
-  const old = !(data.schema >= schema);
-  const valid = data.activities.filter((a) => a?.meta?.id && Array.isArray(a.points)).map(({ meta, points, photos }) => {
-    if (old) meta = refreshStats(meta, points);
-    const pics = Array.isArray(photos) ? photos.filter((u) => typeof u === 'string' && u.startsWith('data:image/')) : [];
-    return pics.length ? { meta, points, photos: pics } : { meta, points };
-  });
-  return {
-    activities: valid,
-    settings: data.settings && typeof data.settings === 'object' ? data.settings : {},
-    segments: (data.segments ?? []).filter((s) => s?.id),
-    routes: (data.routes ?? []).filter((r) => r?.id),
+  try { data = JSON.parse(text); } catch { throw notBackup(); }
+  if (!Array.isArray(data?.activities)) throw notBackup();
+  const old = checkHeader(data, schema);
+  return { activities: data.activities.map((a) => cleanActivity(a, old)).filter(Boolean), ...extras(data) };
+}
+
+/**
+ * Restore batches from a backup's lines (any async or sync iterable of strings): each one
+ * { activities, settings, segments, routes }, at most `size` activities, the extras on the
+ * first one only. Throws a translated message on a file that isn't a backup. A broken
+ * activity line (file cut short) is skipped.
+ */
+export async function* backupBatches(lines, schema, size = BATCH) {
+  let header, old, batch = [], first = true;
+  const out = () => {
+    const b = { activities: batch, ...(first ? extras(header) : { settings: {}, segments: [], routes: [] }) };
+    first = false;
+    batch = [];
+    return b;
   };
+  for await (const line of lines) {
+    if (!line.trim()) continue;
+    if (!header) {
+      try { header = JSON.parse(line); } catch { throw notBackup(); }
+      if (Array.isArray(header?.activities)) return yield parseBackup(line, schema); // single-object backup
+      old = checkHeader(header, schema);
+      continue;
+    }
+    let a;
+    try { a = JSON.parse(line); } catch { continue; }
+    const c = cleanActivity(a, old);
+    if (c) batch.push(c);
+    if (batch.length >= size) yield out();
+  }
+  if (!header) throw notBackup();
+  if (batch.length || first) yield out();
+}
+
+/** Lines of a text arriving in chunks (async or sync iterable of strings), without re-copying a long line per chunk. */
+export async function* splitLines(chunks) {
+  let pending = [];
+  for await (const c of chunks) {
+    let start = 0;
+    for (let i; (i = c.indexOf('\n', start)) !== -1; start = i + 1) {
+      pending.push(c.slice(start, i));
+      yield pending.join('');
+      pending = [];
+    }
+    if (start < c.length) pending.push(c.slice(start));
+  }
+  if (pending.length) yield pending.join('');
 }
 
 /**

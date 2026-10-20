@@ -2,8 +2,8 @@ import { t } from '../lib/i18n.js';
 import { useEffect, useState } from 'react';
 import ConfirmButton from './ConfirmButton.jsx';
 import { fmtDate } from './ActivityCard.jsx';
-import { backupName, makeBackup, parseBackup } from '../lib/backup.js';
-import { VERSION, deleteAllData, exportAll, getSetting, persistStorage, restoreAll, setSetting } from '../lib/db.js';
+import { backupName } from '../lib/backup.js';
+import { deleteAllData, exportBackup, getSetting, persistStorage, restoreBackup, setSetting } from '../lib/db.js';
 import { shareFile } from '../lib/share.js';
 
 /** Full backup to a JSON file, restore from one, and erase everything on this device. */
@@ -24,8 +24,7 @@ export default function MyData({ count }) {
   };
 
   const save = () => run(async () => {
-    const data = await exportAll();
-    const blob = new Blob([JSON.stringify(makeBackup(data))], { type: 'application/json' });
+    const blob = await exportBackup();
     // ponytail: a plain download counts as done; the browser can't say whether it was kept.
     if (await shareFile(blob, backupName()) === false) return;
     const b = { at: Date.now(), count };
@@ -34,8 +33,7 @@ export default function MyData({ count }) {
   });
 
   const restore = (file) => run(async () => {
-    const data = parseBackup(await file.text(), VERSION);
-    await restoreAll(data);
+    await restoreBackup(file);
     location.reload(); // settings and lists are loaded once at startup
   });
 

@@ -446,9 +446,11 @@ Reliability
       French and English `activities.csv` headers, or fall back to column positions
       (`stravaColumns`: known headers, else the column holding `activities/…` paths and
       Strava's 3rd / 4th columns)
-- [ ] IndexedDB migrations untested [I12]: extract the pure patch functions from `db.js`
+- [x] IndexedDB migrations untested [I12]: extract the pure patch functions from `db.js`
       and test them (`fake-indexeddb` for integration: new dependency, to approve)
-- [ ] `exportAll` reads keys and values in two transactions [B2]: use one
+      (`PATCHES` and `splitRoute` tested, plus a migration for every version; the cursor
+      plumbing and restore stay untested without `fake-indexeddb`)
+- [x] `exportAll` reads keys and values in two transactions [B2]: use one (`exportBackup`)
 - [ ] `onversionchange` keeps a closed `dbPromise` [B3]: reset it and ask for a reload
 - [ ] Two close `read({ prompt: true })` calls lose the first promise in
       `RestingHrPlugin.kt` [B4]
@@ -460,19 +462,25 @@ Reliability
 - [ ] Content Security Policy in `index.html` [B10]
 
 Performance & battery
-- [ ] Live map sends the whole track and re-centres every second [I9, U6]: send a thinned
+- [x] Live map sends the whole track and re-centres every second [I9, U6]: send a thinned
       track or its tail, and stop re-centring while the athlete pans (button to recentre)
-- [ ] Maps tab and suggestions read every full track on each open [I10]: cache thinned
+      (vertices every 5 m; a drawn-once part redrawn every 300 vertices and a short tail on
+      each fix; dragging the map stops following)
+- [x] Maps tab and suggestions read every full track on each open [I10]: cache thinned
       lines by id, or store a thinned polyline on the meta
-- [ ] Backup built entirely in memory [I11]: export and restore in chunks (NDJSON);
+      (`thinTracks`: session cache by id and distance, only new or cropped tracks are read)
+- [x] Backup built entirely in memory [I11]: export and restore in chunks (NDJSON);
       measure with 1,000 activities
+      (50 activities per Blob part and per restore transaction, old single-object backups
+      still restored; see `DECISIONS.md`. 60 activities: 11 MB in 0.9 s; 1,000 still to measure)
 - [ ] Live elevation gain re-smooths the whole track every second from GPS altitude [B7]:
       incremental, and closer to the DEM-corrected final value
 - [ ] Demo data (58 KB) in the start-up bundle [B6]: dynamic `import()`
 - [ ] Self-hosted Inter font: no Google request (helps C2), right font offline in the app
 
 Code health
-- [ ] `useSetting(key, default)` hook to shrink `App.jsx` and `SettingsPage`'s 18 props [I13]
+- [x] `useSetting(key, default)` hook to shrink `App.jsx` and `SettingsPage`'s 18 props [I13]
+      (nine settings; `SettingsPage` props unchanged)
 - [ ] One `createMap()` helper (four MapLibre setups), date formatters and one `num()` in
       `lib/format.js` [B5]
 - [ ] Untranslated strings outside `t()` [B1]: `location.js`, `formats/fit.js`,

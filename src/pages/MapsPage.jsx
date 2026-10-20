@@ -6,9 +6,9 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import RoutePreview from '../components/RoutePreview.jsx';
 import Terrain3D from '../components/Terrain3D.js';
-import { forEachTrack, getSetting, setSetting } from '../lib/db.js';
+import { getSetting, setSetting, thinTracks } from '../lib/db.js';
 import { distUnit, elevUnit, fmtDist, fmtElev } from '../lib/format.js';
-import { homeLines, thin } from '../lib/heatmap.js';
+import { homeLines } from '../lib/heatmap.js';
 import { watchPosition } from '../lib/location.js';
 import { nearestFirst } from '../lib/routes.js';
 import { sportOptions, SPORTS } from '../lib/sports.js';
@@ -56,11 +56,7 @@ export default function MapsPage({ activities, routes }) {
 
   useEffect(() => {
     if (!activities) return;
-    const sportOf = new Map(activities.map((a) => [a.id, a.sport]));
-    const out = [];
-    forEachTrack((id, points) => {
-      if (sportOf.has(id) && points?.length > 1) out.push({ sport: sportOf.get(id), coords: thin(points) });
-    }).then(() => setLines(out), () => setLines([]));
+    thinTracks(activities).then(setLines, () => setLines([]));
   }, [activities]);
 
   const heatLines = useMemo(() => lines?.filter((l) => !sport || l.sport === sport), [lines, sport]);

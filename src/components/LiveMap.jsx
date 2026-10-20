@@ -1,20 +1,51 @@
-import { useEffect, useRef } from 'react';
+import { t } from '../lib/i18n.js';
+import { useEffect, useRef, useState } from 'react';
 import { Map as MapLibre, Marker, setWorkerUrl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 // Same Vite worker fix as TrackMap.
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+import { haversine } from '../lib/geo.js';
 import { mapStyle } from '../lib/offline.js';
 import { ACCENT, mapLocale, ROUTE } from '../theme.js';
 
 setWorkerUrl(workerUrl);
 
-const line = (points) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: points.map((p) => [p.lon, p.lat]) } });
+const GAP = 5; // m between drawn vertices: invisible at street zoom, fewer for slow sports
+const CHUNK = 300; // vertices in the redrawn tail before it joins the drawn-once part
 
-/** Map following the athlete while recording. pos: last fix { lat, lon }; route: [lon, lat] coords to follow. */
+const line = (coords) => (coords.length > 1
+  ? { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } }
+  : { type: 'FeatureCollection', features: [] });
+
+/**
+ * Map following the athlete while recording. pos: last fix { lat, lon }; route: [lon, lat]
+ * coords to follow. The track is drawn as a long `done` part, set again only every CHUNK
+ * vertices, and a short tail set on every fix: a 6 h ride doesn't send 20,000 points a second.
+ * Dragging the map stops following the athlete until the recenter button.
+ */
 export default function LiveMap({ points, pos, route }) {
   const el = useRef();
   const map = useRef();
   const me = useRef();
+  const drawn = useRef({ n: 0, last: null, done: [], tail: [] });
+  const [follow, setFollow] = useState(true);
+  const following = useRef(true);
+  following.current = follow;
+
+  /** Add the new points to the drawn track; true when the `done` part grew. */
+  const feed = () => {
+    const d = drawn.current;
+    for (; d.n < points.length; d.n++) {
+      const p = points[d.n];
+      if (d.last && haversine(d.last, p) < GAP) continue;
+      d.tail.push([p.lon, p.lat]);
+      d.last = p;
+    }
+    if (d.tail.length <= CHUNK) return false;
+    d.done = d.done.concat(d.tail.slice(0, -1));
+    d.tail = d.tail.slice(-1); // shared vertex: the two parts stay joined
+    return true;
+  };
 
   useEffect(() => {
     const m = new MapLibre({ container: el.current, style: mapStyle(), locale: mapLocale(), center: [pos.lon, pos.lat], zoom: 16, cooperativeGestures: true });
@@ -25,10 +56,14 @@ export default function LiveMap({ points, pos, route }) {
         m.addLayer({ id: 'planned', type: 'line', source: 'planned', layout: { 'line-join': 'round', 'line-cap': 'round' },
           paint: { 'line-color': ROUTE, 'line-width': 6, 'line-opacity': 0.6 } });
       }
-      m.addSource('route', { type: 'geojson', data: line(points) });
-      m.addLayer({ id: 'route', type: 'line', source: 'route', layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: { 'line-color': ACCENT, 'line-width': 5 } });
+      feed();
+      const { done, tail } = drawn.current;
+      for (const [id, coords] of [['done', done], ['route', tail]]) {
+        m.addSource(id, { type: 'geojson', data: line(coords) });
+        m.addLayer({ id, type: 'line', source: id, layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': ACCENT, 'line-width': 5 } });
+      }
     });
+    m.on('dragstart', () => setFollow(false));
     me.current = new Marker({ element: Object.assign(document.createElement('div'), { className: 'pin me' }) }).setLngLat([pos.lon, pos.lat]).addTo(m);
     map.current = m;
     return () => m.remove();
@@ -36,10 +71,27 @@ export default function LiveMap({ points, pos, route }) {
 
   useEffect(() => {
     const m = map.current;
-    m.getSource('route')?.setData(line(points));
+    if (m.getSource('route')) {
+      if (feed()) m.getSource('done').setData(line(drawn.current.done));
+      m.getSource('route').setData(line([...drawn.current.tail, [pos.lon, pos.lat]]));
+    }
     me.current.setLngLat([pos.lon, pos.lat]);
-    m.easeTo({ center: [pos.lon, pos.lat], duration: 500 });
-  }, [points, pos]);
+    if (following.current) m.easeTo({ center: [pos.lon, pos.lat], duration: 500 });
+  }, [points, pos]); // eslint-disable-line react-hooks/exhaustive-deps -- feed reads the latest points
 
-  return <div ref={el} className="map live" />;
+  const recenter = () => {
+    setFollow(true);
+    map.current.easeTo({ center: [pos.lon, pos.lat], duration: 500 });
+  };
+
+  return (
+    <>
+      <div ref={el} className="map live" />
+      {!follow && (
+        <button type="button" className="map-fab live-recenter" onClick={recenter} aria-label={t('Recentrer sur ma position')}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /><circle cx="12" cy="12" r="8" /></svg>
+        </button>
+      )}
+    </>
+  );
 }

@@ -5,6 +5,8 @@
 
 import { t } from './i18n.js';
 import { analyze } from './analyze.js';
+import { BATCH, backupBatches, backupHeader, splitLines } from './backup.js';
+import { thin } from './heatmap.js';
 import { defaultGear } from './gear.js';
 import { bestEfforts } from './records.js';
 import { draftWrites, joinDraft } from './recorder.js';
@@ -15,21 +17,35 @@ const DB_NAME = 'allure';
 export const VERSION = 9;
 let dbPromise;
 
+// Meta patches of the data migrations: pure (track points, meta) -> fields, tested on their own.
+export const PATCHES = {
+  2: (points) => ({ bestEfforts: points ? bestEfforts(analyze(points).track) : {} }),
+  4: (points) => ({ hrTime: points ? hrTime(points) : {} }),
+  8: (points, meta) => {
+    if (!points || !['hike', 'walk', 'swim'].includes(meta.sport)) return {};
+    const { movingTime, avgPace } = analyze(points, meta.sport);
+    return { movingTime, avgPace };
+  },
+};
+
+/** v9: a route record split into its meta and its points (`legs`, null when it had none). */
+export const splitRoute = ({ legs, ...meta }) => ({ meta, legs: legs ?? null });
+
 // Schema migrations, keyed by the version they upgrade to. They run inside the upgrade
 // transaction, in order, for every version above the one stored on the device.
-const MIGRATIONS = {
+export const MIGRATIONS = {
   1: (db) => {
     db.createObjectStore('activities', { keyPath: 'id' });
     db.createObjectStore('tracks');
   },
   // v2: metas gain `bestEfforts`, computed from the stored tracks.
-  2: (db, tx) => backfill(tx, (points) => ({ bestEfforts: points ? bestEfforts(analyze(points).track) : {} })),
+  2: (db, tx) => backfill(tx, PATCHES[2]),
   // v3: `drafts` holds the in-progress live recording, so a crash or reload loses nothing.
   3: (db) => db.createObjectStore('drafts'),
   // v4: metas gain `hrTime` (seconds per bpm); `settings` holds user preferences by key.
   4: (db, tx) => {
     db.createObjectStore('settings');
-    backfill(tx, (points) => ({ hrTime: points ? hrTime(points) : {} }));
+    backfill(tx, PATCHES[4]);
   },
   // v5: `segments`; metas gain `efforts` when a segment matches (none exist before v5).
   5: (db) => db.createObjectStore('segments', { keyPath: 'id' }),
@@ -38,11 +54,7 @@ const MIGRATIONS = {
   // v7: `photos` holds each activity's pictures (array of JPEG Blobs) by activity id.
   7: (db) => db.createObjectStore('photos'),
   // v8: moving speed threshold per sport (was 0.5 m/s for all): recompute slow sports' moving time.
-  8: (db, tx) => backfill(tx, (points, meta) => {
-    if (!points) return {};
-    const { movingTime, avgPace } = analyze(points, meta.sport);
-    return { movingTime, avgPace };
-  }, (meta) => ['hike', 'walk', 'swim'].includes(meta.sport)),
+  8: (db, tx) => backfill(tx, PATCHES[8], (meta) => ['hike', 'walk', 'swim'].includes(meta.sport)),
   // v9: route points (`legs`) move to `routeLegs` by route id, so listing routes reads metas only.
   9: (db, tx) => {
     db.createObjectStore('routeLegs');
@@ -50,7 +62,7 @@ const MIGRATIONS = {
     tx.objectStore('routes').openCursor().onsuccess = (e) => {
       const cursor = e.target.result;
       if (!cursor) return;
-      const { legs: l, ...meta } = cursor.value;
+      const { meta, legs: l } = splitRoute(cursor.value);
       if (l) {
         legs.put(l, cursor.key);
         cursor.update(meta);
@@ -182,13 +194,27 @@ export const getSetting = (key) => tx(['settings'], 'readonly', (s) => s.get(key
 export const setSetting = (key, value) => tx(['settings'], 'readwrite', (s) => s.put(value, key));
 
 /** Call fn(id, points) for every stored track, one at a time, without loading them all in memory. */
-export const forEachTrack = (fn) =>
-  tx(['tracks'], 'readonly', (s) => {
-    s.openCursor().onsuccess = (e) => {
-      const c = e.target.result;
-      if (c) { fn(c.key, c.value); c.continue(); }
-    };
+// Thinned tracks by activity id, for the session: opening Maps again reads only new or
+// changed tracks (a crop changes the distance) instead of every full track.
+const thinned = new Map(); // id → { distance, coords }
+
+/** [{ id, sport, coords }] thinned [lon, lat] lines (see heatmap.thin) of the metas with a track. */
+export async function thinTracks(metas) {
+  const todo = metas.filter((m) => thinned.get(m.id)?.distance !== m.distance);
+  if (todo.length) {
+    await tx(['tracks'], 'readonly', (s) => todo.forEach((m) => {
+      s.get(m.id).onsuccess = (e) => {
+        const points = e.target.result;
+        thinned.set(m.id, { distance: m.distance, coords: points?.length > 1 ? thin(points) : null });
+      };
+    }));
+  }
+  return metas.flatMap((m) => {
+    const coords = thinned.get(m.id)?.coords;
+    return coords ? [{ id: m.id, sport: m.sport, coords }] : [];
   });
+}
+
 
 export const listSegments = () => tx(['segments'], 'readonly', (s) => s.getAll());
 
@@ -233,27 +259,45 @@ export const deleteRoute = (id) => tx(['routes', 'routeLegs'], 'readwrite', (r, 
   l.delete(id);
 });
 
-/** Every store's contents, for a full backup (see lib/backup.js). */
-export async function exportAll() {
-  const [metas, keys, values, segments, routes, photoKeys, photoValues] = await Promise.all([
+/**
+ * Full backup file (see lib/backup.js), read BATCH activities at a time: each batch of
+ * lines becomes a Blob, which the browser may keep on disk, so the whole archive is never
+ * one string in memory.
+ */
+export async function exportBackup(now = Date.now()) {
+  let keys;
+  const [values, metas, segments, routes] = await Promise.all([
+    // Keys and values in one transaction, so a write in between can't misalign them.
+    tx(['settings'], 'readonly', (s) => { s.getAllKeys().onsuccess = (e) => { keys = e.target.result; }; return s.getAll(); }),
     tx(['activities'], 'readonly', (s) => s.getAll()),
-    tx(['settings'], 'readonly', (s) => s.getAllKeys()),
-    tx(['settings'], 'readonly', (s) => s.getAll()),
     listSegments(),
     listRoutes().then((metas) => Promise.all(metas.map((r) => getRoute(r.id)))),
-    tx(['photos'], 'readonly', (s) => s.getAllKeys()),
-    tx(['photos'], 'readonly', (s) => s.getAll()),
   ]);
-  const photos = new Map(await Promise.all(photoKeys.map(async (k, i) => [k, await Promise.all(photoValues[i].map(toDataUrl))])));
-  const points = new Map();
-  await forEachTrack((id, pts) => points.set(id, pts));
-  return {
-    schema: VERSION,
-    activities: metas.map((meta) => ({ meta, points: points.get(meta.id) ?? [], ...(photos.has(meta.id) && { photos: photos.get(meta.id) }) })),
-    settings: Object.fromEntries(keys.map((k, i) => [k, values[i]])),
-    segments,
-    routes,
-  };
+  const settings = Object.fromEntries(keys.map((k, i) => [k, values[i]]));
+  const parts = [`${backupHeader({ schema: VERSION, settings, segments, routes }, now)}\n`];
+  for (let i = 0; i < metas.length; i += BATCH) {
+    const chunk = metas.slice(i, i + BATCH);
+    const points = [], pics = [];
+    await tx(['tracks', 'photos'], 'readonly', (tracks, photos) => chunk.forEach((m, j) => {
+      tracks.get(m.id).onsuccess = (e) => { points[j] = e.target.result; };
+      photos.get(m.id).onsuccess = (e) => { pics[j] = e.target.result; };
+    }));
+    const lines = await Promise.all(chunk.map(async (meta, j) => {
+      const photos = pics[j]?.length ? await Promise.all(pics[j].map(toDataUrl)) : null;
+      return `${JSON.stringify({ meta, points: points[j] ?? [], ...(photos && { photos }) })}\n`;
+    }));
+    parts.push(new Blob(lines));
+  }
+  return new Blob(parts, { type: 'application/json' });
+}
+
+/** Restore a backup File over the local data, BATCH activities per transaction (same ids replaced, others kept). */
+export async function restoreBackup(file) {
+  const reader = file.stream().pipeThrough(new TextDecoderStream()).getReader();
+  async function* chunks() {
+    for (let r; !(r = await reader.read()).done;) yield r.value;
+  }
+  for await (const batch of backupBatches(splitLines(chunks()), VERSION)) await restoreAll(batch);
 }
 
 const toDataUrl = (blob) => new Promise((resolve, reject) => {
@@ -263,8 +307,8 @@ const toDataUrl = (blob) => new Promise((resolve, reject) => {
   r.readAsDataURL(blob);
 });
 
-/** Write a parsed backup over the local data (same ids are replaced, others kept). */
-export async function restoreAll({ activities, settings, segments, routes }) {
+/** Write a parsed backup batch over the local data (same ids are replaced, others kept). */
+async function restoreAll({ activities, settings, segments, routes }) {
   // Decoded before the transaction: an await inside it would let it auto-commit.
   const photos = await Promise.all(activities.map((a) => Promise.all((a.photos ?? []).map(async (u) => (await fetch(u)).blob()))));
   return tx(['activities', 'tracks', 'settings', 'segments', 'routes', 'routeLegs', 'photos'], 'readwrite', (acts, tracks, sets, segs, rts, legs, pics) => {
