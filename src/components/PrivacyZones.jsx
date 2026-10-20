@@ -1,5 +1,6 @@
 import { t } from '../lib/i18n.js';
 import { useState } from 'react';
+import ConfirmButton from './ConfirmButton.jsx';
 import { currentPosition } from '../lib/location.js';
 import { ZONE_RADII } from '../lib/privacy.js';
 
@@ -36,7 +37,7 @@ export default function PrivacyZones({ zones, activities, onSave }) {
               <span className="rec-label">🔒 {z.name}</span>
               <span>
                 <span className="muted">{z.radius} m</span>
-                <button type="button" className="ghost small" onClick={() => onSave(zones.filter((x) => x.id !== z.id))} aria-label={t('Supprimer {name}', { name: z.name })}>✕</button>
+                <ConfirmButton className="ghost small" label={t('Supprimer {name}', { name: z.name })} confirmLabel={t('Supprimer ?')} onConfirm={() => onSave(zones.filter((x) => x.id !== z.id))}>✕</ConfirmButton>
               </span>
             </li>
           ))}

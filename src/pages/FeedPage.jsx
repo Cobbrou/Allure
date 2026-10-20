@@ -51,6 +51,9 @@ export default function FeedPage({ activities, zones, onRefresh, onImport, onDem
       <div className={`ptr ${ptr.ready ? 'ready' : ''} ${ptr.busy ? 'busy' : ''}`} style={{ height: ptr.pull }} aria-hidden={!ptr.busy}>
         <span className="ptr-icon" style={{ '--r': `${ptr.pull * 3}deg` }}>↻</span>
       </div>
+      {!activities && (
+        <main className="feed" aria-busy="true">{[0, 1].map((i) => <div key={i} className="skeleton" style={{ height: 380 }} />)}</main>
+      )}
       {activities?.length > 0 && (
         <main className="feed">
           {activities.slice(0, shown).map((a, i) => <ActivityCard key={a.id} a={a} i={i} onShare={share} />)}

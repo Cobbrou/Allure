@@ -18,7 +18,18 @@ const num = (v) => Math.max(0, parseNum(v) || 0);
 export default function ManualPage({ id, activities, onSaved }) {
   // Only manual activities: saving this form over a GPS one would replace its preview and records.
   const old = id && activities?.find((a) => a.id === id && a.source === 'manual');
-  if (id && !old) return <Top title={t('Activité manuelle')} to="/" />;
+  if (id && !old) {
+    return (
+      <>
+        <Top title={t('Activité manuelle')} to="/" />
+        <main className="detail" aria-busy={!activities}>
+          {activities
+            ? <p className="card muted">{t("Cette activité n'existe pas ou n'a pas été saisie à la main.")}</p>
+            : <div className="skeleton" style={{ height: 320 }} />}
+        </main>
+      </>
+    );
+  }
   return <Form old={old} onSaved={onSaved} />;
 }
 

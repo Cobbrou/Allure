@@ -1,5 +1,6 @@
 import { t } from '../lib/i18n.js';
 import { useState } from 'react';
+import ConfirmButton from './ConfirmButton.jsx';
 import { fmtGoalValue, goalLabel, goalProgress, GOAL_PERIODS, METRICS } from '../lib/goals.js';
 import { SPORTS } from '../lib/sports.js';
 
@@ -26,7 +27,7 @@ export default function Goals({ goals, activities, onSave }) {
                 <b>{goalLabel(g)}</b>
                 <span className="muted">{fmtGoalValue(g.metric, p.value)} / {fmtGoalValue(g.metric, g.target)} {unit}{p.done && t(' · atteint 🎉')}</span>
               </div>
-              <button type="button" className="ghost small" aria-label={t("Supprimer l'objectif {goal}", { goal: goalLabel(g) })} onClick={() => remove(g.id)}>✕</button>
+              <ConfirmButton className="ghost small" label={t("Supprimer l'objectif {goal}", { goal: goalLabel(g) })} confirmLabel={t('Supprimer ?')} onConfirm={() => remove(g.id)}>✕</ConfirmButton>
             </li>
           );
         })}

@@ -39,8 +39,10 @@ export function useRoute() {
   return route;
 }
 
-export function go(path) {
-  location.hash = path;
+/** replace: take the current screen's place in history (a finished form back would reopen). */
+export function go(path, replace = false) {
+  if (replace) location.replace(`#${path}`);
+  else location.hash = path;
 }
 
 /** Back to the previous screen, or to `fallback` when the app was opened on this one (deep link). */

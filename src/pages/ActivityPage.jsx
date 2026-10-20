@@ -25,7 +25,7 @@ import { rpeLabel } from '../lib/training.js';
 import { toGpx } from '../lib/formats/gpxExport.js';
 import { hidePrivate } from '../lib/privacy.js';
 import { safeName, shareFile } from '../lib/share.js';
-import { go } from '../router.js';
+import { back } from '../router.js';
 
 export default function ActivityPage({ id, activities, hr, ftp, weight, zones, segments, onSegment, gears, onChange, onDeleted }) {
   const [data, setData] = useState(); // undefined: loading, null: not found
@@ -109,7 +109,7 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
       if (pics.length) await setPhotos(id, pics);
       await onChange();
     });
-    go('/');
+    back('/'); // to the list it was opened from
   };
   const savePhotos = async (blobs) => { await setPhotos(id, blobs); setPhotoList(blobs); };
   const exportGpx = async () => {
@@ -174,7 +174,8 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
 function TopBar({ children }) {
   return (
     <header className="topbar">
-      <a className="back" href="#/" aria-label={t('Retour aux activités')}>‹</a>
+      {/* Back where it was opened from (training log, calendar, segment…), with its scroll. */}
+      <a className="back" href="#/" aria-label={t('Retour')} onClick={(e) => { e.preventDefault(); back('/'); }}>‹</a>
       <div className="actions">{children}</div>
     </header>
   );

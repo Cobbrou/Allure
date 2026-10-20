@@ -5,6 +5,7 @@ import { distUnit, fmtDist, fmtDuration } from '../lib/format.js';
 import { SPORTS, sportOptions } from '../lib/sports.js';
 import { trainingWeeks, weekdayInitials } from '../lib/stats.js';
 import { activityEffort } from '../lib/training.js';
+import { back } from '../router.js';
 
 const PAGE = 12; // weeks shown per "load more"
 
@@ -33,7 +34,7 @@ export default function TrainingLogPage({ activities, hr }) {
   return (
     <>
       <header className="topbar">
-        <a className="back" href="#/profile" aria-label={t('Retour au profil')}>‹</a>
+        <a className="back" href="#/profile" aria-label={t('Retour au profil')} onClick={(e) => { e.preventDefault(); back('/profile'); }}>‹</a>
         <h1>{t('Journal')}</h1>
         <span className="back" aria-hidden="true" />
       </header>

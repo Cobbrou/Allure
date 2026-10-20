@@ -51,7 +51,7 @@ const LegalPage = lazy(pages.legal);
 const ManualPage = lazy(pages.manual);
 
 // Detail pages and where "back" lands when the app was opened on them (deep link).
-const BACK_TO = { activity: '/', manual: '/record', log: '/profile', segment: '/profile', route: '/maps', suggest: '/maps' };
+const BACK_TO = { activity: '/', manual: '/record', log: '/profile', segment: '/profile', route: '/maps', suggest: '/maps', settings: '/profile', legal: '/settings' };
 
 /** A stored setting as state: [value, save]. `initial` until loaded, or when never saved. */
 function useSetting(key, initial) {
@@ -210,7 +210,7 @@ export default function App() {
   }, [fillWatchHr]);
   const onRecorded = async (rid) => {
     const list = await reload(); // not listed.current: React hasn't rendered the new list yet
-    go(`/activity/${rid}`);
+    go(`/activity/${rid}`, true); // back from the new activity skips the finished recording
     fillWatchHr((list ?? []).filter((a) => a.id === rid), true).catch(() => {});
   };
 
@@ -231,10 +231,12 @@ export default function App() {
     }, () => {});
   }, [activities]);
 
-  // Toasts with a `ttl` (ms) go away on their own.
+  // Notices go away on their own (after `ttl` ms, 5 s by default); errors and notices with an
+  // action stay until closed, unless they set a `ttl`.
   useEffect(() => {
-    if (!toast?.ttl) return;
-    const timer = setTimeout(() => setToast((cur) => (cur === toast ? null : cur)), toast.ttl);
+    const ttl = toast?.ttl ?? (toast?.kind === 'notice' && !toast.action ? 5000 : 0);
+    if (!ttl) return;
+    const timer = setTimeout(() => setToast((cur) => (cur === toast ? null : cur)), ttl);
     return () => clearTimeout(timer);
   }, [toast]);
   const onDeleted = (undo) => setToast({
@@ -290,7 +292,7 @@ ${cur.text}` } : summary));
   else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} name={prefs.name} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} />;
   else if (page === 'settings') content = <SettingsPage activities={activities} hr={hr} hrSaved={hrSaved} ftpEstimate={ftpEstimate} onSaveHr={saveHr} units={units} onSaveUnits={saveUnits} lang={lang} onSaveLang={saveLang} prefs={prefs} onSavePrefs={savePrefs} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} onDemo={addDemo} onHealthImport={onHealthImport} onChange={reload} />;
   else if (page === 'legal') content = <LegalPage id={id} />;
-  else if (page === 'manual') content = <ManualPage id={id} activities={activities} onSaved={async (mid) => { await reload(); if (id) back(`/activity/${mid}`); else go(`/activity/${mid}`); }} />;
+  else if (page === 'manual') content = <ManualPage id={id} activities={activities} onSaved={async (mid) => { await reload(); if (id) back(`/activity/${mid}`); else go(`/activity/${mid}`, true); }} />;
   else content = <FeedPage activities={activities} zones={zones} onRefresh={reload} onImport={onImport} onDemo={addDemo} />;
 
   return (
@@ -308,13 +310,14 @@ ${cur.text}` } : summary));
         </div>
       )}
       {!progress && toast && (
-        <div className={`toast ${toast.kind} ${toast.action ? 'has-action' : ''}`} role={toast.kind === 'error' ? 'alert' : 'status'} onClick={() => setToast(null)}>
+        <div className={`toast ${toast.kind} row`} role={toast.kind === 'error' ? 'alert' : 'status'}>
           <span>{toast.text}</span>
           {toast.action && (
-            <button type="button" className="ghost small" onClick={(e) => { e.stopPropagation(); setToast(null); toast.action.run(); }}>
+            <button type="button" className="ghost small" onClick={() => { setToast(null); toast.action.run(); }}>
               {toast.action.label}
             </button>
           )}
+          <button type="button" className="ghost small toast-close" onClick={() => setToast(null)} aria-label={t('Fermer')}>✕</button>
         </div>
       )}
       <ErrorBoundary key={`${page}/${id ?? ''}/${units}/${lang}/${look}`}>

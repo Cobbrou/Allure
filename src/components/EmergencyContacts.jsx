@@ -1,5 +1,6 @@
 import { t } from '../lib/i18n.js';
 import { useState } from 'react';
+import ConfirmButton from './ConfirmButton.jsx';
 import { cleanPhone } from '../lib/safety.js';
 
 /**
@@ -33,7 +34,7 @@ export default function EmergencyContacts({ contacts, onSave }) {
               <span className="rec-label">🛟 {c.name}</span>
               <span>
                 <span className="muted">{c.phone}</span>
-                <button type="button" className="ghost small" onClick={() => onSave(contacts.filter((x) => x.id !== c.id))} aria-label={t('Supprimer {name}', { name: c.name })}>✕</button>
+                <ConfirmButton className="ghost small" label={t('Supprimer {name}', { name: c.name })} confirmLabel={t('Supprimer ?')} onConfirm={() => onSave(contacts.filter((x) => x.id !== c.id))}>✕</ConfirmButton>
               </span>
             </li>
           ))}

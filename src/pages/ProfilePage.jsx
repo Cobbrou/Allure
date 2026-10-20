@@ -49,12 +49,14 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
           <div className="avatar">{(name || 'A')[0].toUpperCase()}</div>
           <div>
             <h2>{name || t('Athlète Allure')}</h2>
-            <p className="muted">{tn(list.length, '{n} activité', '{n} activités')} · {t('{dist} au total', { dist: `${fmtDist(allDist, 0)} ${distUnit()}` })}</p>
+            {activities && <p className="muted">{tn(list.length, '{n} activité', '{n} activités')} · {t('{dist} au total', { dist: `${fmtDist(allDist, 0)} ${distUnit()}` })}</p>}
           </div>
         </section>
 
-        <Goals goals={goals} activities={list} onSave={onSaveGoals} />
-        <Achievements activities={list} />
+        {/* Until the list loads: placeholders, not "0 activities" and empty goals. */}
+        {!activities && [180, 320].map((h) => <div key={h} className="skeleton" style={{ height: h }} />)}
+        {activities && <Goals goals={goals} activities={list} onSave={onSaveGoals} />}
+        {activities && <Achievements activities={list} />}
 
         {list.length > 0 && (
           <>
@@ -82,7 +84,7 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
           </>
         )}
 
-        <Gear gears={gears} activities={list} onSave={onSaveGears} />
+        {activities && <Gear gears={gears} activities={list} onSave={onSaveGears} />}
       </main>
     </>
   );

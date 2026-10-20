@@ -120,9 +120,9 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 .recharts-surface:focus-visible, .maplibregl-canvas:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
 .ghost { background: transparent; color: var(--text); border-color: var(--border); }
 .ghost:hover { background: var(--border); }
-.small { min-height: 38px; padding: 0 14px; font-size: 14px; }
+.small { min-height: 44px; padding: 0 14px; font-size: 14px; }
 .danger { background: transparent; color: var(--danger-text); border-color: var(--danger-50); }
-.danger.armed { background: var(--danger); color: #fff; border-color: var(--danger); }
+.danger.armed, .ghost.armed { background: var(--danger); color: #fff; border-color: var(--danger); }
 
 .toast {
   position: fixed; top: calc(var(--safe-top) + 64px); left: 16px; right: 16px; max-width: 608px; margin: 0 auto; z-index: 25;
@@ -130,8 +130,10 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 }
 .toast.error { background: color-mix(in srgb, var(--bg) 78%, var(--danger)); border: 1px solid var(--danger-50); color: var(--danger-text); }
 .toast.notice { background: var(--card-2); border: 1px solid var(--border-strong); color: var(--text); }
-.toast.has-action { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.toast.has-action button { flex-shrink: 0; min-height: 44px; }
+.toast.row { display: flex; align-items: center; gap: 8px; padding-right: 8px; }
+.toast.row > span { flex: 1; }
+.toast.row button { flex-shrink: 0; }
+.toast-close { width: 44px; padding: 0; border-color: transparent; color: inherit; }
 .progress { height: 4px; border-radius: 2px; background: var(--border); margin-top: 8px; overflow: hidden; }
 .progress > div { height: 100%; background: var(--accent); transition: width 0.2s ease; }
 
@@ -252,6 +254,7 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .goals b { font-size: 14px; }
 .goals .muted { font-size: 13px; }
 .goals .ghost { width: 44px; min-height: 44px; padding: 0; color: var(--muted); }
+.goals .ghost.armed { width: auto; padding: 0 12px; color: #fff; }
 .ring { width: 56px; height: 56px; transform: rotate(-90deg); }
 .ring circle { fill: none; stroke: var(--border); stroke-width: 4; }
 .ring circle + circle { stroke: var(--accent); stroke-linecap: round; animation: ring 0.8s var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 60ms + 150ms); }
@@ -390,7 +393,7 @@ table.splits .pace { font-weight: 600; width: 56px; }
 
 /* Profile dashboard */
 .segmented { display: flex; gap: 4px; padding: 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; scrollbar-width: none; }
-.segmented button { flex: 1 0 auto; min-height: 36px; padding: 0 12px; font-size: 13px; background: transparent; border-color: transparent; color: var(--muted); border-radius: 9px; }
+.segmented button { flex: 1 0 auto; min-height: 44px; padding: 0 12px; font-size: 13px; background: transparent; border-color: transparent; color: var(--muted); border-radius: 9px; }
 .segmented button.on { background: var(--border); color: var(--text); }
 .totals { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 12px; margin-top: 14px; }
 .totals span { display: block; font-size: 12px; color: var(--muted); }
@@ -405,7 +408,7 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .weeks-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px; }
 .cal-head { display: flex; align-items: center; justify-content: space-between; }
 .cal-head h3 { margin: 0; text-transform: capitalize; }
-.icon { width: 40px; min-height: 40px; padding: 0; font-size: 22px; }
+.icon { width: 44px; min-height: 44px; padding: 0; font-size: 22px; }
 .cal-sub { font-size: 13px; text-align: center; margin: 2px 0 10px; }
 .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
 .cal-dow { font-size: 11px; color: var(--muted); padding-bottom: 4px; }
@@ -644,7 +647,6 @@ ol.splits li.best .split-gap { color: var(--on-accent); }
 .screen-fields { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .screen-fields li { display: flex; align-items: center; gap: 6px; padding: 2px 4px 2px 12px; background: var(--card-2); border: 1px solid var(--border); border-radius: var(--radius); }
 .screen-fields span { flex: 1; }
-.screen-fields .icon { width: 44px; min-height: 44px; }
 .live-map { position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); background: var(--card); }
 .live-recenter { position: absolute; left: 10px; bottom: 10px; }
 .map.live { height: max(240px, calc(100vh - 430px - var(--safe-top) - var(--safe-bottom))); }

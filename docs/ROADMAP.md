@@ -496,12 +496,15 @@ Code health
       in `global.css` (the drop-zone text comes from a `data-drop` attribute)
 
 UI/UX
-- [ ] Tap targets ≥ 44 px [U1]: `.segmented button` (36), `.small` (38), `.icon` (40)
-- [ ] Toasts expire after 5 s by default, errors stay; toast as a real button [U2]
-- [ ] Back navigation returns to where the activity was opened from (training log,
+- [x] Tap targets ≥ 44 px [U1]: `.segmented button` (36), `.small` (38), `.icon` (40)
+- [x] Toasts expire after 5 s by default, errors stay; toast as a real button [U2]
+      (notices with an action stay too; every toast has a ✕ close button)
+- [x] Back navigation returns to where the activity was opened from (training log,
       calendar, segment…) with its scroll position; edge swipe on Settings and Legal [U3]
-- [ ] `ConfirmButton` on goal, privacy zone and contact deletes [U4]
-- [ ] Loading states on the feed, profile and an unknown `#/manual/<id>` [U5]
+      (history back; a just-recorded or just-added activity replaces the record / form
+      screen, so back skips it)
+- [x] `ConfirmButton` on goal, privacy zone and contact deletes [U4]
+- [x] Loading states on the feed, profile and an unknown `#/manual/<id>` [U5]
 - [ ] Type scale and radius tokens: 18 font sizes and 16 radii today, no text under 11 px [U7]
 - [ ] Last hard-coded colours (`.pin.me`, `.danger.armed`) and stories following the
       accent colour [U8]

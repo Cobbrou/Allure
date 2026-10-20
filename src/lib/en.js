@@ -704,4 +704,6 @@ export default {
   'Allure a été mis à jour dans un autre onglet : recharge cette page.': 'Allure was updated in another tab: reload this page.',
   'Service de routage saturé : réessaie dans une minute.': 'Routing service busy: try again in a minute.',
   'Réessayer': 'Try again',
+  'Fermer': 'Close',
+  "Cette activité n'existe pas ou n'a pas été saisie à la main.": "This activity doesn't exist or wasn't entered by hand.",
 };
