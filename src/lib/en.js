@@ -150,6 +150,7 @@ export default {
   "La FC sert aux zones cardio, à l'effort relatif et à la courbe de forme ; la FTP à l'intensité et à la charge des sorties vélo ; le poids aux calories.":
     'Heart rate drives HR zones, Relative Effort and the fitness curve; FTP drives the intensity and load of rides; weight drives calories.',
   'FC max': 'Max HR',
+  'Ajuster manuellement': 'Adjust manually',
   '{n} (estimée)': '{n} (estimated)',
   '{n} (montre)': '{n} (watch)',
   'FC repos': 'Resting HR',

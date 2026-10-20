@@ -25,6 +25,8 @@ export default function HrSettings({ hr, ftpEstimate, saved, onSave }) {
     <form className="card edit hr-settings" onSubmit={submit}>
       <h3>{t('Cardio et puissance')}</h3>
       <p className="muted">{t("La FC sert aux zones cardio, à l'effort relatif et à la courbe de forme ; la FTP à l'intensité et à la charge des sorties vélo ; le poids aux calories.")}</p>
+      <details>
+      <summary className="muted">{t('Ajuster manuellement')}</summary>
       <div className="row">
         <label>{t('FC max')}
           <input type="number" inputMode="numeric" min="120" max="230" placeholder={t('{n} (estimée)', { n: hr.max })} value={max}
@@ -44,6 +46,7 @@ export default function HrSettings({ hr, ftpEstimate, saved, onSave }) {
         </label>
       </div>
       <div className="row"><button type="submit">{t(done ? 'Enregistré ✓' : 'Enregistrer')}</button></div>
+      </details>
     </form>
   );
 }

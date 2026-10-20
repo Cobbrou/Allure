@@ -349,7 +349,7 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .gear-actions { margin: 10px 0 2px 52px; }
 .gear .retired { opacity: 0.7; }
 .gear-retired { margin-top: 8px; }
-.gear-retired summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-size: 14px; }
+.gear-retired summary, .hr-settings summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-size: 14px; }
 
 
 /* Profile dashboard */
