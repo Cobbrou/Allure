@@ -335,9 +335,10 @@ Fixes
       the same session from Health Connect and from a FIT export slips through. Treat
       overlapping time ranges of the same sport as duplicates
       (`isDuplicate`: start + moving time, the elapsed time is not stored)
-- [ ] Indoor files are rejected: GPX / TCX / FIT points without coordinates are filtered
+- [x] Indoor files are rejected: GPX / TCX / FIT points without coordinates are filtered
       out (treadmill, home trainer, pool). Import them as track-less activities with time,
       distance, HR and power from the file; same for Health Connect indoor sessions
+      (`indoorActivity`; Health Connect distance needs `READ_DISTANCE`, not requested)
 - [x] Heart-rate strap lost mid-recording stays lost (`sensors.js`): retry
       `gatt.connect()` a few times on `gattserverdisconnected`, toast if it gives up
       (retries after 1, 3 and 10 s)

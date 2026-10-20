@@ -195,7 +195,7 @@ export default function App() {
     const workouts = await readWorkouts();
     const tasks = healthTasks(workouts);
     await syncRestingHr(true).catch(() => {}); // a missing resting HR never fails the import
-    if (!tasks.length) throw new Error(t(workouts.length ? 'Aucune séance avec trace GPS dans Health Connect.' : 'Aucune séance trouvée dans Health Connect.'));
+    if (!tasks.length) throw new Error(t(workouts.length ? 'Aucune séance importable dans Health Connect.' : 'Aucune séance trouvée dans Health Connect.'));
     return importTasks(tasks, existing, onProgress);
   });
   // run(existing, onProgress) imports and returns importTasks' result.

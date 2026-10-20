@@ -1,5 +1,5 @@
 import { t } from './i18n.js';
-import { createActivity, isDuplicate } from './activity.js';
+import { createActivity, indoorActivity, isDuplicate } from './activity.js';
 import { saveActivities } from './db.js';
 import { parseCsv } from './formats/csv.js';
 import { parseGpx } from './formats/gpx.js';
@@ -73,8 +73,11 @@ export async function importTasks(tasks, existing, onProgress = () => {}) {
     onProgress(i, tasks.length);
     await new Promise((r) => setTimeout(r)); // let the progress paint between files
     try {
-      const { name, type, points, laps, source } = await task.read();
-      const item = createActivity({ name, sport: sportFromGpxType(type), points, laps, source });
+      const { name, type, points, samples, distance, movingTime, laps, source } = await task.read();
+      const sport = sportFromGpxType(type);
+      const item = points
+        ? createActivity({ name, sport, points, laps, source })
+        : indoorActivity({ name, sport, samples, distance, movingTime, source });
       if (seen.some((m) => isDuplicate(m, item.meta))) { result.duplicates++; continue; }
       seen.push(item.meta);
       batch.push(item);
@@ -89,21 +92,29 @@ export async function importTasks(tasks, existing, onProgress = () => {}) {
 }
 
 // Health Connect exercise types Allure has a sport for (sportFromGpxType maps them).
-const HEALTH_SPORTS = /^(RUNNING|BIKING|HIKING|WALKING|SWIMMING_OPEN_WATER)$/;
+const HEALTH_SPORTS = /^(RUNNING|RUNNING_TREADMILL|BIKING|BIKING_STATIONARY|HIKING|WALKING|SWIMMING_OPEN_WATER|SWIMMING_POOL)$/;
 
 /**
- * Health Connect workouts (capacitor-health queryWorkouts) to import tasks. Only outdoor
- * sports with a GPS route are kept: Allure activities are built from a track.
+ * Health Connect workouts (capacitor-health queryWorkouts) to import tasks, for the sports
+ * Allure has. A workout without a route (treadmill, indoor bike, pool) comes in track-less.
  */
 export function healthTasks(workouts) {
   return workouts
-    .filter((w) => HEALTH_SPORTS.test(w.workoutType) && w.route?.length >= 2)
+    .filter((w) => HEALTH_SPORTS.test(w.workoutType))
     .map((w) => ({ label: w.title || w.workoutType, read: async () => fromHealthWorkout(w) }));
 }
 
-/** One workout to { name, type, points, source }; each point takes the nearest heart rate sample within 10 s. */
+/**
+ * One workout to { name, type, points, source }; each point takes the nearest heart rate sample
+ * within 10 s. Without a route: { name, type, samples, distance, movingTime, source }.
+ */
 export function fromHealthWorkout(w) {
   const hrs = (w.heartRate ?? []).map((s) => ({ t: Date.parse(s.timestamp), bpm: s.bpm })).sort((a, b) => a.t - b.t);
+  if (!(w.route?.length >= 2)) {
+    // ponytail: distance stays undefined while READ_DISTANCE is not requested (AndroidManifest.xml).
+    const samples = [{ time: Date.parse(w.startDate) }, ...hrs.map((s) => ({ time: s.t, hr: s.bpm })), { time: Date.parse(w.endDate) }];
+    return { name: w.title || undefined, type: w.workoutType, samples, distance: w.distance, movingTime: w.duration, source: 'healthconnect' };
+  }
   let j = 0;
   const points = w.route
     .map((r) => ({ lat: r.lat, lon: r.lng, ele: r.alt ?? null, time: Date.parse(r.timestamp) }))

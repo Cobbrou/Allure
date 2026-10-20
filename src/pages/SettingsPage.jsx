@@ -99,7 +99,7 @@ export default function SettingsPage({ activities, hr, hrSaved, ftpEstimate, onS
         {health !== 'unsupported' && (
           <section className="card">
             <h3>Health Connect</h3>
-            <p className="muted">{t('Importe les sorties enregistrées par ta montre (Pixel Watch, Fitbit…) : course, vélo, rando, marche et nage en eau libre avec trace GPS et fréquence cardiaque. Les séances déjà importées sont ignorées.')}</p>
+            <p className="muted">{t('Importe les séances enregistrées par ta montre (Pixel Watch, Fitbit…) : course, vélo, rando, marche et natation, avec trace GPS et fréquence cardiaque, ou en salle sans trace. Les séances déjà importées sont ignorées.')}</p>
             {health === 'missing'
               ? <button onClick={async () => { const { installHealthConnect } = await import('../lib/health.js'); installHealthConnect(); }}>{t('Installer Health Connect')}</button>
               : <button onClick={onHealthImport}>{t('Importer depuis Health Connect')}</button>}

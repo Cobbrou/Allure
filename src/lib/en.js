@@ -6,7 +6,7 @@ export default {
   '🎉 Objectif atteint : {goal}': '🎉 Goal reached: {goal}',
   '🏆 Défi terminé : {title}': '🏆 Challenge completed: {title}',
   'Stockage indisponible : {error}': 'Storage unavailable: {error}',
-  'Aucune séance avec trace GPS dans Health Connect.': 'No session with a GPS track in Health Connect.',
+  'Aucune séance importable dans Health Connect.': 'No importable session in Health Connect.',
   'Aucune séance trouvée dans Health Connect.': 'No session found in Health Connect.',
   'Import… {done} / {total}': 'Importing… {done} / {total}',
   '{n} activité importée': '{n} activity imported',
@@ -221,7 +221,7 @@ export default {
   "Sauvegarde faite avec une version plus récente d'Allure : mets l'app à jour.": 'Backup made with a newer version of Allure: update the app.',
   'Allure est ouvert dans un autre onglet : ferme-le pour terminer la mise à jour.': 'Allure is open in another tab: close it to finish the update.',
   'Allure est ouvert dans un autre onglet : ferme-le puis réessaie.': 'Allure is open in another tab: close it and try again.',
-  'Aucun point GPS dans ce fichier FIT (activité en salle ?).': 'No GPS points in this FIT file (indoor activity?).',
+  'Aucune donnée exploitable dans ce fichier.': 'No usable data in this file.',
   'Fichier GPX invalide (XML illisible).': 'Invalid GPX file (unreadable XML).',
   'Aucun point GPS exploitable dans ce fichier.': 'No usable GPS points in this file.',
   'Archive trop volumineuse (ZIP64 non supporté).': 'Archive too large (ZIP64 not supported).',
@@ -582,8 +582,8 @@ export default {
   'Localisation': 'Location',
   'Utilisée seulement pendant un enregistrement, y compris écran éteint.': 'Used only while recording, including with the screen off.',
   'Données': 'Data',
-  'Importe les sorties enregistrées par ta montre (Pixel Watch, Fitbit…) : course, vélo, rando, marche et nage en eau libre avec trace GPS et fréquence cardiaque. Les séances déjà importées sont ignorées.':
-    'Import outings recorded by your watch (Pixel Watch, Fitbit…): runs, rides, hikes, walks and open-water swims with a GPS track and heart rate. Sessions already imported are skipped.',
+  'Importe les séances enregistrées par ta montre (Pixel Watch, Fitbit…) : course, vélo, rando, marche et natation, avec trace GPS et fréquence cardiaque, ou en salle sans trace. Les séances déjà importées sont ignorées.':
+    'Import the sessions your watch recorded (Pixel Watch, Fitbit…): run, ride, hike, walk and swim, with GPS track and heart rate, or indoors without a track. Sessions already imported are skipped.',
   'Installer Health Connect': 'Install Health Connect',
   'Importer depuis Health Connect': 'Import from Health Connect',
   'Données de démo': 'Demo data',

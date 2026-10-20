@@ -83,6 +83,25 @@ export function manualActivity({ id, name, sport = 'run', date, movingTime, dist
   return { meta, points: [] };
 }
 
+const MAX_GAP = 60; // s: a longer gap between samples is a pause
+
+/**
+ * An activity without a GPS track (treadmill, home trainer, pool) from a file's or a watch's
+ * samples [{ time, hr?, dist?, power? }]: like one typed in by hand, plus heart rate and power.
+ * distance and movingTime come from the device when given, else from the samples.
+ */
+export function indoorActivity({ name, sport = 'run', samples, distance, movingTime, source = 'gpx' }) {
+  let moving = 0, far = 0, hrSum = 0, hrN = 0;
+  samples.forEach((s, i) => {
+    const dt = i ? (s.time - samples[i - 1].time) / 1000 : 0;
+    if (dt > 0 && dt < MAX_GAP) moving += dt;
+    if (s.dist > far) far = s.dist;
+    if (Number.isFinite(s.hr)) { hrSum += s.hr; hrN++; }
+  });
+  const { meta } = manualActivity({ name, sport, date: samples[0].time, movingTime: Math.round(movingTime ?? moving), distance: distance ?? far });
+  return { meta: { ...meta, source, avgHr: hrN ? Math.round(hrSum / hrN) : null, hrTime: hrTime(samples), ...powerStats(samples) }, points: [] };
+}
+
 /**
  * Same sport and overlapping time ranges: the same session, e.g. from Health Connect and from
  * the watch's FIT file. The range ends after the moving time (the elapsed time is not stored).

@@ -2,26 +2,26 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { deflateRawSync, gzipSync } from 'node:zlib';
 import { Encoder, Profile } from '@garmin/fitsdk';
-import { isDuplicate } from '../src/lib/activity.js';
+import { indoorActivity, isDuplicate } from '../src/lib/activity.js';
 import { parseCsv } from '../src/lib/formats/csv.js';
 import { parseFit } from '../src/lib/formats/fit.js';
 import { readZip } from '../src/lib/formats/zip.js';
 import { collectTasks, fromHealthWorkout, healthTasks } from '../src/lib/importer.js';
 
 /** Small FIT activity: `n` records 1 s apart heading north from Chamonix, two laps. */
-function fitFile(n = 30, sport = 'cycling') {
+function fitFile(n = 30, sport = 'cycling', gps = true) {
   const e = new Encoder();
   const t0 = new Date('2026-10-01T08:00:00Z');
   e.writeMesg({ mesgNum: Profile.MesgNum.FILE_ID, type: 'activity', manufacturer: 'development', product: 0, timeCreated: t0, serialNumber: 1 });
   for (let i = 0; i < n; i++) {
     e.writeMesg({
       mesgNum: Profile.MesgNum.RECORD, timestamp: new Date(+t0 + i * 1000),
-      positionLat: Math.round(((45.9 + i * 0.00005) / 180) * 2 ** 31), positionLong: Math.round((6.87 / 180) * 2 ** 31),
-      altitude: 1040 + i, heartRate: 130 + (i % 5), power: 200 + i,
+      ...(gps && { positionLat: Math.round(((45.9 + i * 0.00005) / 180) * 2 ** 31), positionLong: Math.round((6.87 / 180) * 2 ** 31) }),
+      distance: i * 5, altitude: 1040 + i, heartRate: 130 + (i % 5), power: 200 + i,
     });
   }
   for (const k of [0, Math.floor(n / 2)]) e.writeMesg({ mesgNum: Profile.MesgNum.LAP, timestamp: t0, startTime: new Date(+t0 + k * 1000) });
-  e.writeMesg({ mesgNum: Profile.MesgNum.SESSION, timestamp: t0, startTime: t0, sport, totalElapsedTime: n, totalTimerTime: n });
+  e.writeMesg({ mesgNum: Profile.MesgNum.SESSION, timestamp: t0, startTime: t0, sport, totalElapsedTime: n, totalTimerTime: n, totalDistance: (n - 1) * 5 });
   return e.close();
 }
 
@@ -90,7 +90,7 @@ test('isDuplicate matches overlapping sessions of the same sport', () => {
   assert.ok(!isDuplicate(fit, { sport: 'run', date: 1_000_000 + 1801_000, movingTime: 600 })); // right after
 });
 
-test('healthTasks keeps outdoor workouts with a route', () => {
+test('healthTasks keeps the sports Allure has, with or without a route', () => {
   const route = [{ timestamp: '2026-10-01T08:00:00Z', lat: 45.9, lng: 6.87 }, { timestamp: '2026-10-01T08:00:05Z', lat: 45.9001, lng: 6.87 }];
   const tasks = healthTasks([
     { workoutType: 'RUNNING', title: 'Footing', route },
@@ -98,7 +98,7 @@ test('healthTasks keeps outdoor workouts with a route', () => {
     { workoutType: 'BIKING' },
     { workoutType: 'YOGA', route },
   ]);
-  assert.deepEqual(tasks.map((t) => t.label), ['Footing']);
+  assert.deepEqual(tasks.map((t) => t.label), ['Footing', 'RUNNING_TREADMILL', 'BIKING']);
 });
 
 test('fromHealthWorkout maps the route and takes the nearest heart rate within 10 s', () => {
@@ -116,4 +116,32 @@ test('fromHealthWorkout maps the route and takes the nearest heart rate within 1
   assert.equal(r.source, 'healthconnect');
   assert.deepEqual(r.points.map((p) => [p.lat, p.ele, p.hr]), [[45.9, null, 120], [45.9002, 1042, 140], [45.9004, 1045, null]]);
   assert.equal(r.points[0].time, Date.parse('2026-10-01T08:00:00Z'));
+});
+
+test('an indoor FIT (no GPS) comes back as samples with the session totals', () => {
+  const { type, samples, distance, movingTime, points } = parseFit(fitFile(10, 'training', false));
+  assert.equal(points, undefined);
+  assert.equal(type, 'training');
+  assert.equal(samples.length, 10);
+  assert.deepEqual([samples[2].hr, samples[2].dist, samples[2].power], [132, 10, 202]);
+  assert.deepEqual([distance, movingTime], [45, 10]);
+});
+
+test('indoorActivity: track-less meta with HR, power and the given totals', () => {
+  const samples = Array.from({ length: 61 }, (_, i) => ({ time: 1_000_000 + i * 1000, hr: 140, dist: i * 3, power: 180 }));
+  const { meta, points } = indoorActivity({ sport: 'ride', samples, source: 'fit' });
+  assert.deepEqual(points, []);
+  assert.deepEqual([meta.date, meta.movingTime, meta.distance, meta.avgHr, meta.avgPower, meta.source], [1_000_000, 60, 180, 140, 180, 'fit']);
+  assert.equal(meta.hrTime[140], 60);
+  assert.equal(indoorActivity({ sport: 'run', samples, distance: 200, movingTime: 70 }).meta.movingTime, 70);
+});
+
+test('fromHealthWorkout without a route gives samples, duration and heart rate', () => {
+  const r = fromHealthWorkout({
+    workoutType: 'RUNNING_TREADMILL', startDate: '2026-10-01T08:00:00Z', endDate: '2026-10-01T08:30:00Z', duration: 1800,
+    heartRate: [{ timestamp: '2026-10-01T08:10:00Z', bpm: 150 }],
+  });
+  assert.equal(r.points, undefined);
+  assert.equal(r.movingTime, 1800);
+  assert.deepEqual(r.samples.map((x) => x.hr ?? null), [null, 150, null]);
 });

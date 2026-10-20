@@ -190,8 +190,10 @@ and `lib/sports.js` (`effort()` picks km/h, min/km or min/100 m by sport).
 - `.gz`: platform `DecompressionStream`.
 - Strava archive: `activities.csv` provides names and sport types, matched by `Filename`.
 - Health Connect (Android): `lib/health.js` reads workouts through `capacitor-health`;
-  `healthTasks` keeps outdoor sports with a route and `fromHealthWorkout` matches each
-  route point to the nearest heart rate sample (≤ 10 s). Both feed `importTasks`, like files.
+  `healthTasks` keeps the sports Allure has and `fromHealthWorkout` matches each
+  route point to the nearest heart rate sample (≤ 10 s); without a route it returns samples.
+- Indoor files and workouts (no GPS): parsers return `samples` instead of `points`, and
+  `indoorActivity` builds a track-less meta (time, distance, HR, power), stored with no points. Both feed `importTasks`, like files.
   `readRestingHr` goes through the local `RestingHr` plugin (`android/app/.../RestingHrPlugin.kt`);
   App keeps the result in the `watchRest` setting, used when no resting HR is typed in.
 
