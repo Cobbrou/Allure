@@ -7,6 +7,7 @@ import MyData from '../components/MyData.jsx';
 import PrivacyZones from '../components/PrivacyZones.jsx';
 import Segmented from '../components/Segmented.jsx';
 import { deleteActivities } from '../lib/db.js';
+import { parseNum } from '../lib/format.js';
 import { FIELDS } from '../lib/liveFields.js';
 import { VOICE, VOICE_EVERY, VOICE_FIELDS } from '../lib/recorder.js';
 import { displayOf, SPORTS } from '../lib/sports.js';
@@ -197,8 +198,14 @@ function VoiceSettings({ voice, onChange }) {
       ))}
       <div className="edit">
         <label>{t('Alerte si le cardio dépasse (bpm)')}
-          <input type="number" inputMode="numeric" min="80" max="230" placeholder={t('Désactivée')} value={voice.hrHigh ?? ''}
-            onChange={(e) => onChange({ ...voice, hrHigh: +e.target.value || null })} />
+          {/* Committed on blur, so typing 165 doesn't pass through 1 and 16. */}
+          <input type="number" inputMode="numeric" min="80" max="230" placeholder={t('Désactivée')} defaultValue={voice.hrHigh ?? ''}
+            onBlur={(e) => {
+              const n = Math.round(parseNum(e.target.value));
+              const hrHigh = n > 0 ? Math.min(230, Math.max(80, n)) : null;
+              e.target.value = hrHigh ?? '';
+              if (hrHigh !== (voice.hrHigh ?? null)) onChange({ ...voice, hrHigh });
+            }} />
         </label>
       </div>
     </>

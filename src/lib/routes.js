@@ -33,6 +33,7 @@ export function parseLeg(geojson) {
 
 async function fetchGeojson(url) {
   const res = await fetch(url);
+  if (res.status === 429) throw new Error(t('Service de routage saturé : réessaie dans une minute.'));
   if (!res.ok) throw new Error(t('Routage indisponible ({status})', { status: res.status }));
   return res.json();
 }

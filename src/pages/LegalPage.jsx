@@ -3,7 +3,7 @@ import { back } from '../router.js';
 
 // Legal texts shown in the app. Keep them in sync with what the app actually sends out:
 // every new network service or permission must be listed in the privacy policy, in both
-// languages (FR and EN below say the same thing).
+// languages (FR and EN below say the same thing), and its host in the CSP (vite.config.js).
 const UPDATED = { fr: '20 octobre 2026', en: '20 October 2026' };
 const REPO = 'https://github.com/Cobbrou/Allure';
 

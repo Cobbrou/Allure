@@ -10,7 +10,7 @@ import { distUnit, elevUnit, fmtDist, fmtElev, isImperial } from '../lib/format.
 import { currentPosition } from '../lib/location.js';
 import { createRoute, fetchRoute, splitLegs } from '../lib/routes.js';
 import { SPORTS } from '../lib/sports.js';
-import { BEARINGS, cellKey, FALLBACK_START, familiarity, loopWaypoints, rank } from '../lib/suggest.js';
+import { BEARINGS, cellKey, FALLBACK_START, familiarity, loopWaypoints, rank, settleLimited } from '../lib/suggest.js';
 import { back } from '../router.js';
 
 const sportOptions = () => ['run', 'ride', 'hike'].map((id) => ({ id, label: `${SPORTS[id].icon} ${SPORTS[id].label}` }));
@@ -65,8 +65,11 @@ export default function SuggestPage({ activities, onPick }) {
       const { distance, gain } = analyze(r.points);
       return { bearing, waypoints, points: r.points, distance, gain, unpaved: r.unpaved, familiar: familiarity(r.points, cells.current) };
     };
-    const all = (await Promise.allSettled(BEARINGS.map(loop))).filter((x) => x.status === 'fulfilled').map((x) => x.value);
-    setResults(all.length ? rank(all, { distance: target, terrain, surface, discover }) : { error: t('Aucun itinéraire trouvé : vérifie ta connexion.') });
+    const settled = await settleLimited(BEARINGS, 2, loop);
+    const all = settled.filter((x) => x.status === 'fulfilled').map((x) => x.value);
+    // fetch rejects with a TypeError when offline; anything else (rate limit, no route) says what happened.
+    const told = settled.find((x) => x.status === 'rejected' && !(x.reason instanceof TypeError))?.reason.message;
+    setResults(all.length ? rank(all, { distance: target, terrain, surface, discover }) : { error: told ?? t('Aucun itinéraire trouvé : vérifie ta connexion.') });
   };
 
   const keep = (c) => onPick(createRoute({

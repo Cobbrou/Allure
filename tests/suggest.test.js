@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { haversine } from '../src/lib/geo.js';
 import { splitLegs, unpavedShare } from '../src/lib/routes.js';
-import { cellKey, familiarity, loopWaypoints, offset, rank } from '../src/lib/suggest.js';
+import { cellKey, familiarity, loopWaypoints, offset, rank, settleLimited } from '../src/lib/suggest.js';
 
 const ll = ([lon, lat]) => ({ lon, lat });
 const start = [6.87, 45.92];
@@ -51,4 +51,18 @@ test('unpavedShare weighs ways by distance, splitLegs cuts at the waypoints', ()
   const legs = splitLegs(pts, [[6, 45], [6.021, 45], [6.04, 45]]);
   assert.deepEqual(legs.map((l) => l.length), [3, 3]);
   assert.equal(legs[0].at(-1), legs[1][0]);
+});
+
+test('settleLimited runs at most `limit` calls at once and keeps the order', async () => {
+  let running = 0, peak = 0;
+  const out = await settleLimited([1, 2, 3, 4, 5], 2, async (n) => {
+    peak = Math.max(peak, ++running);
+    await new Promise((r) => setTimeout(r, 5));
+    running--;
+    if (n === 3) throw new Error('no route');
+    return n * 10;
+  });
+  assert.equal(peak, 2);
+  assert.deepEqual(out.map((x) => x.value ?? x.reason.message), [10, 20, 'no route', 40, 50]);
+  assert.deepEqual(await settleLimited([], 2, async () => 1), []);
 });

@@ -8,6 +8,22 @@ const WIGGLE = 1.25; // routed length over the circle drawn through the waypoint
 export const FALLBACK_START = [6.8696, 45.9237]; // Chamonix, where the demo history lives
 export const BEARINGS = [0, 60, 120, 180, 240, 300];
 
+/**
+ * Promise.allSettled over `items` with at most `limit` calls of fn running at once: the
+ * public routing server answers a burst of requests with 429 (too many requests).
+ */
+export async function settleLimited(items, limit, fn) {
+  const out = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    for (let i; (i = next++) < items.length;) {
+      try { out[i] = { status: 'fulfilled', value: await fn(items[i]) }; } catch (reason) { out[i] = { status: 'rejected', reason }; }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return out;
+}
+
 /** The point `d` meters from [lon, lat] towards `bearing` degrees (flat approximation). */
 export function offset([lon, lat], d, bearing) {
   const b = bearing * RAD;

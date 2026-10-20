@@ -4,7 +4,6 @@
 
 import { locale, t } from './i18n.js';
 import { Capacitor, registerPlugin } from '@capacitor/core';
-import { demoTrack } from './demo.js';
 
 /**
  * Watch the position. Calls onFix({ lat, lon, ele, time, accuracy, speed }) and
@@ -52,16 +51,20 @@ function watchNative(onFix, onError) {
 }
 
 function simulate(speedup, onFix) {
-  const track = demoTrack({ km: 5, start: 0 });
-  const t0 = Date.now();
-  let i = 0;
-  const timer = setInterval(() => {
-    while (i < track.length && track[i].time <= (Date.now() - t0) * speedup) {
-      const p = track[i++];
-      onFix({ lat: p.lat, lon: p.lon, ele: p.ele, time: t0 + p.time / speedup, accuracy: 5, speed: null });
-    }
-  }, 250);
-  return () => clearInterval(timer);
+  let timer, stopped = false;
+  import('./demo.js').then(({ demoTrack }) => { // dev only: kept out of the bundle
+    if (stopped) return;
+    const track = demoTrack({ km: 5, start: 0 });
+    const t0 = Date.now();
+    let i = 0;
+    timer = setInterval(() => {
+      while (i < track.length && track[i].time <= (Date.now() - t0) * speedup) {
+        const p = track[i++];
+        onFix({ lat: p.lat, lon: p.lon, ele: p.ele, time: t0 + p.time / speedup, accuracy: 5, speed: null });
+      }
+    }, 250);
+  });
+  return () => { stopped = true; clearInterval(timer); };
 }
 
 /** Keep the screen on. Re-acquired when the page becomes visible again. Returns a release function. */

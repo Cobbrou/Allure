@@ -19,18 +19,20 @@ export function workoutSummary(w) {
  */
 export default function WorkoutEditor({ workout: w, onChange }) {
   const set = (patch) => onChange({ ...w, ...patch });
-  const field = (label, value, onValue) => (
-    <label>{label}<input type="number" inputMode="numeric" min="0" value={value} onChange={(e) => onValue(num(e.target.value))} /></label>
+  // min applied on blur: clamping while typing would turn a cleared "6" into "16".
+  const field = (label, value, onValue, min = 0) => (
+    <label>{label}<input type="number" inputMode="numeric" min={min} value={value}
+      onChange={(e) => onValue(num(e.target.value))} onBlur={() => value < min && onValue(min)} /></label>
   );
   return (
     <div className="edit workout-editor">
       <p className="muted">{workoutSummary(w)}</p>
       {field(t('Échauffement (min)'), w.warmup / 60, (n) => set({ warmup: n * 60 }))}
-      {field(t('Répétitions'), w.reps, (reps) => set({ reps }))}
+      {field(t('Répétitions'), w.reps, (reps) => set({ reps }), 1)}
       <Segmented label={t('Effort')} value={w.work.type}
         options={[{ id: 'dist', label: t('Distance') }, { id: 'time', label: t('Durée') }]}
         onChange={(type) => set({ work: { type, value: type === 'dist' ? 400 : 60 } })} />
-      {field(w.work.type === 'dist' ? t('Effort (m)') : t('Effort (s)'), w.work.value, (value) => set({ work: { ...w.work, value } }))}
+      {field(w.work.type === 'dist' ? t('Effort (m)') : t('Effort (s)'), w.work.value, (value) => set({ work: { ...w.work, value } }), 1)}
       {field(t('Récupération (s)'), w.rest.value, (value) => set({ rest: { type: 'time', value } }))}
       {field(t('Retour au calme (min)'), w.cooldown / 60, (n) => set({ cooldown: n * 60 }))}
     </div>

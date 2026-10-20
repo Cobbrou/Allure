@@ -107,6 +107,12 @@ function Builder({ saved, activities, onSave, onDelete }) {
         {missing.length > 0 && t(' · calcul…')}
         {failed && t(' · routage indisponible, tronçon en ligne droite')}
       </p>
+      {failed && (
+        <button type="button" className="ghost small"
+          onClick={() => setLegCache((c) => Object.fromEntries(Object.entries(c).filter(([, leg]) => leg !== 'error')))}>
+          {t('Réessayer')}
+        </button>
+      )}
       <div className="row route-tools">
         <button type="button" className="ghost" disabled={!waypoints.length} onClick={() => setWaypoints((w) => w.slice(0, -1))}>{t('Annuler')}</button>
         <button type="button" className="ghost" disabled={waypoints.length < 2} onClick={() => setWaypoints((w) => [...w, w[0]])}>{t('Boucler')}</button>

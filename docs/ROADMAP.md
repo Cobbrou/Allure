@@ -456,12 +456,14 @@ Reliability
 - [x] Two close `read({ prompt: true })` calls lose the first promise in
       `RestingHrPlugin.kt` [B4] (calls queue behind one permission screen; compiled, not
       run on a device)
-- [ ] Validation [B8]: HR alert threshold range, workouts with ≥ 1 rep, no negative
+- [x] Validation [B8]: HR alert threshold range, workouts with ≥ 1 rep, no negative
       manual values, no double submit, `#/manual/<id>` refused for a GPS activity
-- [ ] BRouter [B9]: suggestions fire 12 requests at once (likely 429, misleading
+      (threshold and minimums applied on blur, so typing isn't fought)
+- [x] BRouter [B9]: suggestions fire 12 requests at once (likely 429, misleading
       "connection" message): limit concurrency, tell rate limits apart; retry a failed leg
-      in the route builder
-- [ ] Content Security Policy in `index.html` [B10]
+      in the route builder (two loops at a time, `settleLimited`; "Réessayer" button)
+- [x] Content Security Policy in `index.html` [B10] (injected into builds by
+      `vite.config.js`: the dev server needs inline scripts; no violation on the built app)
 
 Performance & battery
 - [x] Live map sends the whole track and re-centres every second [I9, U6]: send a thinned
@@ -477,7 +479,10 @@ Performance & battery
       still restored; see `DECISIONS.md`. 60 activities: 11 MB in 0.9 s; 1,000 still to measure)
 - [ ] Live elevation gain re-smooths the whole track every second from GPS altitude [B7]:
       incremental, and closer to the DEM-corrected final value
-- [ ] Demo data (58 KB) in the start-up bundle [B6]: dynamic `import()`
+      (measured: 1.4 ms per call at 6 h / 21,600 points on a desktop, only while the field
+      is shown. Left as is until a phone measurement says otherwise; the gap with the
+      DEM-corrected total needs the DEM live, i.e. network while recording)
+- [x] Demo data (58 KB) in the start-up bundle [B6]: dynamic `import()` (own 61 KB chunk)
 - [ ] Self-hosted Inter font: no Google request (helps C2), right font offline in the app
 
 Code health

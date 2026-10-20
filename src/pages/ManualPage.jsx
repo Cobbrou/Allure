@@ -9,14 +9,15 @@ import { back } from '../router.js';
 
 // "2026-10-20T07:30" in local time, the value format of <input type="datetime-local">.
 const localInput = (ms) => new Date(ms - new Date(ms).getTimezoneOffset() * 60e3).toISOString().slice(0, 16);
-const num = (v) => parseNum(v) || 0;
+const num = (v) => Math.max(0, parseNum(v) || 0);
 
 /**
  * Add an activity without GPS (gym, treadmill, pool…), or edit the numbers of one (id).
  * onSaved(id) runs once it is stored.
  */
 export default function ManualPage({ id, activities, onSaved }) {
-  const old = id && activities?.find((a) => a.id === id);
+  // Only manual activities: saving this form over a GPS one would replace its preview and records.
+  const old = id && activities?.find((a) => a.id === id && a.source === 'manual');
   if (id && !old) return <Top title={t('Activité manuelle')} to="/" />;
   return <Form old={old} onSaved={onSaved} />;
 }
@@ -38,16 +39,22 @@ function Form({ old, onSaved }) {
   const when = new Date(date).getTime();
   const valid = movingTime > 0 && Number.isFinite(when);
 
+  const [busy, setBusy] = useState(false); // a double tap must not add the activity twice
+
   const save = async (e) => {
     e.preventDefault();
-    const { meta, points } = manualActivity({
-      id: old?.id, name: name.trim(), sport, date: when, movingTime,
-      distance: num(dist) * len, gain: swim || !gain ? null : num(gain) * elevLen(), rpe,
-    });
-    // Editing keeps what the numbers don't cover: description, notes, gear.
-    if (old) await updateActivity({ ...old, ...meta, rpe: rpe || undefined });
-    else await saveActivities([{ meta, points }]);
-    onSaved(meta.id);
+    if (busy) return;
+    setBusy(true);
+    try {
+      const { meta, points } = manualActivity({
+        id: old?.id, name: name.trim(), sport, date: when, movingTime,
+        distance: num(dist) * len, gain: swim || !gain ? null : num(gain) * elevLen(), rpe,
+      });
+      // Editing keeps what the numbers don't cover: description, notes, gear.
+      if (old) await updateActivity({ ...old, ...meta, rpe: rpe || undefined });
+      else await saveActivities([{ meta, points }]);
+      await onSaved(meta.id);
+    } finally { setBusy(false); }
   };
 
   return (
@@ -94,7 +101,7 @@ function Form({ old, onSaved }) {
               aria-valuetext={rpe ? `${rpe}/10 ${rpeLabel(rpe)}` : t('Non renseigné')} />
             <span className="hint">{t('Sans cardio, c’est lui qui compte dans ta forme.')}</span>
           </label>
-          <button type="submit" disabled={!valid}>{t(old ? 'Enregistrer' : "Ajouter l'activité")}</button>
+          <button type="submit" disabled={!valid || busy}>{t(old ? 'Enregistrer' : "Ajouter l'activité")}</button>
         </form>
       </main>
     </>

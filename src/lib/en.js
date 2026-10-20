@@ -702,4 +702,6 @@ export default {
   'Fractionné à {place}': 'Intervals in {place}',
   'Dépose tes fichiers': 'Drop your files',
   'Allure a été mis à jour dans un autre onglet : recharge cette page.': 'Allure was updated in another tab: reload this page.',
+  'Service de routage saturé : réessaie dans une minute.': 'Routing service busy: try again in a minute.',
+  'Réessayer': 'Try again',
 };

@@ -5,7 +5,6 @@ import TabBar from './components/TabBar.jsx';
 import { addWatchHr, createActivity, needsWatchHr } from './lib/activity.js';
 import { backupDue } from './lib/backup.js';
 import { deleteRoute, deleteSegment, getActivity, getSetting, listActivities, listRoutes, listSegments, persistStorage, saveActivities, saveRoute, saveSegment, setSetting } from './lib/db.js';
-import { demoHistory } from './lib/demo.js';
 import { setUnits } from './lib/format.js';
 import { deviceLang, getLang, setLang, t, tn } from './lib/i18n.js';
 import { newlyUnlocked } from './lib/achievements.js';
@@ -274,6 +273,7 @@ ${cur.text}` } : summary));
   };
 
   const addDemo = async () => {
+    const { demoHistory } = await import('./lib/demo.js'); // demo tracks stay out of the start-up bundle
     await saveActivities(demoHistory().map((h) => createActivity({ ...h, source: 'demo' })));
     await reload();
   };
