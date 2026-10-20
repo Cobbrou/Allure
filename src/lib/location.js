@@ -18,7 +18,7 @@ export function watchPosition(onFix, onError, { background = false, maxAge = 0 }
   if (sim) return simulate(sim, onFix);
   if (background && Capacitor.isNativePlatform()) return watchNative(onFix, onError);
   if (!navigator.geolocation) {
-    onError('GPS indisponible sur cet appareil.');
+    onError(t('GPS indisponible sur cet appareil.'));
     return () => {};
   }
   const id = navigator.geolocation.watchPosition(
@@ -43,7 +43,7 @@ function watchNative(onFix, onError) {
       onFix({ lat: loc.latitude, lon: loc.longitude, ele: loc.altitude, time: loc.time, accuracy: loc.accuracy, speed: loc.speed });
     },
   );
-  id.catch(() => onError('GPS indisponible sur cet appareil.'));
+  id.catch(() => onError(t('GPS indisponible sur cet appareil.')));
   return () => {
     if (stopped) return;
     stopped = true;

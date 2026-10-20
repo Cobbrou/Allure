@@ -1,9 +1,10 @@
-import { locale, t, tn } from '../lib/i18n.js';
+import { t, tn } from '../lib/i18n.js';
+import { fmtMonth } from '../lib/format.js';
 import { useMemo } from 'react';
 import FriendChallenges from '../components/FriendChallenges.jsx';
 import { badges, fmtChallenge, monthChallenges } from '../lib/challenges.js';
 
-const monthName = (y, m) => new Date(y, m, 1).toLocaleDateString(locale(), { month: 'long', year: 'numeric' });
+const monthName = (y, m) => fmtMonth(new Date(y, m, 1));
 
 /**
  * Groups tab: this month's challenges and the trophy case (local, from your activities),

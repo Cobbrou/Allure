@@ -1,6 +1,6 @@
-import { locale, t, tn } from '../lib/i18n.js';
+import { t, tn } from '../lib/i18n.js';
 import { useMemo } from 'react';
-import { fmtDuration } from '../lib/format.js';
+import { fmtDay, fmtDuration } from '../lib/format.js';
 import { matchedActivities } from '../lib/matched.js';
 import { effort } from '../lib/sports.js';
 
@@ -23,7 +23,7 @@ export default function MatchedActivities({ meta, activities }) {
           const e = effort(m.sport, m.avgPace);
           const row = (
             <>
-              <span className="matched-date">{new Date(m.date).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: '2-digit' })}</span>
+              <span className="matched-date">{fmtDay(m.date, '2-digit')}</span>
               <span className="matched-bar"><span className="bar" style={{ width: `${(best / m.avgPace) * 100}%`, '--i': i }} /></span>
               <b>{fmtDuration(m.movingTime)}</b>
               <span className="muted">{e.value} {e.unit}</span>

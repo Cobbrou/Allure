@@ -95,8 +95,13 @@ function open() {
       for (let v = e.oldVersion + 1; v <= VERSION; v++) MIGRATIONS[v](req.result, req.transaction);
     };
     req.onsuccess = () => {
-      // Let a newer version of the app (another tab) upgrade the schema.
-      req.result.onversionchange = () => req.result.close();
+      // Let a newer version of the app (another tab) upgrade the schema. This tab's code is
+      // now stale: reopening at its old version would fail, so every later access says why.
+      req.result.onversionchange = () => {
+        req.result.close();
+        dbPromise = Promise.reject(new Error(t('Allure a été mis à jour dans un autre onglet : recharge cette page.')));
+        dbPromise.catch(() => {}); // reported by the caller that needs it
+      };
       resolve(req.result);
     };
     req.onerror = () => reject(req.error);

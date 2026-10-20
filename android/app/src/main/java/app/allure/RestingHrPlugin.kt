@@ -31,14 +31,16 @@ import kotlinx.coroutines.launch
 class RestingHrPlugin : Plugin() {
     private val permission = HealthPermission.getReadPermission(RestingHeartRateRecord::class)
     private lateinit var launcher: ActivityResultLauncher<Set<String>>
-    private var pending: PluginCall? = null
+    // Calls waiting on the permission screen: a second read({ prompt: true }) while it is open
+    // joins them instead of replacing the first, whose promise would never settle.
+    private val pending = mutableListOf<PluginCall>()
 
     override fun load() {
         // Must be registered while the activity is being created, hence here and not in read().
         launcher = activity.registerForActivityResult(PermissionController.createRequestPermissionResultContract()) { granted ->
-            val call = pending ?: return@registerForActivityResult
-            pending = null
-            if (permission in granted) query(call) else call.resolve(JSObject().put("bpm", JSArray()))
+            val calls = pending.toList()
+            pending.clear()
+            calls.forEach { if (permission in granted) query(it) else it.resolve(JSObject().put("bpm", JSArray())) }
         }
     }
 
@@ -49,7 +51,10 @@ class RestingHrPlugin : Plugin() {
                 val granted = client().permissionController.getGrantedPermissions()
                 when {
                     permission in granted -> query(call)
-                    call.getBoolean("prompt", false) == true -> { pending = call; launcher.launch(setOf(permission)) }
+                    call.getBoolean("prompt", false) == true -> {
+                        pending.add(call)
+                        if (pending.size == 1) launcher.launch(setOf(permission))
+                    }
                     else -> call.resolve(JSObject().put("bpm", JSArray()))
                 }
             } catch (e: Exception) {

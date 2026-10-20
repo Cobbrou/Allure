@@ -10,10 +10,10 @@ const SEMICIRCLE = 180 / 2 ** 31;
  */
 export function parseFit(bytes) {
   const decoder = new Decoder(Stream.fromByteArray(bytes));
-  if (!decoder.isFIT()) throw new Error('Fichier FIT invalide.');
+  if (!decoder.isFIT()) throw new Error(t('Fichier FIT invalide.'));
   const { messages, errors } = decoder.read();
   const records = messages.recordMesgs ?? [];
-  if (errors.length && !records.length) throw new Error(`Fichier FIT illisible : ${errors[0].message}`);
+  if (errors.length && !records.length) throw new Error(t('Fichier FIT illisible : {error}', { error: errors[0].message }));
   const points = records
     .filter((r) => r.positionLat != null && r.positionLong != null)
     .map((r) => ({

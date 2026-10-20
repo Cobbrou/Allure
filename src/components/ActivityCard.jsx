@@ -1,6 +1,6 @@
-import { locale, t } from '../lib/i18n.js';
+import { t } from '../lib/i18n.js';
 import { useState } from 'react';
-import { distUnit, fmtDist, fmtDuration } from '../lib/format.js';
+import { distUnit, fmtDate, fmtDist, fmtDuration } from '../lib/format.js';
 import { effort, SPORTS } from '../lib/sports.js';
 import RoutePreview from './RoutePreview.jsx';
 import StatMetric from './StatMetric.jsx';
@@ -47,6 +47,3 @@ export default function ActivityCard({ a, i = 0, onShare }) {
     </article>
   );
 }
-
-export const fmtDate = (d) =>
-  new Date(d).toLocaleString(locale(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });

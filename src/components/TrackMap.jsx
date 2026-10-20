@@ -1,14 +1,10 @@
 import { t } from '../lib/i18n.js';
 import { useEffect, useRef } from 'react';
-import { LngLatBounds, Map as MapLibre, Marker, setWorkerUrl } from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-// MapLibre resolves its worker relative to its own module URL, which Vite's dep bundling breaks.
-import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
-import { mapStyle } from '../lib/offline.js';
-import { ACCENT, CASING, mapLocale } from '../theme.js';
+import { LngLatBounds, Marker } from 'maplibre-gl';
+import { createMap } from '../map.js';
+import { ACCENT, CASING } from '../theme.js';
 import Terrain3D from './Terrain3D.js';
 
-setWorkerUrl(workerUrl);
 
 const DRAW_MS = 1200; // route drawing animation
 
@@ -22,7 +18,7 @@ export default function TrackMap({ track, hover, range }) {
     const coords = track.map((p) => [p.lon, p.lat]);
     const bounds = coords.reduce((b, c) => b.extend(c), new LngLatBounds(coords[0], coords[0]));
     // cooperativeGestures: one finger scrolls the page, two fingers move the map (ctrl+wheel on desktop).
-    const map = new MapLibre({ container: el.current, style: mapStyle(), locale: mapLocale(), bounds, fitBoundsOptions: { padding: 40 }, cooperativeGestures: true });
+    const map = createMap({ container: el.current, bounds, fitBoundsOptions: { padding: 40 }, cooperativeGestures: true });
 
     const line = (c) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: c } });
     let frame;

@@ -7,7 +7,7 @@ import { t } from '../i18n.js';
 export function parseTcx(text) {
   // Strava's TCX exports start with whitespace before <?xml, which is a parse error.
   const doc = new DOMParser().parseFromString(text.trim(), 'application/xml');
-  if (doc.querySelector('parsererror')) throw new Error('Fichier TCX invalide (XML illisible).');
+  if (doc.querySelector('parsererror')) throw new Error(t('Fichier TCX invalide (XML illisible).'));
   const v = (n, tag) => n.getElementsByTagNameNS('*', tag)[0]?.textContent;
   const all = [...doc.getElementsByTagNameNS('*', 'Trackpoint')]
     .map((n) => {

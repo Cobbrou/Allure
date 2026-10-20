@@ -12,7 +12,7 @@ export async function readZip(blob) {
   for (let i = tail.byteLength - 22; i >= 0; i--) {
     if (tail.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
   }
-  if (eocd < 0) throw new Error('Archive ZIP invalide.');
+  if (eocd < 0) throw new Error(t('Archive ZIP invalide.'));
   const count = tail.getUint16(eocd + 10, true);
   const cdSize = tail.getUint32(eocd + 12, true);
   const cdOffset = tail.getUint32(eocd + 16, true);
@@ -22,7 +22,7 @@ export async function readZip(blob) {
   const utf8 = new TextDecoder();
   const entries = [];
   for (let p = 0, n = 0; n < count; n++) {
-    if (cd.getUint32(p, true) !== 0x02014b50) throw new Error('Archive ZIP corrompue.');
+    if (cd.getUint32(p, true) !== 0x02014b50) throw new Error(t('Archive ZIP corrompue.'));
     const method = cd.getUint16(p + 10, true);
     const size = cd.getUint32(p + 20, true);
     const nameLen = cd.getUint16(p + 28, true);

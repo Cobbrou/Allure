@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
-import { fmtDist, fmtElev, fmtLength, fmtPaceUnit, fmtSpeed, setUnits } from '../src/lib/format.js';
+import { fmtDist, fmtElev, fmtLength, fmtPaceUnit, fmtSpeed, parseNum, setUnits } from '../src/lib/format.js';
 import { fmtGoalValue, METRICS } from '../src/lib/goals.js';
 import { voiceCue, startRecording } from '../src/lib/recorder.js';
 import { displayOf, effort, setDisplays, splitSize } from '../src/lib/sports.js';
@@ -46,4 +46,11 @@ test('pace or speed per sport, swims stay per 100 m', () => {
   const r = startRecording({}, 0);
   assert.equal(voiceCue({ ...r, distance: 990 }, { ...r, distance: 1000, active: 300_000, runningSince: null }, 0).text,
     '1 kilomètre. Vitesse moyenne 12,0 kilomètres heure.');
+});
+
+test('parseNum reads a decimal comma or point, NaN otherwise', () => {
+  assert.equal(parseNum('4,5'), 4.5);
+  assert.equal(parseNum(' 12.25 '), 12.25);
+  assert.equal(parseNum(7), 7);
+  assert.ok(Number.isNaN(parseNum('abc')));
 });

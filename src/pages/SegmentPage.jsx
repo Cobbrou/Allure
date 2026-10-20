@@ -1,8 +1,8 @@
-import { locale, t, tn } from '../lib/i18n.js';
+import { t, tn } from '../lib/i18n.js';
 import { useMemo, useRef } from 'react';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import TrackMap from '../components/TrackMap.jsx';
-import { distUnit, elevUnit, fmtDist, fmtDuration, fmtElev } from '../lib/format.js';
+import { distUnit, elevUnit, fmtDay, fmtDist, fmtDuration, fmtElev } from '../lib/format.js';
 import { leaderboard } from '../lib/segments.js';
 import { effort, SPORTS } from '../lib/sports.js';
 import { back } from '../router.js';
@@ -53,7 +53,7 @@ export default function SegmentPage({ id, segments, activities, onDelete }) {
                   <li key={`${b.meta.id}/${b.from}`}>
                     <a href={`#/activity/${b.meta.id}`}>
                       <span className={`rank ${i === 0 ? 'first' : ''}`}>{i + 1}</span>
-                      <span className="muted">{new Date(b.meta.date).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: '2-digit' })}</span>
+                      <span className="muted">{fmtDay(b.meta.date, '2-digit')}</span>
                     </a>
                     <a href={`#/activity/${b.meta.id}`}>
                       <b>{fmtDuration(b.time)}</b>

@@ -1,7 +1,6 @@
-import { locale, t } from '../lib/i18n.js';
-import { fmtDuration, fmtPaceUnit, paceUnit } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
+import { fmtDay, fmtDuration, fmtPaceUnit, paceUnit } from '../lib/format.js';
 
-const fmtDay = (d) => new Date(d).toLocaleDateString(locale(), { day: 'numeric', month: 'short' });
 const fmtKm = (m) => `${(m / 1000).toFixed(m % 1000 ? 1 : 0)} km`;
 
 /** Predicted race times. predictions: [{ id, label, m, time?, from? }] from predictRaces(). */

@@ -1,6 +1,5 @@
 import { t } from '../lib/i18n.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { fmtDate } from '../components/ActivityCard.jsx';
 import BestEfforts from '../components/BestEfforts.jsx';
 import BottomSheet from '../components/BottomSheet.jsx';
 import ConfirmButton from '../components/ConfirmButton.jsx';
@@ -19,7 +18,7 @@ import { analyze, computeSplits } from '../lib/analyze.js';
 import { addWatchHr, cropActivity } from '../lib/activity.js';
 import { correctElevation } from '../lib/elevation.js';
 import { deleteActivities, getActivity, getPhotos, saveActivities, setPhotos, updateActivity } from '../lib/db.js';
-import { distUnit, fmtDist, fmtDuration } from '../lib/format.js';
+import { distUnit, fmtDate, fmtDist, fmtDuration } from '../lib/format.js';
 import { defaultGear, GEAR_KINDS, gearFor } from '../lib/gear.js';
 import { SPORTS, splitSize as splitSizeOf } from '../lib/sports.js';
 import { rpeLabel } from '../lib/training.js';

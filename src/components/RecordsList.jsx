@@ -1,5 +1,5 @@
-import { locale, t } from '../lib/i18n.js';
-import { fmtDuration, fmtPaceUnit, paceUnit } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
+import { fmtDay, fmtDuration, fmtPaceUnit, paceUnit } from '../lib/format.js';
 
 /** Personal records table. records: [{ id, label, m, time?, activity? }]. */
 export default function RecordsList({ records }) {
@@ -16,7 +16,7 @@ export default function RecordsList({ records }) {
               {r.time ? (
                 <a href={`#/activity/${r.activity.id}`}>
                   <b>{fmtDuration(r.time)}</b>
-                  <span className="muted">{fmtPaceUnit(r.time / (r.m / 1000))} {paceUnit()} · {new Date(r.activity.date).toLocaleDateString(locale(), { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  <span className="muted">{fmtPaceUnit(r.time / (r.m / 1000))} {paceUnit()} · {fmtDay(r.activity.date, 'numeric')}</span>
                 </a>
               ) : (
                 <span className="muted">—</span>

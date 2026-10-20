@@ -1,5 +1,5 @@
-import { locale, t, tn } from '../lib/i18n.js';
-import { distUnit, fmtDist } from '../lib/format.js';
+import { t, tn } from '../lib/i18n.js';
+import { distUnit, fmtDist, fmtMonth } from '../lib/format.js';
 import { useMemo, useState } from 'react';
 import { byDay, monthGrid, startOfDay, weekdayInitials } from '../lib/stats.js';
 
@@ -10,7 +10,7 @@ export default function ActivityCalendar({ activities, sport }) {
   const grid = monthGrid(cursor.y, cursor.m);
   const today = startOfDay(Date.now());
   const shift = (n) => setCursor(({ y, m }) => { const d = new Date(y, m + n, 1); return { y: d.getFullYear(), m: d.getMonth() }; });
-  const title = new Date(cursor.y, cursor.m, 1).toLocaleDateString(locale(), { month: 'long', year: 'numeric' });
+  const title = fmtMonth(new Date(cursor.y, cursor.m, 1));
   const activeDays = grid.flat().filter((t) => t && days.has(t)).length;
 
   return (

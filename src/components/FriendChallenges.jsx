@@ -1,4 +1,5 @@
-import { locale, t, tn } from '../lib/i18n.js';
+import { t, tn } from '../lib/i18n.js';
+import { fmtDay } from '../lib/format.js';
 import { useEffect, useState } from 'react';
 import ConfirmButton from './ConfirmButton.jsx';
 import { getSetting, setSetting } from '../lib/db.js';
@@ -8,7 +9,6 @@ import { appLink, shareText } from '../lib/share.js';
 import { SPORTS } from '../lib/sports.js';
 
 const DAY = 86400000;
-const fmtDay = (ms) => new Date(ms).toLocaleDateString(locale(), { day: 'numeric', month: 'short' });
 const fmtValue = (metric, v) => (METRICS[metric].unit ? `${fmtGoalValue(metric, v)} ${METRICS[metric].unit}` : tn(v, '{n} activité', '{n} activités'));
 // <input type="date"> value <-> local midnight.
 const toInput = (ms) => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };

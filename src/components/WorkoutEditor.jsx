@@ -1,8 +1,8 @@
 import { t } from '../lib/i18n.js';
-import { fmtDuration, fmtLength } from '../lib/format.js';
+import { fmtDuration, fmtLength, parseNum } from '../lib/format.js';
 import Segmented from './Segmented.jsx';
 
-const num = (v) => Math.max(0, Math.round(+v) || 0);
+const num = (v) => Math.max(0, Math.round(parseNum(v)) || 0);
 
 /** Short summary of a template: "10 min · 6 × 400 m / 1:30 · 5 min". */
 export function workoutSummary(w) {

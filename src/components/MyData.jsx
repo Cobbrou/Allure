@@ -1,7 +1,7 @@
 import { t } from '../lib/i18n.js';
+import { fmtDate } from '../lib/format.js';
 import { useEffect, useState } from 'react';
 import ConfirmButton from './ConfirmButton.jsx';
-import { fmtDate } from './ActivityCard.jsx';
 import { backupName } from '../lib/backup.js';
 import { deleteAllData, exportBackup, getSetting, persistStorage, restoreBackup, setSetting } from '../lib/db.js';
 import { shareFile } from '../lib/share.js';

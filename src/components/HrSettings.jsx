@@ -1,6 +1,6 @@
 import { t } from '../lib/i18n.js';
 import { useEffect, useState } from 'react';
-import { isImperial } from '../lib/format.js';
+import { isImperial, parseNum } from '../lib/format.js';
 
 const LB = 2.20462; // pounds per kg: weight is stored in kg
 
@@ -14,7 +14,7 @@ export default function HrSettings({ hr, ftpEstimate, saved, onSave }) {
   const [weight, setWeight] = useState(shownWeight(saved?.weight));
   const [done, setDone] = useState(false);
   useEffect(() => { setMax(saved?.max ?? ''); setRest(saved?.rest ?? ''); setFtp(saved?.ftp ?? ''); setWeight(shownWeight(saved?.weight)); }, [saved]); // eslint-disable-line react-hooks/exhaustive-deps -- k follows the units, which remount the page
-  const num = (v, lo, hi) => (v === '' ? undefined : Math.min(hi, Math.max(lo, Math.round(Number(v)))));
+  const num = (v, lo, hi) => (v === '' ? undefined : Math.min(hi, Math.max(lo, Math.round(parseNum(v)))));
   const submit = async (e) => {
     e.preventDefault();
     const kg = weight === '' ? undefined : Math.round(Math.min(250, Math.max(30, Number(weight) / k)) * 10) / 10;

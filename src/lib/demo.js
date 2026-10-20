@@ -98,7 +98,7 @@ export function demoHistory(now = Date.now(), count = 20, rand = Math.random) {
     if (i === 1) {
       const place = PLACES[1 + Math.floor(rand() * 2)]; // flat places: the intervals show in the pace
       const start = now - (3 + rand()) * 86400e3;
-      return { sport: 'run', name: `Fractionné à ${place.name}`, laps: WORKOUT_LAPS.map((s) => start + s * 1000),
+      return { sport: 'run', name: t('Fractionné à {place}', { place: place.name }), laps: WORKOUT_LAPS.map((s) => start + s * 1000),
         points: demoTrack({ place, sport: 'run', km: 11, start, rand, workout: true }) };
     }
     const sport = rand() < 0.6 ? 'run' : rand() < 0.6 ? 'ride' : 'hike';

@@ -61,7 +61,7 @@ export async function shrinkPhoto(file, max = 1600) {
   c.height = Math.round(img.height * k);
   c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
   img.close();
-  return new Promise((resolve, reject) => c.toBlob((b) => (b ? resolve(b) : reject(new Error('Image illisible'))), 'image/jpeg', 0.85));
+  return new Promise((resolve, reject) => c.toBlob((b) => (b ? resolve(b) : reject(new Error(t('Image illisible.')))), 'image/jpeg', 0.85));
 }
 
 /** Share the story currently drawn on `canvas` as a PNG (alpha kept for transparent ones). */

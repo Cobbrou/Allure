@@ -1,9 +1,7 @@
 import { locale, t } from '../lib/i18n.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { GeolocateControl, LngLatBounds, Map as MapLibre, Marker, setWorkerUrl } from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-// Same Vite worker fix as TrackMap.
-import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+import { GeolocateControl, LngLatBounds, Marker } from 'maplibre-gl';
+import { createMap } from '../map.js';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import ProfileChart from '../components/ProfileChart.jsx';
 import Segmented from '../components/Segmented.jsx';
@@ -16,10 +14,9 @@ import { safeName, shareFile } from '../lib/share.js';
 import { SPORTS } from '../lib/sports.js';
 import { back } from '../router.js';
 import { getRoute } from '../lib/db.js';
-import { downloadRoute, mapStyle, offlineInfo, removeOffline } from '../lib/offline.js';
-import { ACCENT, mapLocale } from '../theme.js';
+import { downloadRoute, offlineInfo, removeOffline } from '../lib/offline.js';
+import { ACCENT } from '../theme.js';
 
-setWorkerUrl(workerUrl);
 
 const sportOptions = () => ['run', 'ride', 'hike', 'walk'].map((id) => ({ id, label: `${SPORTS[id].icon} ${SPORTS[id].label}` }));
 const snapOptions = () => [{ id: true, label: t('Suivre les chemins') }, { id: false, label: t('Ligne droite') }];
@@ -200,7 +197,7 @@ function BuilderMap({ center, fit, waypoints, points, hover, onAdd, onMove }) {
 
   useEffect(() => {
     // No cooperativeGestures: the map is the editing surface, so one finger pans it.
-    const m = new MapLibre({ container: el.current, style: mapStyle(), locale: mapLocale(), center, zoom: 13 });
+    const m = createMap({ container: el.current, center, zoom: 13 });
     if (fit?.length > 1) m.fitBounds(fit.reduce((b, c) => b.extend(c), new LngLatBounds(fit[0], fit[0])), { padding: 40, duration: 0 });
     m.addControl(new GeolocateControl({ positionOptions: { enableHighAccuracy: true } }), 'top-right');
     m.on('load', () => {

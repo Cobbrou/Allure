@@ -64,6 +64,7 @@ src/
   App.jsx           route switch, activity list, GPX import, demo seeding
   router.js         hash routing: useRoute() / go()
   theme.js          shared JS constants (accent color, map style URL)
+  map.js            createMap(): MapLibre setup shared by every map (worker fix, style, labels)
   pages/            one component per route (Feed, Maps, Record, Groups, Profile, Settings, Legal,
                     Activity, Route, TrainingLog, Segment)
   components/       reusable React components, one per file, default export
@@ -110,8 +111,9 @@ Details and data model: `docs/ARCHITECTURE.md`.
 ## Gotchas
 
 - MapLibre v6 loads its web worker relative to its own module URL, which breaks under
-  Vite's dependency pre-bundling. `TrackMap.jsx` fixes it with
-  `setWorkerUrl(import 'maplibre-gl/dist/maplibre-gl-worker.mjs?url')`. Keep it.
+  Vite's dependency pre-bundling. `src/map.js` fixes it with
+  `setWorkerUrl(import 'maplibre-gl/dist/maplibre-gl-worker.mjs?url')`. Keep it, and create
+  every map with its `createMap()`.
 - Chart hover → map cursor is imperative (`hover` ref), so hovering never re-renders
   React. Don't move that into state.
 - The map uses `cooperativeGestures`: wheel scroll passes through, and ctrl+wheel or

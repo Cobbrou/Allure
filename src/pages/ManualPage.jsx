@@ -2,14 +2,14 @@ import { t } from '../lib/i18n.js';
 import { useState } from 'react';
 import { manualActivity } from '../lib/activity.js';
 import { saveActivities, updateActivity } from '../lib/db.js';
-import { distLen, distUnit, elevLen, elevUnit, shortLen, shortUnit } from '../lib/format.js';
+import { distLen, distUnit, elevLen, elevUnit, parseNum, shortLen, shortUnit } from '../lib/format.js';
 import { SPORTS } from '../lib/sports.js';
 import { rpeLabel } from '../lib/training.js';
 import { back } from '../router.js';
 
 // "2026-10-20T07:30" in local time, the value format of <input type="datetime-local">.
 const localInput = (ms) => new Date(ms - new Date(ms).getTimezoneOffset() * 60e3).toISOString().slice(0, 16);
-const num = (v) => Number(String(v).replace(',', '.')) || 0;
+const num = (v) => parseNum(v) || 0;
 
 /**
  * Add an activity without GPS (gym, treadmill, pool…), or edit the numbers of one (id).

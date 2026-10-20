@@ -296,6 +296,7 @@ ${cur.text}` } : summary));
   return (
     <div
       className={`app ${dragging ? 'dragging' : ''}`}
+      data-drop={t('Dépose tes fichiers')}
       onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
       onDragLeave={(e) => e.currentTarget === e.target && setDragging(false)}
       onDrop={(e) => { e.preventDefault(); setDragging(false); onImport([...e.dataTransfer.files]); }}

@@ -451,9 +451,11 @@ Reliability
       (`PATCHES` and `splitRoute` tested, plus a migration for every version; the cursor
       plumbing and restore stay untested without `fake-indexeddb`)
 - [x] `exportAll` reads keys and values in two transactions [B2]: use one (`exportBackup`)
-- [ ] `onversionchange` keeps a closed `dbPromise` [B3]: reset it and ask for a reload
-- [ ] Two close `read({ prompt: true })` calls lose the first promise in
-      `RestingHrPlugin.kt` [B4]
+- [x] `onversionchange` keeps a closed `dbPromise` [B3]: reset it and ask for a reload
+      (every later access fails with "updated in another tab: reload this page")
+- [x] Two close `read({ prompt: true })` calls lose the first promise in
+      `RestingHrPlugin.kt` [B4] (calls queue behind one permission screen; compiled, not
+      run on a device)
 - [ ] Validation [B8]: HR alert threshold range, workouts with ≥ 1 rep, no negative
       manual values, no double submit, `#/manual/<id>` refused for a GPS activity
 - [ ] BRouter [B9]: suggestions fire 12 requests at once (likely 429, misleading
@@ -481,11 +483,12 @@ Performance & battery
 Code health
 - [x] `useSetting(key, default)` hook to shrink `App.jsx` and `SettingsPage`'s 18 props [I13]
       (nine settings; `SettingsPage` props unchanged)
-- [ ] One `createMap()` helper (four MapLibre setups), date formatters and one `num()` in
-      `lib/format.js` [B5]
-- [ ] Untranslated strings outside `t()` [B1]: `location.js`, `formats/fit.js`,
+- [x] One `createMap()` helper (four MapLibre setups), date formatters and one `num()` in
+      `lib/format.js` [B5] (`src/map.js`; `fmtDate`, `fmtDay`, `fmtMonth`, `parseNum` in
+      `format.js`; the three `num()` keep their own clamping on top of `parseNum`)
+- [x] Untranslated strings outside `t()` [B1]: `location.js`, `formats/fit.js`,
       `formats/tcx.js`, `formats/zip.js`, `story.js`, `demo.js`, the drop-zone `content:`
-      in `global.css`
+      in `global.css` (the drop-zone text comes from a `data-drop` attribute)
 
 UI/UX
 - [ ] Tap targets ≥ 44 px [U1]: `.segmented button` (36), `.small` (38), `.icon` (40)

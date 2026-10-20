@@ -1,10 +1,9 @@
-import { locale, t } from '../lib/i18n.js';
+import { t } from '../lib/i18n.js';
+import { fmtDay } from '../lib/format.js';
 import { useMemo } from 'react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { fitnessSeries } from '../lib/training.js';
 import { ACCENT, GRID, AXIS, TICK, FATIGUE } from '../theme.js';
-
-const fmtDay = (d) => new Date(d).toLocaleDateString(locale(), { day: 'numeric', month: 'short' });
 
 /** Fitness & Freshness over the last 90 days. */
 export default function FitnessChart({ activities, hr }) {
