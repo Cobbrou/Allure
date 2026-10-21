@@ -1,7 +1,8 @@
-const W = 100, H = 50, PAD = 4;
+const W = 100, PAD = 4;
 
-/** Static route thumbnail from [lon, lat] pairs, drawn as an SVG polyline. */
-export default function RoutePreview({ coords }) {
+/** Static route thumbnail from [lon, lat] pairs, drawn as an SVG polyline (2:1, or square). */
+export default function RoutePreview({ coords, square }) {
+  const H = square ? W : W / 2;
   if (!coords?.length) return null;
   const cos = Math.cos((coords[0][1] * Math.PI) / 180);
   const pts = coords.map(([lon, lat]) => [lon * cos, -lat]);

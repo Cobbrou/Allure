@@ -9,6 +9,12 @@ export function fmtDuration(s) {
   return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
+/** Seconds to a rounded "h mm" or "m min", for estimates. */
+export function fmtHm(s) {
+  const m = Math.round(s / 60);
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')}`;
+}
+
 /** Seconds per km to "m:ss". */
 export function fmtPace(sPerKm) {
   if (!sPerKm || !Number.isFinite(sPerKm)) return '—';

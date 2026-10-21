@@ -192,7 +192,9 @@ Maps & routes (features 4, 5, 6)
       (800 m corridor, z5 to z14, served by a `cached://` MapLibre protocol)
 - [x] Personal heatmap **(premium)** (a layer of the full-screen Maps tab)
 - [x] Explore map: full-screen map centered on you, routes nearest first in a swipeable
-      carousel synced with the map; "roads" surface keeps suggested loops on paved ways
+      carousel synced with the map; route ideas generated in place (chips for distance, difficulty,
+      elevation, surface; all loops drawn, picked one with arrows and a surface callout); "roads"
+      surface keeps suggested loops on paved ways
 - [ ] Global heatmap (aggregated, anonymized)
 - [x] 3D terrain view (activity map and route builder: "3D" button, AWS Terrain Tiles DEM,
       hillshade, 1.5x exaggeration, camera tilted to 60°)

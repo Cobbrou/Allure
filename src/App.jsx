@@ -31,7 +31,6 @@ const pages = {
   maps: () => import('./pages/MapsPage.jsx'),
   groups: () => import('./pages/GroupsPage.jsx'),
   route: () => import('./pages/RoutePage.jsx'),
-  suggest: () => import('./pages/SuggestPage.jsx'),
   segment: () => import('./pages/SegmentPage.jsx'),
   settings: () => import('./pages/SettingsPage.jsx'),
   legal: () => import('./pages/LegalPage.jsx'),
@@ -44,14 +43,13 @@ const TrainingLogPage = lazy(pages.log);
 const MapsPage = lazy(pages.maps);
 const GroupsPage = lazy(pages.groups);
 const RoutePage = lazy(pages.route);
-const SuggestPage = lazy(pages.suggest);
 const SegmentPage = lazy(pages.segment);
 const SettingsPage = lazy(pages.settings);
 const LegalPage = lazy(pages.legal);
 const ManualPage = lazy(pages.manual);
 
 // Detail pages and where "back" lands when the app was opened on them (deep link).
-const BACK_TO = { activity: '/', manual: '/record', log: '/profile', segment: '/profile', route: '/maps', suggest: '/maps', settings: '/profile', legal: '/settings' };
+const BACK_TO = { activity: '/', manual: '/record', log: '/profile', segment: '/profile', route: '/maps', settings: '/profile', legal: '/settings' };
 
 /** A stored setting as state: [value, save]. `initial` until loaded, or when never saved. */
 function useSetting(key, initial) {
@@ -124,7 +122,7 @@ export default function App() {
   const loadRoutes = () => listRoutes().then(setRoutes, () => setRoutes([]));
   useEffect(() => { loadRoutes(); }, []);
   const addRoute = async (r) => { await saveRoute(r); await loadRoutes(); back('/maps'); };
-  const pickRoute = async (r) => { await saveRoute(r); await loadRoutes(); go(`/route/${r.id}`); };
+  const keepRoute = async (r) => { await saveRoute(r); await loadRoutes(); };
   const removeRoute = async (rid) => { await deleteRoute(rid); await loadRoutes(); back('/maps'); };
   const [zones, saveZones] = useSetting('privacy', []); // privacy zones
   const [contacts, saveContacts] = useSetting('contacts', []); // emergency contacts
@@ -283,8 +281,7 @@ ${cur.text}` } : summary));
   let content;
   if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} ftp={ftp} weight={hrSaved?.weight} zones={zones} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} onDeleted={onDeleted} />;
   else if (page === 'log') content = <TrainingLogPage activities={activities} hr={hr} />;
-  else if (page === 'maps') content = <MapsPage activities={activities} routes={routes} />;
-  else if (page === 'suggest') content = <SuggestPage activities={activities} onPick={pickRoute} />;
+  else if (page === 'maps') content = <MapsPage activities={activities} routes={routes} onSave={keepRoute} />;
   else if (page === 'route') content = <RoutePage id={id} activities={activities} onSave={addRoute} onDelete={removeRoute} />;
   else if (page === 'groups' || page === 'challenge') content = <GroupsPage activities={activities} name={prefs.name} incoming={page === 'challenge' ? id : null} />;
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
@@ -323,7 +320,7 @@ ${cur.text}` } : summary));
       <ErrorBoundary key={`${page}/${id ?? ''}/${units}/${lang}/${look}`}>
         <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
       </ErrorBoundary>
-      {!(page === 'record' && recording.rec) && <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'manual' ? 'record' : page === 'log' || page === 'settings' || page === 'legal' ? 'profile' : page === 'route' || page === 'suggest' ? 'maps' : page} recording={recording.rec && (recording.rec.paused ? 'paused' : 'live')} />}
+      {!(page === 'record' && recording.rec) && <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'manual' ? 'record' : page === 'log' || page === 'settings' || page === 'legal' ? 'profile' : page === 'route' ? 'maps' : page} recording={recording.rec && (recording.rec.paused ? 'paused' : 'live')} />}
     </div>
   );
 }

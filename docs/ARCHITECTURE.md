@@ -40,8 +40,7 @@ Route changes run inside `document.startViewTransition` (slide or fade, see
 | `#/manual(/:id)`  | `ManualPage`: add an activity by hand (no GPS), or edit a manual one's date, duration, distance, D+ |
 | `#/log`          | `TrainingLogPage`: week-by-week bubbles, opened from the profile |
 | `#/segment/:id`  | `SegmentPage`: segment map, distance / grade, your efforts fastest first |
-| `#/maps`         | `MapsPage` (tab): full-screen map around you, saved routes nearest first in a bottom carousel, heatmap layer |
-| `#/suggest`      | `SuggestPage`: routes made for you, loops from your position ranked on your preferences |
+| `#/maps`         | `MapsPage` (tab): full-screen map around you; filter chips + Search route loops from the area in view (ranked on distance, difficulty, terrain, surface, novelty), drawn together and synced with a bottom carousel; Saved swaps in your routes; heatmap layer |
 | `#/route/:id`    | `RoutePage`: route builder (`new`) or a saved route, editable |
 | `#/groups`       | `GroupsPage` (tab): clubs and events (placeholders until accounts land) |
 | `#/profile`      | `ProfilePage`  |

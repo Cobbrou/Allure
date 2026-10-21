@@ -56,9 +56,27 @@ export function familiarity(points, cells) {
   return points.filter((p) => cells.has(cellKey(p.lon, p.lat))).length / points.length;
 }
 
+// Effort in flat-equivalent km (100 m of climbing ~ 1 km) where medium, then hard, begins.
+const LEVELS = { run: [8, 16], ride: [40, 90], hike: [10, 20] };
+
+/** 'easy' | 'medium' | 'hard' for a route of `distance` m climbing `gain` m. */
+export function difficulty(distance, gain, sport) {
+  const effort = distance / 1000 + (gain ?? 0) / 100;
+  const [medium, hard] = LEVELS[sport] ?? LEVELS.run;
+  return effort < medium ? 'easy' : effort < hard ? 'medium' : 'hard';
+}
+
+const PACE = { run: [10, 600], ride: [20, 800], hike: [4.5, 600] }; // km/h on the flat, m climbed per extra hour
+
+/** Expected moving time (s) of a route, Naismith-style: flat speed plus time for the climbing. */
+export function estimateTime(distance, gain, sport) {
+  const [kmh, climb] = PACE[sport] ?? PACE.run;
+  return 3600 * (distance / 1000 / kmh + (gain ?? 0) / climb);
+}
+
 /**
- * Lower is better. candidate: { distance, gain, unpaved, familiar }; prefs: { distance,
- * terrain: 'flat' | 'hilly' | '', surface: 'paved' | 'trail' | '', discover: bool }.
+ * Lower is better. candidate: { distance, gain, unpaved, familiar }; prefs: { distance, sport,
+ * terrain: 'flat' | 'hilly' | '', surface: 'paved' | 'trail' | '', level: '' | difficulty(), discover: bool }.
  */
 export function score(c, prefs) {
   let s = Math.abs(c.distance - prefs.distance) / prefs.distance;
@@ -67,6 +85,7 @@ export function score(c, prefs) {
   if (prefs.terrain === 'hilly') s -= Math.min(climb, 40) / 80;
   if (prefs.surface === 'paved') s += (c.unpaved ?? 0) * 0.5;
   if (prefs.surface === 'trail') s += (1 - (c.unpaved ?? 0)) * 0.5;
+  if (prefs.level && difficulty(c.distance, c.gain, prefs.sport) !== prefs.level) s += 0.5;
   if (prefs.discover) s += c.familiar * 0.4;
   return s;
 }

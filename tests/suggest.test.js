@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { haversine } from '../src/lib/geo.js';
 import { splitLegs, unpavedShare } from '../src/lib/routes.js';
-import { cellKey, familiarity, loopWaypoints, offset, rank, settleLimited } from '../src/lib/suggest.js';
+import { fmtHm } from '../src/lib/format.js';
+import { cellKey, difficulty, estimateTime, familiarity, loopWaypoints, offset, rank, settleLimited } from '../src/lib/suggest.js';
 
 const ll = ([lon, lat]) => ({ lon, lat });
 const start = [6.87, 45.92];
@@ -40,6 +41,21 @@ test('rank honours distance, terrain, surface and novelty', () => {
   assert.equal(rank([a, b], { ...prefs, surface: 'paved' })[0].id, 'b');
   assert.equal(rank([a, b], { ...prefs, discover: true })[0].id, 'b');
   assert.equal(rank([a, b, a, b], prefs, 3).length, 3);
+});
+
+test('difficulty and estimateTime weigh distance and climbing per sport', () => {
+  assert.equal(difficulty(5000, 50, 'run'), 'easy');
+  assert.equal(difficulty(10000, 300, 'run'), 'medium'); // 13 effort km
+  assert.equal(difficulty(10000, 800, 'run'), 'hard');
+  assert.equal(difficulty(30000, 200, 'ride'), 'easy');
+  assert.equal(estimateTime(10000, 0, 'run'), 3600);
+  assert.equal(estimateTime(9000, 600, 'hike'), 3 * 3600);
+  const a = { id: 'a', distance: 10000, gain: 800 }, b = { id: 'b', distance: 11000, gain: 100 };
+  const prefs = { distance: 10000, sport: 'run', terrain: '', surface: '' };
+  assert.equal(rank([a, b], prefs)[0].id, 'a');
+  assert.equal(rank([a, b], { ...prefs, level: 'medium' })[0].id, 'b');
+  assert.equal(fmtHm(2700), '45 min');
+  assert.equal(fmtHm(3900), '1 h 05');
 });
 
 test('unpavedShare weighs ways by distance, splitLegs cuts at the waypoints', () => {

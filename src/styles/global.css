@@ -539,14 +539,7 @@ a.round { display: inline-grid; place-items: center; height: 44px; }
 .pin.via { background: var(--pin-ring); width: 14px; height: 14px; }
 .pin.start, .pin.finish, .pin.via { cursor: grab; }
 .route-tools button { flex: 1; }
-.route-card { justify-content: flex-start; }
-.route-card .route-preview { flex: none; width: 72px; height: 36px; }
 .edit .switch { display: flex; color: var(--text); font-size: var(--fs-base); }
-.suggest-form .field { display: grid; gap: 6px; font-size: var(--fs-sm); color: var(--muted); font-weight: 500; }
-.suggest-form input[type='range'] { width: 100%; min-height: 44px; padding: 0; accent-color: var(--accent); }
-button.suggestion { width: 100%; text-align: left; font-weight: 400; background: var(--card); border-color: var(--border); color: var(--text); }
-button.suggestion.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-.route-card > span:nth-child(2) { flex: 1; min-width: 0; display: grid; gap: 2px; font-size: var(--fs-base); color: var(--text); }
 .pin.me { background: var(--me); box-shadow: 0 0 0 2px var(--pin-ring), 0 0 14px 4px var(--me-60); }
 
 /* ---------- Design system components ---------- */
@@ -804,34 +797,80 @@ button:active:not(:disabled), .button:active, .activity-card:active, .sport-pick
   justify-self: stretch; display: flex; align-items: center; min-height: 48px; border-radius: var(--radius-lg); overflow: hidden;
   background: color-mix(in srgb, var(--card) 94%, transparent); border: 1px solid var(--border); backdrop-filter: blur(8px); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
-.map-sport { position: relative; display: flex; align-items: center; gap: 2px; align-self: stretch; padding: 0 10px 0 14px; border-right: 1px solid var(--border-strong); font-size: var(--fs-xl); }
-.map-sport::after { content: '▾'; font-size: var(--fs-xs); color: var(--accent-text); }
+.map-sport { position: relative; display: flex; align-items: center; gap: 2px; align-self: stretch; padding: 0 8px 0 14px; border-right: 1px solid var(--border-strong); color: var(--accent-text); }
+.map-sport svg { width: 24px; height: 24px; }
+.map-sport::after { content: '▾'; font-size: var(--fs-xs); }
 /* Invisible native select over the icon: the OS picker, no custom dropdown. */
 .map-sport select { position: absolute; inset: 0; opacity: 0; font-size: 16px; cursor: pointer; }
-.map-search a { flex: 1; display: flex; align-items: center; gap: 8px; align-self: stretch; padding: 0 14px; color: var(--muted); font-size: var(--fs-base); }
-.map-search svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
-.map-filter {
-  min-height: 44px; padding: 0 16px; border-radius: var(--radius-lg); font-size: var(--fs-sm);
-  background: color-mix(in srgb, var(--bg) 82%, transparent); border: 1px solid var(--accent); color: var(--accent-text); backdrop-filter: blur(8px);
+.map-search input { flex: 1; min-width: 0; align-self: stretch; padding: 0 12px; border: 0; background: none; color: var(--text); font: inherit; font-size: 16px; text-overflow: ellipsis; }
+.map-search input:focus { outline: none; }
+.map-search input::placeholder { color: var(--muted); }
+.map-saved { align-self: stretch; min-height: 0; padding: 0 14px; border: 0; border-left: 1px solid var(--border-strong); border-radius: 0; background: none; color: var(--text); font-size: var(--fs-sm); }
+.map-saved svg { width: 18px; height: 18px; }
+.map-saved[aria-pressed='true'] { color: var(--accent-text); }
+.map-saved[aria-pressed='true'] svg { fill: currentColor; }
+@media (max-width: 360px) { .map-saved span { display: none; } }
+/* Filter chips: one scrolling row, edge to edge. */
+.map-chips { justify-self: stretch; display: flex; gap: 8px; margin: 0 -16px; padding: 0 16px; overflow-x: auto; scrollbar-width: none; }
+.map-chip {
+  flex: none; min-height: 44px; padding: 0 14px; border-radius: var(--radius-lg); font-size: var(--fs-sm); gap: 4px;
+  background: color-mix(in srgb, var(--card) 94%, transparent); border: 1px solid var(--border-strong); color: var(--text); backdrop-filter: blur(8px);
 }
-.map-filter[aria-pressed='true'] { background: var(--accent); color: var(--on-accent); }
+.map-chip span { font-size: var(--fs-2xs); color: var(--muted); }
+.map-chip.set, .map-chip[aria-pressed='true'] { border-color: var(--accent); color: var(--accent-text); }
+.map-go { justify-self: center; padding: 0 28px; border-radius: var(--radius-lg); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35); }
 .map-alert {
   justify-self: stretch; display: flex; align-items: center; gap: 10px; margin: 0; padding: 10px 12px; border-radius: var(--radius-md);
   font-size: var(--fs-sm); color: var(--text); background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(8px);
 }
 .map-alert span { flex: none; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: var(--text); color: var(--bg); font-size: var(--fs-xs); font-weight: 800; }
-.map-fabs { position: absolute; right: 16px; bottom: 150px; display: grid; gap: 12px; }
+.map-fabs { position: absolute; right: 16px; bottom: 214px; display: grid; gap: 12px; }
 .map-fab, .map-fabs .ctrl-3d {
   width: 48px; height: 48px; padding: 0; border-radius: 50%; display: grid; place-items: center; font-size: var(--fs-base);
   background: var(--card); border: 1px solid var(--border-strong); color: var(--text); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 .map-fabs .maplibregl-ctrl-group { margin: 0; background: none; box-shadow: none; }
 .map-fabs .ctrl-3d[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.map-fab { position: relative; }
+.map-fab-count { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; border-radius: 9px; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-size: var(--fs-2xs); font-weight: 800; }
 .map-fab svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .map-carousel {
-  position: absolute; left: 0; right: 0; bottom: 12px; display: flex; gap: 10px; padding: 0 12px; scroll-padding: 0 12px;
+  position: absolute; left: 0; right: 0; bottom: 64px; display: flex; gap: 10px; padding: 0 12px; scroll-padding: 0 12px;
   overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
 }
-.map-carousel > .card { flex: 0 0 82%; scroll-snap-align: start; min-height: 84px; background: color-mix(in srgb, var(--card) 94%, transparent); backdrop-filter: blur(8px); }
+.map-carousel > .card { flex: 0 0 86%; scroll-snap-align: start; min-height: 84px; background: color-mix(in srgb, var(--card) 94%, transparent); backdrop-filter: blur(8px); }
 .map-carousel > .card.on { border-color: var(--accent); }
-.explore .maplibregl-ctrl-bottom-right, .explore .maplibregl-ctrl-bottom-left { bottom: 104px; }
+.explore .maplibregl-ctrl-bottom-right, .explore .maplibregl-ctrl-bottom-left { bottom: 182px; }
+.explore.sheet-open .map-carousel, .explore.sheet-open .map-fabs { display: none; }
+.map-callout {
+  padding: 6px 10px; border-radius: var(--radius-sm); font-size: var(--fs-xs); font-weight: 600; white-space: nowrap; pointer-events: none;
+  background: var(--card); color: var(--text); border: 1px solid var(--border-strong); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+/* Route card: square thumbnail, one-line name, stats; a stretched name button/link makes the whole card tappable. */
+.idea-card { position: relative; display: flex; gap: 12px; padding: 12px; }
+.idea-card .route-preview { flex: none; width: 88px; height: 88px; }
+.idea-card > div { flex: 1; min-width: 0; display: grid; gap: 4px; align-content: center; }
+.idea-card h3 { margin: 0; padding-right: 40px; font-size: var(--fs-base); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.idea-card h3 button { all: unset; cursor: pointer; }
+.idea-card h3 :is(a, button)::after { content: ''; position: absolute; inset: 0; }
+.idea-card p { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--muted); white-space: nowrap; overflow: hidden; }
+.idea-card p svg { flex: none; width: 16px; height: 16px; }
+.idea-card .stats { flex-wrap: wrap; row-gap: 2px; white-space: normal; }
+.idea-card .for-you { color: var(--accent-text); }
+.idea-card .level { padding: 1px 8px; border-radius: var(--radius-sm); font-size: var(--fs-2xs); font-weight: 700; }
+.level.easy { color: var(--good-text); background: color-mix(in srgb, var(--good) 15%, transparent); }
+.level.medium { color: var(--warn-text); background: color-mix(in srgb, var(--warn) 15%, transparent); }
+.level.hard { color: var(--danger-text); background: var(--danger-50); }
+.idea-save {
+  position: absolute; z-index: 1; top: 6px; right: 6px; width: 44px; height: 44px; min-height: 0; padding: 0; border-radius: 50%; display: grid; place-items: center;
+  background: var(--bg); border: 1px solid var(--border); color: var(--text);
+}
+.idea-save svg { width: 18px; height: 18px; }
+.idea-save.saved { color: var(--accent-text); }
+.idea-save.saved svg { fill: currentColor; }
+/* Peek of the bottom list, above the tab bar: tap or swipe the handle to open it. */
+.explore-sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--card); border: 1px solid var(--border); border-bottom: 0; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.explore-sheet-top { width: 100%; min-height: 52px; padding: 8px 16px 12px; display: grid; justify-items: center; gap: 8px; border: 0; background: none; color: var(--text); font-size: var(--fs-sm); touch-action: none; }
+.explore-list { max-height: 60vh; overflow-y: auto; display: grid; gap: 10px; padding: 0 12px 12px; }
+.map-pane input[type='range'] { width: 100%; min-height: 44px; padding: 0; accent-color: var(--accent); }
+.map-pane label:not(.switch) { display: grid; gap: 6px; font-size: var(--fs-sm); color: var(--muted); }
