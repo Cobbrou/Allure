@@ -49,12 +49,18 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
           <div className="avatar">{(name || 'A')[0].toUpperCase()}</div>
           <div>
             <h2>{name || t('Athlète Allure')}</h2>
-            {activities && <p className="muted">{tn(list.length, '{n} activité', '{n} activités')} · {t('{dist} au total', { dist: `${fmtDist(allDist, 0)} ${distUnit()}` })}</p>}
+            {activities && <p className="muted"><a href="#/activities">{tn(list.length, '{n} activité', '{n} activités')}</a> · {t('{dist} au total', { dist: `${fmtDist(allDist, 0)} ${distUnit()}` })}</p>}
           </div>
         </section>
 
         {/* Until the list loads: placeholders, not "0 activities" and empty goals. */}
         {!activities && [180, 320].map((h) => <div key={h} className="skeleton" style={{ height: h }} />)}
+        {activities && (
+          <a className="card link-card" href="#/activities">
+            <span><b>{t('Mes activités')}</b><span className="muted">{t('Toutes tes sorties, de la plus récente à la plus ancienne')}</span></span>
+            <span aria-hidden="true">›</span>
+          </a>
+        )}
         {activities && <Goals goals={goals} activities={list} onSave={onSaveGoals} />}
         {activities && <Achievements activities={list} />}
 

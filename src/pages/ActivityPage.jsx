@@ -110,7 +110,7 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
       if (pics.length) await setPhotos(id, pics);
       await onChange();
     });
-    back('/'); // to the list it was opened from
+    back('/activities'); // to the list it was opened from
   };
   const savePhotos = async (blobs) => { await setPhotos(id, blobs); setPhotoList(blobs); };
   const exportGpx = async () => {
@@ -176,7 +176,7 @@ function TopBar({ children }) {
   return (
     <header className="topbar">
       {/* Back where it was opened from (training log, calendar, segment…), with its scroll. */}
-      <a className="back" href="#/" aria-label={t('Retour')} onClick={(e) => { e.preventDefault(); back('/'); }}>‹</a>
+      <a className="back" href="#/activities" aria-label={t('Retour')} onClick={(e) => { e.preventDefault(); back('/activities'); }}>‹</a>
       <div className="actions">{children}</div>
     </header>
   );

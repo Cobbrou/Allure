@@ -49,7 +49,7 @@ const LegalPage = lazy(pages.legal);
 const ManualPage = lazy(pages.manual);
 
 // Detail pages and where "back" lands when the app was opened on them (deep link).
-const BACK_TO = { activity: '/', manual: '/record', log: '/profile', segment: '/profile', route: '/maps', settings: '/profile', legal: '/settings' };
+const BACK_TO = { activities: '/profile', activity: '/activities', manual: '/record', log: '/profile', segment: '/profile', route: '/maps', settings: '/profile', legal: '/settings' };
 
 /** A stored setting as state: [value, save]. `initial` until loaded, or when never saved. */
 function useSetting(key, initial) {
@@ -290,7 +290,8 @@ ${cur.text}` } : summary));
   else if (page === 'settings') content = <SettingsPage activities={activities} hr={hr} hrSaved={hrSaved} ftpEstimate={ftpEstimate} onSaveHr={saveHr} units={units} onSaveUnits={saveUnits} lang={lang} onSaveLang={saveLang} prefs={prefs} onSavePrefs={savePrefs} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} onDemo={addDemo} onHealthImport={onHealthImport} onChange={reload} />;
   else if (page === 'legal') content = <LegalPage id={id} />;
   else if (page === 'manual') content = <ManualPage id={id} activities={activities} onSaved={async (mid) => { await reload(); if (id) back(`/activity/${mid}`); else go(`/activity/${mid}`, true); }} />;
-  else content = <FeedPage activities={activities} name={prefs.name} zones={zones} onRefresh={reload} onImport={onImport} onDemo={addDemo} />;
+  // ponytail: Home keeps the feed until the training hub (phase 10, M3) replaces it.
+  else content = <FeedPage nested={page === 'activities'} activities={activities} name={prefs.name} zones={zones} onRefresh={reload} onImport={onImport} onDemo={addDemo} />;
 
   return (
     <div
@@ -320,7 +321,7 @@ ${cur.text}` } : summary));
       <ErrorBoundary key={`${page}/${id ?? ''}/${units}/${lang}/${look}`}>
         <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
       </ErrorBoundary>
-      {!(page === 'record' && recording.rec) && <TabBar active={page === 'activity' || page === 'segment' ? '' : page === 'manual' ? 'record' : page === 'log' || page === 'settings' || page === 'legal' ? 'profile' : page === 'route' ? 'maps' : page} recording={recording.rec && (recording.rec.paused ? 'paused' : 'live')} />}
+      {!(page === 'record' && recording.rec) && <TabBar active={page === 'manual' ? 'record' : ['activities', 'activity', 'segment', 'log', 'settings', 'legal'].includes(page) ? 'profile' : page === 'route' ? 'maps' : page} recording={recording.rec && (recording.rec.paused ? 'paused' : 'live')} />}
     </div>
   );
 }

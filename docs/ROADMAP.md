@@ -540,9 +540,9 @@ table and algorithms: `docs/TRAINING_PLANS.md`. Rule-based and local; no backend
 Running only. The Home tab becomes the training hub (see `DECISIONS.md`, 2026-10-21).
 
 M0 Activities under Profile
-- [ ] `#/activities`: today's feed (cards, paging, pull to refresh, import, demo) moved off
-      Home, opened from the Profile header and a "Mes activités" row; activity pages
-      highlight the Profile tab
+- [x] `#/activities`: today's feed (cards, paging, pull to refresh, import, demo), opened
+      from the Profile header and a "Mes activités" row; activity pages highlight the
+      Profile tab. Home keeps the feed until the M3 hub takes its place
 
 M1 Pace engine
 - [ ] `lib/paces.js`: VDOT from a race time (Daniels-Gilbert), race time from VDOT, training

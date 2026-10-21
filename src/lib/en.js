@@ -614,6 +614,8 @@ export default {
   "Journal d'entraînement": 'Training log',
   'Toutes tes semaines, jour par jour': 'All your weeks, day by day',
   'Retour au profil': 'Back to profile',
+  'Mes activités': 'My activities',
+  'Toutes tes sorties, de la plus récente à la plus ancienne': 'All your outings, newest first',
   'Journal': 'Log',
   'Taille des bulles': 'Bubble size',
   'Semaines précédentes': 'Earlier weeks',

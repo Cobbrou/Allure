@@ -34,7 +34,8 @@ Route changes run inside `document.startViewTransition` (slide or fade, see
 
 | Hash             | Page           |
 |------------------|----------------|
-| `#/`             | `FeedPage` (Home tab) |
+| `#/`             | `FeedPage` (Home tab), until the training hub replaces it (phase 10, M3) |
+| `#/activities`   | `FeedPage` opened from the profile (header count, "Mes activités" row); it and the activity pages highlight the Profile tab |
 | `#/activity/:id` | `ActivityPage` |
 | `#/record`       | `RecordPage`: setup (sport, route to follow, auto-pause, voice cues, GPS status), then live recording. `#/record/:routeId` preselects a route |
 | `#/manual(/:id)`  | `ManualPage`: add an activity by hand (no GPS), or edit a manual one's date, duration, distance, D+ |

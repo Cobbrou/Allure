@@ -6,10 +6,12 @@ import ShareSheet from '../components/ShareSheet.jsx';
 import { usePullToRefresh } from '../gestures.js';
 import { analyze } from '../lib/analyze.js';
 import { getActivity, getPhotos } from '../lib/db.js';
+import { back } from '../router.js';
 
 const PAGE = 30; // cards rendered per scroll step: a big archive doesn't mount every card
 
-export default function FeedPage({ activities, name, zones, onRefresh, onImport, onDemo }) {
+/** nested: opened from the profile (`#/activities`), with a back button instead of the logo. */
+export default function FeedPage({ nested, activities, name, zones, onRefresh, onImport, onDemo }) {
   const [busy, setBusy] = useState(false);
   const [shared, setShared] = useState(null); // { act: analyzed activity, photos } in the share sheet
   const share = async (id) => {
@@ -34,7 +36,12 @@ export default function FeedPage({ activities, name, zones, onRefresh, onImport,
   return (
     <>
       <header className="topbar">
-        <div className="logo"><span>▲</span> Allure</div>
+        {nested ? (
+          <>
+            <a className="back" href="#/profile" aria-label={t('Retour au profil')} onClick={(e) => { e.preventDefault(); back('/profile'); }}>‹</a>
+            <h1>{t('Mes activités')}</h1>
+          </>
+        ) : <div className="logo"><span>▲</span> Allure</div>}
         <ImportButton onImport={onImport} className="button ghost small">{t('+ Importer')}</ImportButton>
       </header>
       {activities && !activities.length && (
