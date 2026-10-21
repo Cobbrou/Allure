@@ -163,8 +163,9 @@ few tens of KB.
     id, date /* day, ms */, week, phase, type /* 'easy' | 'long' | 'tempo' | 'intervals' | … */,
     steps,                // workout steps, targets as intensity names
     distance, duration,   // estimates
-    status?,              // 'skipped' | 'moved' (set by the athlete); done is computed
-    activity?,            // id, only when the athlete linked it by hand
+    status?,              // 'skipped' | 'moved' (made up on another day); done is computed
+    from?,                // id of the missed session this one makes up for
+    activity?,            // id linked by hand; null: unlinked by hand, never auto-matched
   }],
   adjustments: [{ kind: 'unwell' | 'volume' | 'pace', from, to, options }],
 }

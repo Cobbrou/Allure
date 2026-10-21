@@ -23,13 +23,14 @@ import { deleteActivities, getActivity, getPhotos, saveActivities, setPhotos, up
 import { distUnit, fmtDate, fmtDist, fmtDuration } from '../lib/format.js';
 import { defaultGear, GEAR_KINDS, gearFor } from '../lib/gear.js';
 import { SPORTS, splitSize as splitSizeOf } from '../lib/sports.js';
+import { compliance, matchSessions, SESSION_TYPES } from '../lib/plan.js';
 import { rpeLabel } from '../lib/training.js';
 import { toGpx } from '../lib/formats/gpxExport.js';
 import { hidePrivate } from '../lib/privacy.js';
 import { safeName, shareFile } from '../lib/share.js';
 import { back } from '../router.js';
 
-export default function ActivityPage({ id, activities, hr, ftp, weight, zones, segments, onSegment, gears, onChange, onDeleted }) {
+export default function ActivityPage({ id, activities, plan, hr, ftp, weight, zones, segments, onSegment, gears, onChange, onDeleted }) {
   const [data, setData] = useState(); // undefined: loading, null: not found
   const [sheet, setSheet] = useState(null); // null | 'edit' | 'share'
   const [cropping, setCropping] = useState(false);
@@ -48,6 +49,12 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
   const analysis = useMemo(() => data && analyze(data.points, sport), [data?.points, sport]);
   const splitSize = splitSizeOf(sport);
   const splits = useMemo(() => analysis && computeSplits(analysis.track, splitSize, sport), [analysis, splitSize, sport]);
+  // The plan session this run counts for, if any.
+  const planned = useMemo(() => {
+    if (!plan || !activities) return null;
+    const sid = [...matchSessions(plan, activities)].find(([, a]) => a.id === id)?.[0];
+    return plan.sessions.find((s) => s.id === sid) ?? null;
+  }, [plan, activities, id]);
 
   if (data === undefined) return (<><TopBar /><DetailSkeleton /></>);
   if (data === null) return (<><TopBar /><p className="empty">{t('Activité introuvable.')}</p></>);
@@ -144,6 +151,7 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
         </div>
         {act.description && <p className="description">{act.description}</p>}
         {act.notes && <p className="description notes"><b>{t('Notes privées')} · </b>{act.notes}</p>}
+        {planned && <PlanSession session={planned} meta={data.meta} onRpe={(rpe) => save({ rpe })} />}
         <StatsGrid act={act} weight={weight} />
         {cropping && <CropForm track={act.track} range={range} onCancel={() => setCropping(false)} onCrop={crop} />}
         {hasTrack && (
@@ -313,5 +321,32 @@ function DetailSkeleton() {
       <div className="bento">{[0, 1, 2, 3].map((i) => <div key={i} className="skeleton" style={{ height: 84 }} />)}</div>
       <div className="skeleton" style={{ height: 320 }} />
     </main>
+  );
+}
+
+/** The plan session this activity counts for: how close to plan, and a one-tap effort rating. */
+function PlanSession({ session: s, meta, onRpe }) {
+  const c = compliance(s, meta);
+  return (
+    <section className="card plan-done">
+      <a className="link-card" href={`#/plan/session/${s.id}`}>
+        <span>
+          <b>{t('Séance du plan : {type}', { type: SESSION_TYPES[s.type].label })}</b>
+          <span className="muted">{c.done ? t('Faite') : t('Faite en partie')} · {t('{n} % du prévu', { n: Math.round(c.ratio * 100) })}</span>
+        </span>
+        <span aria-hidden="true">›</span>
+      </a>
+      {!meta.rpe && (
+        <>
+          <p>{t('Comment tu l’as sentie ?')}</p>
+          <div className="rpe-picks" role="group" aria-label={t('Effort perçu')}>
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+              <button key={n} type="button" aria-label={`${n}/10 ${rpeLabel(n)}`} onClick={() => onRpe(n)}>{n}</button>
+            ))}
+          </div>
+          <p className="muted small-label">{t('1 : très facile · 10 : maximal')}</p>
+        </>
+      )}
+    </section>
   );
 }

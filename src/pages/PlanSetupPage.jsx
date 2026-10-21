@@ -1,5 +1,6 @@
-import { locale, t, tn } from '../lib/i18n.js';
+import { t, tn } from '../lib/i18n.js';
 import { useMemo, useState } from 'react';
+import RunDays from '../components/RunDays.jsx';
 import Segmented from '../components/Segmented.jsx';
 import { distLen, distUnit, fmtDay, fmtDist, fmtDuration, parseNum } from '../lib/format.js';
 import { raceTime, vdot as vdotOf } from '../lib/paces.js';
@@ -11,8 +12,6 @@ const DAY = 86400e3;
 const toInput = (ms) => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 const fromInput = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d).getTime(); };
 const EXPERIENCE_LABELS = { get beginner() { return t('Débutant'); }, get intermediate() { return t('Intermédiaire'); }, get advanced() { return t('Confirmé'); } };
-const WEEK = [1, 2, 3, 4, 5, 6, 0]; // getDay values, Monday first
-const dayName = (d) => new Date(2026, 0, 4 + d).toLocaleDateString(locale(), { weekday: 'long' }); // 2026-01-04 is a Sunday
 
 /** `#/plan/new(/:goal)`: one question per screen, prefilled from history, ending on a preview. */
 export default function PlanSetupPage({ activities, goal: goalParam, onCreate }) {
@@ -43,10 +42,6 @@ function Wizard({ defaults, goalParam, onCreate }) {
   const plan = useMemo(() => (screen === 'preview' ? generatePlan(inputs) : null), [screen]); // inputs read when the preview opens
 
   const pickGoal = (id) => { setGoal(id); setRaceDate(defaultRaceDate(id, defaults.start, longDay)); };
-  const toggleDay = (d) => {
-    if (d === longDay) return; // the long-run day stays a run day
-    setDays(days.includes(d) ? days.filter((x) => x !== d) : [...days, d].sort((a, b) => a - b));
-  };
   const valid = {
     goal: true,
     date: raceDate >= minDate && raceDate <= maxDate,
@@ -132,19 +127,7 @@ function Wizard({ defaults, goalParam, onCreate }) {
         {screen === 'days' && (
           <section className="card edit">
             <h2>{t('Tes jours de course')}</h2>
-            <div className="day-picks" role="group" aria-label={t('Jours de course')}>
-              {WEEK.map((d) => (
-                <button key={d} type="button" className={days.includes(d) ? 'on' : ''} aria-pressed={days.includes(d)} onClick={() => toggleDay(d)}>
-                  {dayName(d).slice(0, 3)}
-                </button>
-              ))}
-            </div>
-            <p className="muted small-label">{tn(days.length, '{n} sortie par semaine', '{n} sorties par semaine')} · {t('2 à 6')}</p>
-            <label>{t('Sortie longue le')}
-              <select value={longDay} onChange={(e) => setLongDay(Number(e.target.value))}>
-                {WEEK.filter((d) => days.includes(d)).map((d) => <option key={d} value={d}>{dayName(d)}</option>)}
-              </select>
-            </label>
+            <RunDays days={days} longDay={longDay} onDays={setDays} onLongDay={setLongDay} />
           </section>
         )}
         {screen === 'preview' && plan && (

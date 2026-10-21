@@ -572,9 +572,11 @@ M3 Plan generator
       preselected on Record
 
 M4 Completion and feedback
-- [ ] Runs matched to sessions (same day, else ±1 day), compliance per session and per step
-- [ ] RPE prompt after a plan session
-- [ ] Missed sessions, move / swap a session, change run days for the rest of the plan
+- [x] Runs matched to sessions (same day, else ±1 day), compliance per session (per step:
+      the activity page's intervals card, from M2)
+- [x] RPE prompt after a plan session (on its activity page)
+- [x] Missed sessions (a missed key session can replace a later easy run of its week, once),
+      move / swap a session, skip, link / unlink a run by hand, change run days for the rest of the plan
 
 M5 Adaptation
 - [ ] Pace check: proposes a fitness change after key sessions repeatedly beaten or missed,

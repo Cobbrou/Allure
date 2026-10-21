@@ -167,14 +167,14 @@ function qualityTypes(phase, count, week) {
  * The plan for the wizard inputs:
  * { goal, raceDate, start (first day of week 1), vdot, weekly (m, recent average), runs,
  *   days (getDay values), longDay, experience }.
- * Same inputs, same plan. `now` stamps it.
+ * Same inputs, same plan. `now` stamps it. `fixed`: week volumes to keep (changeDays).
  */
-export function generatePlan(inputs, now = Date.now()) {
+export function generatePlan(inputs, now = Date.now(), fixed = null) {
   const g = GOALS[inputs.goal];
   const paces = trainingPaces(inputs.vdot);
   const weeks = Math.max(g.taper + 1, planWeeks(inputs));
   const phases = planPhases(weeks, g.taper);
-  const volumes = weeklyVolumes(inputs, weeks);
+  const volumes = fixed ?? weeklyVolumes(inputs, weeks);
   const days = [...new Set([...inputs.days, inputs.longDay])].slice(0, 7);
   const x = Math.max(0, EXPERIENCE.indexOf(inputs.experience));
   const nq = x > 0 && days.length >= 4 ? 2 : 1;
@@ -256,11 +256,118 @@ export function planDefaults(metas, now = Date.now()) {
 /** Plan week (1-based) a time falls in, 0 before the start, past the end after it. */
 export const weekOf = (plan, time) => Math.floor(Math.round((startOfDay(time) - plan.inputs.start) / 86400e3) / 7) + 1;
 
+/** The 7 day starts of a plan week. */
+export const weekDays = (plan, week) =>
+  Array.from({ length: 7 }, (_, i) => startOfDay(plan.inputs.start + ((week - 1) * 7 + i) * 86400e3 + 12 * 3600e3)); // noon: DST-proof
+
 /** Sessions on the day of `time`. */
 export const sessionsOn = (plan, time) => plan.sessions.filter((s) => s.date === startOfDay(time));
 
-/** First session today or later, or null once the plan is over. */
-export const nextSession = (plan, now) => plan.sessions.find((s) => s.date >= startOfDay(now)) ?? null;
+/** First session today or later still to run (not skipped, not done), or null once the plan is over. */
+export const nextSession = (plan, now, matches = new Map()) =>
+  plan.sessions.find((s) => s.date >= startOfDay(now) && !s.status && !matches.has(s.id)) ?? null;
 
 /** A session as a workout for lib/workout.js startWorkout. */
 export const sessionWorkout = (s) => ({ name: SESSION_TYPES[s.type].label, steps: s.steps });
+
+// Completion (M4): what was done is computed on read from the activities, never stored. A
+// session only stores what the athlete decided: `status` ('skipped', or 'moved' once a missed
+// key session was made up), `activity` (an id linked by hand, null when unlinked by hand) and
+// `from` (the missed session it makes up for).
+
+const DAY = 86400e3;
+const SLACK = 0.2; // done within ±20 % of the planned distance or duration
+const dayDiff = (a, b) => Math.round((a - b) / DAY); // DST-proof: days are 23 to 25 h long
+
+/** Done / planned ratio, by distance or duration, whichever is closer to 1; done within ±20 %. */
+export function compliance(s, a) {
+  const r = [a.distance / s.distance, a.movingTime / s.duration].filter(Number.isFinite);
+  const ratio = r.length ? r.reduce((b, x) => (Math.abs(x - 1) < Math.abs(b - 1) ? x : b)) : 0;
+  return { ratio, done: Math.abs(ratio - 1) <= SLACK };
+}
+
+/**
+ * Activity of each session (Map session id -> activity meta). Links made by hand first, then
+ * each run goes to an open session of the same day, else the day before or after, the closest
+ * in distance / duration. A run matches one session at most.
+ */
+export function matchSessions(plan, metas) {
+  const out = new Map(), used = new Set();
+  const byId = new Map(metas.map((a) => [a.id, a]));
+  for (const s of plan.sessions) {
+    const a = s.activity && byId.get(s.activity);
+    if (a) { out.set(s.id, a); used.add(a.id); }
+  }
+  const open = plan.sessions.filter((s) => s.activity === undefined && !s.status);
+  const runs = metas.filter((a) => a.sport === 'run' && !used.has(a.id)).sort((a, b) => a.date - b.date);
+  for (const off of [0, 1]) {
+    for (const a of runs) {
+      if (used.has(a.id)) continue;
+      const day = startOfDay(a.date);
+      let best = null, score = Infinity;
+      for (const s of open) {
+        if (out.has(s.id) || Math.abs(dayDiff(s.date, day)) !== off) continue;
+        const sc = Math.abs(Math.log(compliance(s, a).ratio || 0.01));
+        if (sc < score) { best = s; score = sc; }
+      }
+      if (best) { out.set(best.id, a); used.add(a.id); }
+    }
+  }
+  return out;
+}
+
+/** 'done' | 'partial' (run, off by more than 20 %) | 'skipped' | 'moved' | 'missed' | 'planned'. */
+export function sessionState(s, a, now) {
+  if (a) return compliance(s, a).done ? 'done' : 'partial';
+  if (s.status) return s.status;
+  return s.date < startOfDay(now) ? 'missed' : 'planned';
+}
+
+/** Another hard session, still on, the day before or after `date`. */
+export const hardNextTo = (plan, date, except) =>
+  plan.sessions.some((s) => s !== except && !s.status && isHard(s.type) && Math.abs(dayDiff(s.date, date)) === 1);
+
+const withSessions = (plan, map) => ({ ...plan, sessions: plan.sessions.map(map).sort((a, b) => a.date - b.date) });
+
+/** A session moved to another day; the session already on that day, if any, takes its place. */
+export function moveSession(plan, id, date) {
+  const s = plan.sessions.find((x) => x.id === id);
+  const other = plan.sessions.find((x) => x.date === date && x !== s);
+  return withSessions(plan, (x) => (x === s ? { ...x, date } : x === other ? { ...x, date: s.date } : x));
+}
+
+/**
+ * Easy run of the same week a missed key session can replace: today or later, still open,
+ * no hard session the day before or after. Null when there is none, or the session was made
+ * up already, or is itself a make-up. A missed session is never crammed in another way.
+ */
+export function makeUpSlot(plan, id, now, matches = new Map()) {
+  const m = plan.sessions.find((s) => s.id === id);
+  if (!m || !isHard(m.type) || m.type === 'race' || m.status || m.from) return null;
+  return plan.sessions.find((s) => s.week === m.week && s.date >= startOfDay(now) && s.type === 'easy' && !s.status
+    && !matches.has(s.id) && !hardNextTo(plan, s.date, m)) ?? null;
+}
+
+/** The plan with the missed session `id` in place of `slot` (from makeUpSlot). */
+export const makeUp = (plan, id, slot) => {
+  const m = plan.sessions.find((s) => s.id === id);
+  const { type, steps, distance, duration } = m;
+  return withSessions(plan, (s) => (s === m ? { ...s, status: 'moved' } : s.id === slot.id ? { ...s, type, steps, distance, duration, from: id } : s));
+};
+
+/**
+ * New run days from next week on: the weeks after the current one are generated again with
+ * the same volumes (capped for fewer days), the current and past weeks are kept.
+ */
+export function changeDays(plan, runDays, longDay, now) {
+  const week = Math.max(weekOf(plan, now), 0);
+  const inputs = { ...plan.inputs, days: runDays, longDay, runs: runDays.length };
+  const volumes = plan.weeks.map(({ volume, kind }) => ({ volume: Math.min(volume, runDays.length * RUN_CAP), kind }));
+  const fresh = generatePlan({ ...inputs, vdot: plan.vdot }, now, volumes);
+  return {
+    ...plan,
+    inputs,
+    weeks: plan.weeks.map((w, i) => (i < week ? w : { ...w, volume: volumes[i].volume })),
+    sessions: [...plan.sessions.filter((s) => s.week <= week), ...fresh.sessions.filter((s) => s.week > week)],
+  };
+}

@@ -63,7 +63,7 @@ function Setup({ recording, contacts, routes, routeId, workoutId, plan, segments
   // A plan session: the one asked for, else today's (the race is run free).
   const session = workoutId?.startsWith('plan:')
     ? plan?.sessions.find((s) => `plan:${s.id}` === workoutId)
-    : !workoutId && plan && sessionsOn(plan, Date.now()).find((s) => s.type !== 'race');
+    : !workoutId && plan && sessionsOn(plan, Date.now()).find((s) => s.type !== 'race' && !s.status);
   const preset = session ? `plan:${session.id}` : LIBRARY.some((w) => w.id === workoutId) ? workoutId : null;
   const [withWorkout, setWithWorkout] = useState(!!preset);
   const [pick, setPick] = useState(preset ?? 'custom'); // 'custom', 'plan:<id>', a LIBRARY id or a saved workout's id

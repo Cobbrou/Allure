@@ -4,7 +4,7 @@ import ImportButton from '../components/ImportButton.jsx';
 import { workoutSummary } from '../components/WorkoutEditor.jsx';
 import { distUnit, fmtDay, fmtDist, fmtDuration } from '../lib/format.js';
 import { raceTime } from '../lib/paces.js';
-import { GOALS, isHard, nextSession, PHASES, SESSION_TYPES, weekOf } from '../lib/plan.js';
+import { GOALS, isHard, matchSessions, nextSession, PHASES, SESSION_TYPES, sessionState, weekDays, weekOf } from '../lib/plan.js';
 import { startOfDay } from '../lib/stats.js';
 import { LIBRARY } from '../lib/workout.js';
 
@@ -38,12 +38,12 @@ function PlanHub({ plan, activities, onEndPlan }) {
   const goal = GOALS[plan.goal.kind];
   const weeks = plan.weeks.length;
   const week = Math.min(Math.max(weekOf(plan, now), 1), weeks);
-  const next = nextSession(plan, now);
+  const matches = useMemo(() => matchSessions(plan, activities ?? []), [plan, activities]);
+  const next = nextSession(plan, now, matches);
   const daysLeft = Math.round((plan.goal.date - today) / DAY);
   const thisWeek = plan.sessions.filter((s) => s.week === week);
   const planned = thisWeek.reduce((n, s) => n + s.distance, 0);
-  const weekStart = startOfDay(plan.inputs.start + (week - 1) * 7 * DAY + 12 * 3600e3); // noon: DST-proof
-  const strip = Array.from({ length: 7 }, (_, i) => startOfDay(weekStart + i * DAY + 12 * 3600e3));
+  const strip = weekDays(plan, week);
   const done = strip.reduce((n, d) => n + (runs.get(d) ?? 0), 0);
 
   if (daysLeft < 0) {
@@ -70,7 +70,7 @@ function PlanHub({ plan, activities, onEndPlan }) {
         <ol className="week-strip">
           {strip.map((d) => {
             const s = thisWeek.find((x) => x.date === d);
-            const state = runs.has(d) ? 'done' : s && d < today ? 'missed' : s ? 'planned' : 'rest';
+            const state = s ? sessionState(s, matches.get(s.id), now) : runs.has(d) ? 'done' : 'rest'; // an extra run counts too
             return (
               <li key={d} className={`${state} ${d === today ? 'today' : ''} ${s && isHard(s.type) ? 'hard' : ''}`}>
                 <span className="muted">{new Date(d).toLocaleDateString(locale(), { weekday: 'narrow' })}</span>

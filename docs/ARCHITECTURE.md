@@ -35,7 +35,7 @@ Route changes run inside `document.startViewTransition` (slide or fade, see
 | Hash             | Page           |
 |------------------|----------------|
 | `#/`             | `HomePage` (Home tab, "Entraînement"): the plan's race countdown, next session, week strip and volume; without a plan, goal picker and workout library |
-| `#/plan`         | `PlanPage`: phases chart and every week of the active plan. `#/plan/session/:id`: one session's steps and paces, start button |
+| `#/plan`         | `PlanPage`: phases chart, every week of the active plan with done / missed marks (`matchSessions`), run days change. `#/plan/session/:id`: one session's steps and paces, start, what was done, move / swap, skip, make up, link a run by hand |
 | `#/plan/new(/:goal)` | `PlanSetupPage`: wizard (goal, race date, fitness, volume and experience, run days), prefilled by `planDefaults`, ending on a preview |
 | `#/activities`   | `FeedPage` opened from the profile (header count, "Mes activités" row); it and the activity pages highlight the Profile tab |
 | `#/activity/:id` | `ActivityPage` |
@@ -62,7 +62,7 @@ IndexedDB database `allure`, version 7:
   `gear` → `[{ id, name, kind, initial, alert, isDefault, retired }]` (see `lib/gear.js`),
   `privacy` → `[{ id, name, lat, lon, radius }]` privacy zones (see `lib/privacy.js`)
   `contacts` → `[{ id, name, phone }]` emergency contacts (see `lib/safety.js`)
-  `plan` → the active training plan `{ id, created, goal: { kind, date }, inputs, vdot, vdotHistory, weeks: [{ volume, kind, phase }], sessions: [{ id, date, week, phase, type, steps, distance, duration }], adjustments }` (see `lib/plan.js`); `planHistory` → finished or stopped plans, with `ended` and `status`
+  `plan` → the active training plan `{ id, created, goal: { kind, date }, inputs, vdot, vdotHistory, weeks: [{ volume, kind, phase }], sessions: [{ id, date, week, phase, type, steps, distance, duration, status?, activity?, from? }], adjustments }` (see `lib/plan.js`; done is computed from activities, never stored); `planHistory` → finished or stopped plans, with `ended` and `status`
   `units` → `'metric' | 'imperial'` display unit system (see `lib/format.js`)
   `lang` → `'fr' | 'en'` UI language, device language when unset (see `lib/i18n.js`)
   `prefs` → `{ name, autoPause, audio, recordScreen, workout, workouts }` display name and recording defaults (Settings page); `workout` is the custom workout template being edited, `workouts` the saved ones `[{ id, ...template }]`;

@@ -291,14 +291,14 @@ ${cur.text}` } : summary));
   };
 
   let content;
-  if (page === 'activity') content = <ActivityPage id={id} activities={activities} hr={hr} ftp={ftp} weight={hrSaved?.weight} zones={zones} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} onDeleted={onDeleted} />;
+  if (page === 'activity') content = <ActivityPage id={id} activities={activities} plan={plan} hr={hr} ftp={ftp} weight={hrSaved?.weight} zones={zones} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} onDeleted={onDeleted} />;
   else if (page === 'log') content = <TrainingLogPage activities={activities} hr={hr} />;
   else if (page === 'maps') content = <MapsPage activities={activities} routes={routes} onSave={keepRoute} />;
   else if (page === 'route') content = <RoutePage id={id} activities={activities} onSave={addRoute} onDelete={removeRoute} />;
   else if (page === 'groups' || page === 'challenge') content = <GroupsPage activities={activities} name={prefs.name} incoming={page === 'challenge' ? id : null} />;
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
   else if (page === 'plan' && id === 'new') content = <PlanSetupPage activities={activities} goal={sub} onCreate={savePlan} />;
-  else if (page === 'plan') content = <PlanPage plan={plan} sessionId={id === 'session' ? sub : null} onStop={async () => { await endPlan('stopped'); go('/', true); }} />;
+  else if (page === 'plan') content = <PlanPage plan={plan} activities={activities} onSave={savePlan} sessionId={id === 'session' ? sub : null} onStop={async () => { await endPlan('stopped'); go('/', true); }} />;
   else if (page === 'record') content = <RecordPage recording={recording} contacts={contacts} routes={routes} routeId={id === 'workout' ? null : id} workoutId={id === 'workout' ? sub : null} plan={plan} segments={segments ?? []} activities={activities ?? []} hr={hr} prefs={prefs} onSavePrefs={savePrefs} onSaved={onRecorded} />;
   else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} name={prefs.name} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} />;
   else if (page === 'settings') content = <SettingsPage activities={activities} hr={hr} hrSaved={hrSaved} ftpEstimate={ftpEstimate} onSaveHr={saveHr} units={units} onSaveUnits={saveUnits} lang={lang} onSaveLang={saveLang} prefs={prefs} onSavePrefs={savePrefs} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} onDemo={addDemo} onHealthImport={onHealthImport} onChange={reload} />;
