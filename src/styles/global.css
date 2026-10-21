@@ -724,6 +724,53 @@ ol.splits li.best .split-gap { color: var(--on-accent); }
   .map { height: 400px; }
 }
 
+/* ---------- Training plan ---------- */
+.plan-race { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.plan-race > div { display: grid; gap: 2px; }
+.plan-race .muted { font-size: var(--fs-sm); }
+.plan-countdown { font-size: var(--fs-xl); font-weight: 800; color: var(--accent-text); white-space: nowrap; }
+.plan-today { display: grid; gap: 8px; }
+.plan-today h2 { margin: 0; }
+.plan-today p { margin: 0; }
+.week-strip { list-style: none; margin: 0 0 4px; padding: 0; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.week-strip li { display: grid; gap: 4px; justify-items: center; font-size: var(--fs-xs); }
+.week-strip li > :last-child { display: grid; place-items: center; width: 100%; max-width: 44px; height: 44px; border-radius: var(--radius-sm); background: var(--card-2); border: 1px solid var(--border); color: var(--text); font-weight: 700; }
+.week-strip li.rest > :last-child { background: transparent; color: var(--muted); }
+.week-strip li.done > :last-child { background: color-mix(in srgb, var(--good) 25%, transparent); border-color: var(--good); }
+.week-strip li.missed > :last-child { border-color: var(--warn); color: var(--warn-text); }
+.week-strip li.today > :last-child { border-color: var(--accent); border-width: 2px; }
+.week-strip li.hard > :last-child { border-bottom: 3px solid var(--warn); }
+.goal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 4px 0 8px; }
+.goal-grid .button { min-height: 52px; justify-content: center; text-align: center; }
+.pick-list .button { justify-content: flex-start; gap: 12px; min-height: 52px; text-align: left; background: var(--card-2); border-color: var(--border); color: var(--text); }
+.pick-list .button span { flex: none; }
+.pick-list .button small { flex: 1; min-width: 0; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.phase-bar { display: flex; align-items: flex-end; gap: 2px; height: 56px; }
+.phase-bar span { flex: 1; height: var(--h); min-height: 4px; border-radius: 2px; background: var(--muted); opacity: 0.85; }
+.phase-bar .base, .phase-legend .base::before { background: var(--good); }
+.phase-bar .build, .phase-legend .build::before { background: var(--warn); }
+.phase-bar .peak, .phase-legend .peak::before { background: var(--danger); }
+.phase-bar .taper, .phase-legend .taper::before { background: var(--muted); }
+.phase-bar .now { outline: 2px solid var(--text); outline-offset: 1px; }
+.phase-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 0; }
+.phase-legend span::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+.plan-week summary { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.plan-week summary .muted { font-size: var(--fs-sm); }
+.plan-sessions { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.plan-sessions a { display: grid; grid-template-columns: 76px 1fr auto; align-items: center; gap: 8px; min-height: 44px; padding: 0 8px; border-radius: var(--radius-sm); color: var(--text); }
+.plan-sessions li.today a { background: var(--accent-15); }
+.plan-sessions li.past a { opacity: 0.6; }
+.plan-sessions .muted { font-size: var(--fs-sm); }
+.plan-steps { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+.plan-steps li { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 8px 10px; border-left: 3px solid var(--good); background: var(--card-2); border-radius: var(--radius-sm); }
+.plan-steps li.work { border-left-color: var(--accent); }
+.plan-steps li .muted { grid-column: 1 / -1; font-size: var(--fs-sm); }
+.plan-steps li .muted:empty { display: none; }
+.wizard h2 { margin-top: 0; }
+.day-picks { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.day-picks button { min-height: 44px; padding: 0; font-size: var(--fs-sm); background: var(--card-2); border-color: var(--border); color: var(--muted); text-transform: capitalize; }
+.day-picks button.on { background: var(--accent-15); border-color: var(--accent); color: var(--text); }
+
 /* ---------- Motion ----------
    Page transitions use the View Transitions API (src/router.js sets data-nav).
    Everything here is disabled under prefers-reduced-motion. */

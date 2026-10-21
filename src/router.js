@@ -7,7 +7,7 @@ const parse = () => location.hash.replace(/^#\/?/, '').split('/');
 
 // Detail pages sit below tabs (a segment below the activity it was opened from): going
 // deeper slides forward, coming back slides back.
-const DEPTH = { activities: 1, activity: 2, manual: 1, log: 1, route: 1, settings: 1, segment: 3, legal: 2 };
+const DEPTH = { plan: 1, activities: 1, activity: 2, manual: 1, log: 1, route: 1, settings: 1, segment: 3, legal: 2 };
 const depth = (route) => DEPTH[route[0]] ?? 0;
 let inApp = false; // a hash change happened in this session, so history.back() stays in the app
 const scrolls = new Map(); // hash -> scrollY, so going back to the feed keeps its position

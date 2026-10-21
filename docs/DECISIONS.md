@@ -3,6 +3,18 @@
 Lightweight decision log. Newest first. Each entry: context, decision, consequences.
 Open questions sit at the bottom until decided.
 
+## 2026-10-22: Training plans are stored, not regenerated
+
+**Context**: a plan is generated from the wizard inputs by `lib/plan.js`. It could be
+regenerated on each read from its inputs, or stored once.
+**Decision**: the generated sessions are stored in the `plan` setting, with the inputs.
+Session paces are intensity names resolved against `plan.vdot` when a session is shown or
+started. Finished or stopped plans move to `planHistory`.
+**Consequences**: an app update that changes the generator never reshuffles a plan half way.
+Regeneration happens only on request (M5) and only touches future sessions. A fitness change
+moves every target pace without rewriting sessions. No new store and no DB version bump;
+backups carry plans with the other settings.
+
 ## 2026-10-21: Home is the training hub, activities move under Profile
 
 **Context**: with no central social network (2026-10-18), the Home tab only lists your own

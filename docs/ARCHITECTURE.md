@@ -34,10 +34,12 @@ Route changes run inside `document.startViewTransition` (slide or fade, see
 
 | Hash             | Page           |
 |------------------|----------------|
-| `#/`             | `FeedPage` (Home tab), until the training hub replaces it (phase 10, M3) |
+| `#/`             | `HomePage` (Home tab, "Entraînement"): the plan's race countdown, next session, week strip and volume; without a plan, goal picker and workout library |
+| `#/plan`         | `PlanPage`: phases chart and every week of the active plan. `#/plan/session/:id`: one session's steps and paces, start button |
+| `#/plan/new(/:goal)` | `PlanSetupPage`: wizard (goal, race date, fitness, volume and experience, run days), prefilled by `planDefaults`, ending on a preview |
 | `#/activities`   | `FeedPage` opened from the profile (header count, "Mes activités" row); it and the activity pages highlight the Profile tab |
 | `#/activity/:id` | `ActivityPage` |
-| `#/record`       | `RecordPage`: setup (sport, route to follow, auto-pause, voice cues, GPS status), then live recording. `#/record/:routeId` preselects a route |
+| `#/record`       | `RecordPage`: setup (sport, route to follow, workout, auto-pause, voice cues, GPS status), then live recording. `#/record/:routeId` preselects a route, `#/record/workout/:id` a workout (library id or `plan:<session id>`); today's plan session is preselected by default |
 | `#/manual(/:id)`  | `ManualPage`: add an activity by hand (no GPS), or edit a manual one's date, duration, distance, D+ |
 | `#/log`          | `TrainingLogPage`: week-by-week bubbles, opened from the profile |
 | `#/segment/:id`  | `SegmentPage`: segment map, distance / grade, your efforts fastest first |
@@ -60,6 +62,7 @@ IndexedDB database `allure`, version 7:
   `gear` → `[{ id, name, kind, initial, alert, isDefault, retired }]` (see `lib/gear.js`),
   `privacy` → `[{ id, name, lat, lon, radius }]` privacy zones (see `lib/privacy.js`)
   `contacts` → `[{ id, name, phone }]` emergency contacts (see `lib/safety.js`)
+  `plan` → the active training plan `{ id, created, goal: { kind, date }, inputs, vdot, vdotHistory, weeks: [{ volume, kind, phase }], sessions: [{ id, date, week, phase, type, steps, distance, duration }], adjustments }` (see `lib/plan.js`); `planHistory` → finished or stopped plans, with `ended` and `status`
   `units` → `'metric' | 'imperial'` display unit system (see `lib/format.js`)
   `lang` → `'fr' | 'en'` UI language, device language when unset (see `lib/i18n.js`)
   `prefs` → `{ name, autoPause, audio, recordScreen, workout, workouts }` display name and recording defaults (Settings page); `workout` is the custom workout template being edited, `workouts` the saved ones `[{ id, ...template }]`;

@@ -17,12 +17,13 @@ import { setWeekStart } from './lib/stats.js';
 import { DEFAULT_REST_HR, estimateMaxHr } from './lib/training.js';
 import { useEdgeSwipeBack } from './gestures.js';
 import FeedPage from './pages/FeedPage.jsx';
+import HomePage from './pages/HomePage.jsx';
 import { useRecording } from './recording.js';
 import { back, go, useRoute } from './router.js';
 import { ACCENT, MAP_STYLE, setTheme } from './theme.js';
 
-// The feed is the start screen and ships in the main chunk. The other pages pull in
-// MapLibre and Recharts, so they load as separate chunks, fetched once the app is idle.
+// Home (the training hub) is the start screen and ships in the main chunk with the feed. The
+// other pages pull in MapLibre and Recharts, so they load as separate chunks, fetched once the app is idle.
 const pages = {
   activity: () => import('./pages/ActivityPage.jsx'),
   record: () => import('./pages/RecordPage.jsx'),
@@ -35,6 +36,8 @@ const pages = {
   settings: () => import('./pages/SettingsPage.jsx'),
   legal: () => import('./pages/LegalPage.jsx'),
   manual: () => import('./pages/ManualPage.jsx'),
+  plan: () => import('./pages/PlanPage.jsx'),
+  planSetup: () => import('./pages/PlanSetupPage.jsx'),
 };
 const ActivityPage = lazy(pages.activity);
 const RecordPage = lazy(pages.record);
@@ -47,9 +50,11 @@ const SegmentPage = lazy(pages.segment);
 const SettingsPage = lazy(pages.settings);
 const LegalPage = lazy(pages.legal);
 const ManualPage = lazy(pages.manual);
+const PlanPage = lazy(pages.plan);
+const PlanSetupPage = lazy(pages.planSetup);
 
 // Detail pages and where "back" lands when the app was opened on them (deep link).
-const BACK_TO = { activities: '/profile', activity: '/activities', manual: '/record', log: '/profile', segment: '/profile', route: '/maps', settings: '/profile', legal: '/settings' };
+const BACK_TO = { plan: '/', activities: '/profile', activity: '/activities', manual: '/record', log: '/profile', segment: '/profile', route: '/maps', settings: '/profile', legal: '/settings' };
 
 /** A stored setting as state: [value, save]. `initial` until loaded, or when never saved. */
 function useSetting(key, initial) {
@@ -60,7 +65,7 @@ function useSetting(key, initial) {
 }
 
 export default function App() {
-  const [page, id] = useRoute();
+  const [page, id, sub] = useRoute();
   const swipeBack = useCallback(() => back(BACK_TO[page]), [page]);
   useEdgeSwipeBack(page in BACK_TO, swipeBack);
   const [activities, setActivities] = useState(null);
@@ -156,6 +161,13 @@ export default function App() {
     if (Capacitor.isNativePlatform()) import('./lib/shell.js').then((m) => m.systemBars(light));
   }, [light, prefs.accent]);
   const [gears, saveGears] = useSetting('gear', []);
+  const [plan, savePlan] = useSetting('plan', null); // active training plan (lib/plan.js)
+  // Finished or stopped plans move to 'planHistory'.
+  const endPlan = async (status) => {
+    const history = (await getSetting('planHistory')) ?? [];
+    await setSetting('planHistory', [...history, { ...plan, ended: Date.now(), status }]);
+    await savePlan(null);
+  };
 
   // Reloading after a save, import or demo is when a goal can be crossed: celebrate it.
   const goalsRef = useRef(goals);
@@ -285,13 +297,15 @@ ${cur.text}` } : summary));
   else if (page === 'route') content = <RoutePage id={id} activities={activities} onSave={addRoute} onDelete={removeRoute} />;
   else if (page === 'groups' || page === 'challenge') content = <GroupsPage activities={activities} name={prefs.name} incoming={page === 'challenge' ? id : null} />;
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
-  else if (page === 'record') content = <RecordPage recording={recording} contacts={contacts} routes={routes} routeId={id} segments={segments ?? []} activities={activities ?? []} hr={hr} prefs={prefs} onSavePrefs={savePrefs} onSaved={onRecorded} />;
+  else if (page === 'plan' && id === 'new') content = <PlanSetupPage activities={activities} goal={sub} onCreate={savePlan} />;
+  else if (page === 'plan') content = <PlanPage plan={plan} sessionId={id === 'session' ? sub : null} onStop={async () => { await endPlan('stopped'); go('/', true); }} />;
+  else if (page === 'record') content = <RecordPage recording={recording} contacts={contacts} routes={routes} routeId={id === 'workout' ? null : id} workoutId={id === 'workout' ? sub : null} plan={plan} segments={segments ?? []} activities={activities ?? []} hr={hr} prefs={prefs} onSavePrefs={savePrefs} onSaved={onRecorded} />;
   else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} name={prefs.name} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} />;
   else if (page === 'settings') content = <SettingsPage activities={activities} hr={hr} hrSaved={hrSaved} ftpEstimate={ftpEstimate} onSaveHr={saveHr} units={units} onSaveUnits={saveUnits} lang={lang} onSaveLang={saveLang} prefs={prefs} onSavePrefs={savePrefs} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} onDemo={addDemo} onHealthImport={onHealthImport} onChange={reload} />;
   else if (page === 'legal') content = <LegalPage id={id} />;
   else if (page === 'manual') content = <ManualPage id={id} activities={activities} onSaved={async (mid) => { await reload(); if (id) back(`/activity/${mid}`); else go(`/activity/${mid}`, true); }} />;
-  // ponytail: Home keeps the feed until the training hub (phase 10, M3) replaces it.
-  else content = <FeedPage nested={page === 'activities'} activities={activities} name={prefs.name} zones={zones} onRefresh={reload} onImport={onImport} onDemo={addDemo} />;
+  else if (page === 'activities') content = <FeedPage activities={activities} name={prefs.name} zones={zones} onRefresh={reload} onImport={onImport} onDemo={addDemo} />;
+  else content = <HomePage plan={plan} activities={activities} onImport={onImport} onEndPlan={() => endPlan('done')} />;
 
   return (
     <div
@@ -318,10 +332,10 @@ ${cur.text}` } : summary));
           <button type="button" className="ghost small toast-close" onClick={() => setToast(null)} aria-label={t('Fermer')}>✕</button>
         </div>
       )}
-      <ErrorBoundary key={`${page}/${id ?? ''}/${units}/${lang}/${look}`}>
+      <ErrorBoundary key={`${page}/${id ?? ''}/${sub ?? ''}/${units}/${lang}/${look}`}>
         <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
       </ErrorBoundary>
-      {!(page === 'record' && recording.rec) && <TabBar active={page === 'manual' ? 'record' : ['activities', 'activity', 'segment', 'log', 'settings', 'legal'].includes(page) ? 'profile' : page === 'route' ? 'maps' : page} recording={recording.rec && (recording.rec.paused ? 'paused' : 'live')} />}
+      {!(page === 'record' && recording.rec) && <TabBar active={page === 'plan' ? '' : page === 'manual' ? 'record' : ['activities', 'activity', 'segment', 'log', 'settings', 'legal'].includes(page) ? 'profile' : page === 'route' ? 'maps' : page} recording={recording.rec && (recording.rec.paused ? 'paused' : 'live')} />}
     </div>
   );
 }

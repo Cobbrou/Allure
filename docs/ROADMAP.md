@@ -309,7 +309,7 @@ Training
 - [x] Structured workouts: build intervals (warm-up, reps, recovery), follow them live
       with spoken / haptic prompts, compare plan vs done (each step is a lap; the lap button
       skips a step). Pace targets, saved workouts and a library: phase 10, M2
-- [ ] Training plans (5 km → marathon) generated from goals and current fitness (phase 10)
+- [x] Training plans (5 km → marathon) generated from goals and current fitness (phase 10)
 - [ ] Weekly streaks and a year-in-sport recap (shareable story)
 - [ ] Feed search and filters (sport, date range, distance, name)
 
@@ -560,14 +560,15 @@ M2 Workouts with targets
       strides), startable from Record without a plan
 
 M3 Plan generator
-- [ ] Setup wizard: goal (5 km, 10 km, half, marathon), race date or length, fitness, weekly
-      volume, run days, long-run day, experience, strength; prefilled from history; preview
-- [ ] Periodized plan: base / build / peak / taper, +10 % a week at most, lighter week every
+- [x] Setup wizard: goal (5 km, 10 km, half, marathon), race date, fitness, weekly
+      volume, run days, long-run day, experience; prefilled from history; preview. Goal time
+      and strength sessions left out (strength comes with M7)
+- [x] Periodized plan: base / build / peak / taper, +10 % a week at most, lighter week every
       3-4 weeks, long-run caps, ~80 % easy, no back-to-back hard days
-- [ ] Plan stored in settings (`plan`, `planHistory`), in backups, no DB version bump
-- [ ] Home tab as the training hub ("Entraînement"): today's session, week strip, plan
+- [x] Plan stored in settings (`plan`, `planHistory`), in backups, no DB version bump
+- [x] Home tab as the training hub ("Entraînement"): today's session, week strip, plan
       progress, race countdown; without a plan: goal picker, workout library, import
-- [ ] Plan page (`#/plan`: weeks, planned vs done, phases), session page, today's session
+- [x] Plan page (`#/plan`: weeks, phases; done marks come with M4), session page, today's session
       preselected on Record
 
 M4 Completion and feedback

@@ -19,11 +19,15 @@ import { joinLegs } from '../lib/routes.js';
 import { alertText, checkIn, smsUrl } from '../lib/safety.js';
 import { hasBluetooth } from '../lib/sensors.js';
 import { currentVdot, trainingPaces } from '../lib/paces.js';
+import { sessionsOn, sessionWorkout, SESSION_TYPES } from '../lib/plan.js';
 import { SPORTS } from '../lib/sports.js';
 import { DEFAULT_WORKOUT, INTENSITIES, LIBRARY, livePace, startWorkout, stepLabel, stepStatus } from '../lib/workout.js';
 
-/** routeId: route to preselect (from "#/record/<id>"). */
-export default function RecordPage({ recording, contacts, routes, routeId, segments, activities, hr, prefs, onSavePrefs, onSaved }) {
+/**
+ * routeId: route to preselect (from "#/record/<id>"). workoutId: workout to preselect (from
+ * "#/record/workout/<id>"): a LIBRARY id or "plan:<session id>"; today's plan session by default.
+ */
+export default function RecordPage({ recording, contacts, routes, routeId, workoutId, plan, segments, activities, hr, prefs, onSavePrefs, onSaved }) {
   const [editing, setEditing] = useState(null); // sport whose screen layout is being edited
   const live = recording.rec;
   return (
@@ -36,7 +40,7 @@ export default function RecordPage({ recording, contacts, routes, routeId, segme
       )}
       {live
         ? <Live recording={recording} contacts={contacts} layout={layoutFor(prefs.recordScreen, live.sport)} maxHr={hr.max} onSaved={onSaved} />
-        : <Setup recording={recording} contacts={contacts} routes={routes} routeId={routeId} segments={segments} activities={activities} prefs={prefs} onSavePrefs={onSavePrefs} onEditScreen={setEditing} />}
+        : <Setup recording={recording} contacts={contacts} routes={routes} routeId={routeId} workoutId={workoutId} plan={plan} segments={segments} activities={activities} prefs={prefs} onSavePrefs={onSavePrefs} onEditScreen={setEditing} />}
       <BottomSheet open={editing != null} onClose={() => setEditing(null)} title={t("Écran d'enregistrement · {sport}", { sport: SPORTS[editing]?.label })}>
         {editing && (
           <RecordScreenEditor
@@ -49,19 +53,27 @@ export default function RecordPage({ recording, contacts, routes, routeId, segme
   );
 }
 
-function Setup({ recording, contacts, routes, routeId, segments, activities, prefs, onSavePrefs, onEditScreen }) {
+function Setup({ recording, contacts, routes, routeId, workoutId, plan, segments, activities, prefs, onSavePrefs, onEditScreen }) {
   const [routeSel, setRouteSel] = useState(routeId ?? '');
   const route = routes?.find((r) => r.id === routeSel);
   const [sport, setSport] = useState(route?.sport ?? (SPORTS[prefs?.sport] ? prefs.sport : 'run')); // defaults to the last sport recorded
   const [autoPause, setAutoPause] = useState(prefs?.autoPause ?? true);
   const [audio, setAudio] = useState(prefs?.audio ?? true);
   const [safety, setSafety] = useState(true);
-  const [withWorkout, setWithWorkout] = useState(false);
-  const [pick, setPick] = useState('custom'); // 'custom', a LIBRARY id or a saved workout's id
+  // A plan session: the one asked for, else today's (the race is run free).
+  const session = workoutId?.startsWith('plan:')
+    ? plan?.sessions.find((s) => `plan:${s.id}` === workoutId)
+    : !workoutId && plan && sessionsOn(plan, Date.now()).find((s) => s.type !== 'race');
+  const preset = session ? `plan:${session.id}` : LIBRARY.some((w) => w.id === workoutId) ? workoutId : null;
+  const [withWorkout, setWithWorkout] = useState(!!preset);
+  const [pick, setPick] = useState(preset ?? 'custom'); // 'custom', 'plan:<id>', a LIBRARY id or a saved workout's id
   const custom = { ...DEFAULT_WORKOUT, ...prefs?.workout };
   const saved = prefs?.workouts ?? [];
-  const workout = pick === 'custom' ? custom : LIBRARY.find((w) => w.id === pick) ?? saved.find((w) => w.id === pick) ?? custom;
-  const fit = useMemo(() => currentVdot(activities), [activities]);
+  const workout = session && pick === `plan:${session.id}` ? sessionWorkout(session)
+    : pick === 'custom' ? custom : LIBRARY.find((w) => w.id === pick) ?? saved.find((w) => w.id === pick) ?? custom;
+  const historyFit = useMemo(() => currentVdot(activities), [activities]);
+  // Plan sessions run at the plan's fitness, so the paces match the plan page.
+  const fit = session && pick === `plan:${session.id}` ? { vdot: plan.vdot } : historyFit;
   const paces = fit && trainingPaces(fit.vdot);
   const keep = () => onSavePrefs({ ...prefs, workouts: [...saved, { ...custom, id: crypto.randomUUID() }] });
   const drop = (wid) => { if (pick === wid) setPick('custom'); onSavePrefs({ ...prefs, workouts: saved.filter((w) => w.id !== wid) }); };
@@ -158,6 +170,11 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
       </BottomSheet>
       <BottomSheet open={sheet === 'workout'} onClose={() => setSheet(null)} title={t('Séance structurée')}>
         <div className="pick-list">
+          {session && (
+            <button type="button" className={pick === `plan:${session.id}` ? 'on' : ''} aria-pressed={pick === `plan:${session.id}`} onClick={() => setPick(`plan:${session.id}`)}>
+              <Icon name="timer" /><span>{t('Plan : {type}', { type: SESSION_TYPES[session.type].label })}</span><small>{workoutSummary(session)}</small>
+            </button>
+          )}
           {LIBRARY.map((w) => (
             <button key={w.id} type="button" className={pick === w.id ? 'on' : ''} aria-pressed={pick === w.id} onClick={() => setPick(w.id)}>
               <span>{w.name}</span><small>{workoutSummary(w)}</small>

@@ -21,7 +21,7 @@ export default class ErrorBoundary extends Component {
         <h2>{t('Oups, cet écran a planté')}</h2>
         <p>{String(this.state.error.message || this.state.error)}</p>
         <div className="row">
-          <a className="button ghost" href="#/">{t('Retour aux activités')}</a>
+          <a className="button ghost" href="#/">{t("Retour à l'accueil")}</a>
           <button onClick={() => location.reload()}>{t('Recharger')}</button>
         </div>
       </main>

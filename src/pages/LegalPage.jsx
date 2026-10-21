@@ -92,6 +92,12 @@ const FR = {
           Distances, allures, fréquence cardiaque, prédictions et indicateurs d'entraînement sont
           des estimations. Ils ne constituent pas un avis médical.
         </p>
+        <h3>Plans d'entraînement</h3>
+        <p>
+          Les plans sont des conseils généraux, calculés à partir de ton historique et de règles
+          publiées. Ils ne tiennent pas compte de ton état de santé : en cas de douleur, de malaise
+          ou de maladie, arrête-toi et consulte un professionnel de santé.
+        </p>
         <h3>Tes données</h3>
         <p>
           Elles t'appartiennent et restent sur ton téléphone. Pense à faire des sauvegardes :
@@ -216,6 +222,12 @@ const EN = {
         <p>
           Distances, paces, heart rate, predictions and training metrics are estimates. They
           are not medical advice.
+        </p>
+        <h3>Training plans</h3>
+        <p>
+          Plans are general guidance, computed from your history and published rules. They don't
+          take your health into account: if you feel pain, unwell or ill, stop and see a health
+          professional.
         </p>
         <h3>Your data</h3>
         <p>
