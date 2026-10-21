@@ -158,6 +158,11 @@ and `lib/sports.js` (`effort()` picks km/h, min/km or min/100 m by sport).
 - **Best efforts** (`lib/records.js`): a two-pointer sliding window on cumulative
   distance finds the fastest elapsed time over 1 km, 5 km, 10 km, half and full
   marathon, scaled to the exact distance. Personal records = the best of all runs.
+- **Paces** (`lib/paces.js`): Daniels-Gilbert VDOT from a race time and back (bisection),
+  training paces at fixed shares of VDOT (easy 65-74 %, threshold 88 %, interval 97.5 %,
+  marathon from the race time, repetition 15 s/km under interval). Current fitness is the
+  best VDOT of the last 90 days of runs, from efforts of 3 km or more when any. Time in
+  pace zone takes pace over ~10 s chunks of moving time (point-to-point GPS pace is noise).
 - **Duplicates on import**: same sport and overlapping time ranges, start to start + moving time (`isDuplicate`).
 - **Profile stats** (`lib/stats.js`): local time, weeks start on Monday or Sunday (`setWeekStart`, a setting).
 - **Segment efforts** (`lib/segments.js`): a pass starts at the fix closest to the

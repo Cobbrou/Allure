@@ -242,6 +242,7 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .zones { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 8px; }
 .zones li { display: grid; grid-template-columns: 112px 1fr 56px; align-items: center; gap: 10px; font-size: var(--fs-sm); }
 .zone-time { text-align: right; color: var(--muted); }
+.zone-label small { display: block; font-size: var(--fs-xs); }
 .zone-bar { height: 10px; border-radius: 5px; background: var(--border); overflow: hidden; }
 .zone-bar > span {
   display: block; height: 100%; border-radius: 5px; background: hsl(calc(200 - var(--z) * 50) 80% 55%);

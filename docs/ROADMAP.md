@@ -364,7 +364,7 @@ Fixes
 Records & analysis
 - [ ] Records beyond running: longest ride / hike / swim, biggest climb, fastest 20 / 40 /
       100 km on the bike (`personalRecords` is run-only)
-- [ ] Pace zones for runners without a strap (from threshold pace or the race predictions),
+- [x] Pace zones for runners without a strap (from threshold pace or the race predictions),
       time in zone like HR zones (phase 10, M1)
 - [ ] Compare two activities: overlay on the map, pace / HR charts aligned by distance
       (starting point: matched activities)
@@ -545,10 +545,10 @@ M0 Activities under Profile
       Profile tab. Home keeps the feed until the M3 hub takes its place
 
 M1 Pace engine
-- [ ] `lib/paces.js`: VDOT from a race time (Daniels-Gilbert), race time from VDOT, training
+- [x] `lib/paces.js`: VDOT from a race time (Daniels-Gilbert), race time from VDOT, training
       paces (easy, marathon, threshold, interval, repetition), tested against Daniels' table
-- [ ] Current fitness from history (`predictRaces` sources, last 90 days)
-- [ ] Pace zones and time in pace zone on runs without a strap (phase 8 item)
+- [x] Current fitness from history (`predictRaces` sources, last 90 days)
+- [x] Pace zones and time in pace zone on runs without a strap (phase 8 item)
 
 M2 Workouts with targets
 - [ ] Step targets: pace range (as an intensity name, resolved at start), HR zone or RPE

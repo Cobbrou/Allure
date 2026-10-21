@@ -5,6 +5,7 @@ import BottomSheet from '../components/BottomSheet.jsx';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import PointSlider from '../components/PointSlider.jsx';
 import HrZones from '../components/HrZones.jsx';
+import PaceZones from '../components/PaceZones.jsx';
 import Intervals from '../components/Intervals.jsx';
 import MatchedActivities from '../components/MatchedActivities.jsx';
 import Photos from '../components/Photos.jsx';
@@ -163,6 +164,7 @@ export default function ActivityPage({ id, activities, hr, ftp, weight, zones, s
           </>
         )}
         <HrZones hist={data.meta.hrTime} hr={hr} />
+        {hasTrack && act.sport === 'run' && <PaceZones act={act} activities={activities} />}
         {data.meta.powerCurve && <PowerCurve meta={data.meta} activities={activities} ftp={ftp} />}
         {hasTrack && <SplitsTable splits={splits} sport={act.sport} size={splitSize} />}
         <BestEfforts meta={data.meta} activities={activities} />
