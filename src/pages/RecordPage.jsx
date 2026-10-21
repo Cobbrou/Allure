@@ -1,15 +1,15 @@
 import { t } from '../lib/i18n.js';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import BottomSheet from '../components/BottomSheet.jsx';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import Icon from '../components/Icon.jsx';
 import LiveMap from '../components/LiveMap.jsx';
 import RecordScreenEditor from '../components/RecordScreenEditor.jsx';
 import StatMetric from '../components/StatMetric.jsx';
-import WorkoutEditor, { workoutSummary } from '../components/WorkoutEditor.jsx';
+import WorkoutEditor, { fmtRange, workoutSummary } from '../components/WorkoutEditor.jsx';
 import { followRoute } from '../lib/follow.js';
 import { liveSegments } from '../lib/liveSegments.js';
-import { distUnit, fmtDist, fmtDuration, fmtLength } from '../lib/format.js';
+import { distUnit, fmtDist, fmtDuration, fmtLength, fmtPaceUnit } from '../lib/format.js';
 import { haptic } from '../lib/haptics.js';
 import { hush, speak, watchPosition } from '../lib/location.js';
 import { FIELDS, layoutFor } from '../lib/liveFields.js';
@@ -18,8 +18,9 @@ import { getRoute } from '../lib/db.js';
 import { joinLegs } from '../lib/routes.js';
 import { alertText, checkIn, smsUrl } from '../lib/safety.js';
 import { hasBluetooth } from '../lib/sensors.js';
+import { currentVdot, trainingPaces } from '../lib/paces.js';
 import { SPORTS } from '../lib/sports.js';
-import { DEFAULT_WORKOUT, startWorkout, stepLabel, stepStatus } from '../lib/workout.js';
+import { DEFAULT_WORKOUT, INTENSITIES, LIBRARY, livePace, startWorkout, stepLabel, stepStatus } from '../lib/workout.js';
 
 /** routeId: route to preselect (from "#/record/<id>"). */
 export default function RecordPage({ recording, contacts, routes, routeId, segments, activities, hr, prefs, onSavePrefs, onSaved }) {
@@ -56,7 +57,14 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
   const [audio, setAudio] = useState(prefs?.audio ?? true);
   const [safety, setSafety] = useState(true);
   const [withWorkout, setWithWorkout] = useState(false);
-  const workout = { ...DEFAULT_WORKOUT, ...prefs?.workout };
+  const [pick, setPick] = useState('custom'); // 'custom', a LIBRARY id or a saved workout's id
+  const custom = { ...DEFAULT_WORKOUT, ...prefs?.workout };
+  const saved = prefs?.workouts ?? [];
+  const workout = pick === 'custom' ? custom : LIBRARY.find((w) => w.id === pick) ?? saved.find((w) => w.id === pick) ?? custom;
+  const fit = useMemo(() => currentVdot(activities), [activities]);
+  const paces = fit && trainingPaces(fit.vdot);
+  const keep = () => onSavePrefs({ ...prefs, workouts: [...saved, { ...custom, id: crypto.randomUUID() }] });
+  const drop = (wid) => { if (pick === wid) setPick('custom'); onSavePrefs({ ...prefs, workouts: saved.filter((w) => w.id !== wid) }); };
   const [gps, setGps] = useState(null); // last fix { lat, lon, accuracy… } | { error }
 
   // Warm up the GPS so the first recorded fix is precise. An error keeps the last position on the map.
@@ -75,7 +83,7 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
     if (sport !== prefs?.sport) onSavePrefs({ ...prefs, sport });
     if (audio) { hush(); speak(t('Enregistrement démarré.')); }
     const full = route && (await getRoute(route.id)); // the list holds metas, not points
-    recording.start({ sport, autoPause, audio, voice: prefs?.voice, safety: safety && contacts.length > 0, route: full && followRoute(full, joinLegs(full.legs)), liveSegs: liveSegments(segments, sport, activities), workout: withWorkout ? startWorkout(workout) : null });
+    recording.start({ sport, autoPause, audio, voice: prefs?.voice, safety: safety && contacts.length > 0, route: full && followRoute(full, joinLegs(full.legs)), liveSegs: liveSegments(segments, sport, activities), workout: withWorkout ? startWorkout(workout, fit?.vdot) : null });
   };
   useEffect(() => {
     if (count == null) return;
@@ -111,7 +119,7 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
             ? <button type="button" className={`pill ${safety ? 'on' : ''}`} aria-pressed={safety} onClick={() => setSafety(!safety)}><Icon name={safety ? 'shieldCheck' : 'shieldAlert'} />{t('Alerte si je reste immobile')}</button>
             : <a className="pill warn" href="#/settings"><Icon name="shieldAlert" />{t("Contact d'urgence non configuré")}</a>}
           <button type="button" className={`pill ${withWorkout ? 'on' : ''}`} onClick={() => setSheet('workout')}>
-            <Icon name="timer" />{withWorkout ? workoutSummary(workout) : t('Séance')}
+            <Icon name="timer" />{withWorkout ? workout.name ?? workoutSummary(workout) : t('Séance')}
           </button>
           {hasBluetooth() && <SensorButton recording={recording} kind="hr" />}
           {hasBluetooth() && sport === 'ride' && <SensorButton recording={recording} kind="cadence" />}
@@ -149,7 +157,33 @@ function Setup({ recording, contacts, routes, routeId, segments, activities, pre
         </div>
       </BottomSheet>
       <BottomSheet open={sheet === 'workout'} onClose={() => setSheet(null)} title={t('Séance structurée')}>
-        <WorkoutEditor workout={workout} onChange={(w) => onSavePrefs({ ...prefs, workout: w })} />
+        <div className="pick-list">
+          {LIBRARY.map((w) => (
+            <button key={w.id} type="button" className={pick === w.id ? 'on' : ''} aria-pressed={pick === w.id} onClick={() => setPick(w.id)}>
+              <span>{w.name}</span><small>{workoutSummary(w)}</small>
+            </button>
+          ))}
+          {saved.map((w) => (
+            <div key={w.id} className="pick-row">
+              <button type="button" className={pick === w.id ? 'on' : ''} aria-pressed={pick === w.id} onClick={() => setPick(w.id)}>
+                <span>{workoutSummary(w)}</span>{w.pace && <small>{INTENSITIES.find((i) => i.id === w.pace)?.label}</small>}
+              </button>
+              <ConfirmButton className="ghost" label={t('Supprimer cette séance')} onConfirm={() => drop(w.id)}>✕</ConfirmButton>
+            </div>
+          ))}
+          <button type="button" className={pick === 'custom' ? 'on' : ''} aria-pressed={pick === 'custom'} onClick={() => setPick('custom')}>
+            <Icon name="edit" /><span>{t('Personnalisée')}</span>
+          </button>
+        </div>
+        {pick === 'custom' && (
+          <>
+            <WorkoutEditor workout={custom} paces={paces} onChange={(w) => onSavePrefs({ ...prefs, workout: w })} />
+            <button type="button" className="ghost" onClick={keep}>{t('Garder dans mes séances')}</button>
+          </>
+        )}
+        <p className="muted small-label">
+          {fit ? t('Allures cibles calculées sur un VDOT de {vdot}.', { vdot: fit.vdot }) : t('Pas de course récente (90 jours) : la séance se suivra sans allure cible.')}
+        </p>
         <div className="edit-actions">
           {withWorkout && <button type="button" className="ghost" onClick={() => { setWithWorkout(false); setSheet(null); }}>{t('Sans séance')}</button>}
           <button type="button" onClick={() => { setWithWorkout(true); setSheet(null); }}>{t('Suivre cette séance')}</button>
@@ -323,9 +357,12 @@ function StepChip({ rec, now }) {
   if (!rec.workout) return null;
   const s = stepStatus(rec, now);
   if (!s) return <span className="chip step">{t('Séance terminée')}</span>;
+  const range = s.step.target?.range, pace = range && livePace(rec.workout);
+  const off = pace && (pace < range[0] ? 'fast' : pace > range[1] ? 'slow' : 'ok');
   return (
     <span key={rec.workout.i} className={`chip step ${s.step.kind}`}>
       {stepLabel(s.step, rec.workout.reps)} <b>{s.step.type === 'time' ? fmtDuration(s.left) : fmtLength(s.left)}</b>
+      {range && <small className={`step-pace ${off ?? ''}`}>{fmtRange(range)}{pace ? ` · ${fmtPaceUnit(pace)}` : ''}</small>}
     </span>
   );
 }

@@ -11,7 +11,7 @@ import { keepAwake, speak, watchPosition } from './lib/location.js';
 import { lockScreenControls } from './lib/lockscreen.js';
 import { addFix, addReadings, elapsed, lap, lapCue, lapStarts, lapStatus, hrAlert, pause, recover, resume, startRecording, tick, voiceCue } from './lib/recorder.js';
 import { connectSensor } from './lib/sensors.js';
-import { nextStep, stepCue, workoutStep } from './lib/workout.js';
+import { nextStep, paceCueText, savedWorkout, stepCue, workoutStep } from './lib/workout.js';
 
 const SAVE_EVERY = 5000; // ms between draft autosaves
 const FRESH = 5000; // ms a sensor reading stays valid for the next GPS fix
@@ -54,10 +54,12 @@ export function useRecording({ onSensorLost } = {}) {
     if (alert) haptic('alert');
     const step = next.workout && next.workout.i !== prev.workout?.i;
     if (step) haptic('lap');
+    const paceCue = !step && next.workout?.cueAt !== prev.workout?.cueAt && next.workout.cue;
+    if (paceCue) haptic('alert');
     if (next.audio) {
       const voice = voiceCue(prev, next, Date.now(), freshHr());
       if (voice?.cued != null) next = { ...next, cued: voice.cued };
-      const cue = (step ? stepCue(next) : null) ?? (alert ? t('Cardio élevé : {n}.', { n: freshHr() }) : null) ?? followCue(prev, next) ?? segmentCue(prev, next) ?? voice?.text;
+      const cue = (step ? stepCue(next) : null) ?? (paceCue ? paceCueText(paceCue) : null) ?? (alert ? t('Cardio élevé : {n}.', { n: freshHr() }) : null) ?? followCue(prev, next) ?? segmentCue(prev, next) ?? voice?.text;
       if (cue) speak(cue);
     }
     const done = next.seg?.last;
@@ -127,6 +129,7 @@ export function useRecording({ onSensorLost } = {}) {
       if (r.points.length < 2) return null;
       const points = await correctElevation(r.points);
       const act = createActivity({ sport: r.sport, points, source: 'record', laps: lapStarts(r) });
+      if (r.workout) act.meta.workout = savedWorkout(r.workout);
       await saveActivities([act]);
       hideLock();
       haptic('success');

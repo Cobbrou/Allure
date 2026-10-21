@@ -308,7 +308,7 @@ Recording
 Training
 - [x] Structured workouts: build intervals (warm-up, reps, recovery), follow them live
       with spoken / haptic prompts, compare plan vs done (each step is a lap; the lap button
-      skips a step). Next: several saved workouts, pace targets per step (phase 10, M2)
+      skips a step). Pace targets, saved workouts and a library: phase 10, M2
 - [ ] Training plans (5 km → marathon) generated from goals and current fitness (phase 10)
 - [ ] Weekly streaks and a year-in-sport recap (shareable story)
 - [ ] Feed search and filters (sport, date range, distance, name)
@@ -551,11 +551,12 @@ M1 Pace engine
 - [x] Pace zones and time in pace zone on runs without a strap (phase 8 item)
 
 M2 Workouts with targets
-- [ ] Step targets: pace range (as an intensity name, resolved at start), HR zone or RPE
-- [ ] Live pace target on the step chip, spoken / buzzed "faster / slower" (30 s rolling
+- [x] Step targets: pace range (as an intensity name, resolved at start); HR zone and RPE
+      targets left for M6
+- [x] Live pace target on the step chip, spoken / buzzed "faster / slower" (30 s rolling
       pace, outside the range for 20 s, once a minute at most)
-- [ ] Plan vs done per step on the activity page (target, done pace, HR)
-- [ ] Several saved workouts and a library (fartlek, hills, threshold, VO2, progression,
+- [x] Plan vs done per step on the activity page (target, done pace, HR)
+- [x] Several saved workouts and a library (fartlek, hills, threshold, VO2, progression,
       strides), startable from Record without a plan
 
 M3 Plan generator

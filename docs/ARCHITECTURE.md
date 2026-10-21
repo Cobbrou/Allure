@@ -62,7 +62,7 @@ IndexedDB database `allure`, version 7:
   `contacts` → `[{ id, name, phone }]` emergency contacts (see `lib/safety.js`)
   `units` → `'metric' | 'imperial'` display unit system (see `lib/format.js`)
   `lang` → `'fr' | 'en'` UI language, device language when unset (see `lib/i18n.js`)
-  `prefs` → `{ name, autoPause, audio, recordScreen }` display name and recording defaults (Settings page);
+  `prefs` → `{ name, autoPause, audio, recordScreen, workout, workouts }` display name and recording defaults (Settings page); `workout` is the custom workout template being edited, `workouts` the saved ones `[{ id, ...template }]`;
   `recordScreen` → `{ [sport]: { map, hero, fields } }` live screen layout (`lib/liveFields.js`)
   `friendChallenges` → `[{ id, title, metric, sport, from, to, entries, me }]` challenges with
   friends, shared as `#/challenge/<code>` links (see `lib/friendChallenges.js`)
@@ -115,6 +115,7 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
   hrTime,                // { [bpm]: s } moving seconds per heart rate (lib/training.js)
   efforts,               // [{ seg, time, from, to }] segment efforts: segment id, elapsed s, point indices
   laps,                  // device lap start times (ms), from FIT / TCX; only when 2+ laps
+  workout,               // recorded in Allure only: { name?, steps } reached, one per lap; pace targets resolved to s/km (lib/workout.js)
   description, notes,    // free text; notes are private (never exported)
   rpe,                   // perceived exertion 1-10; effort source without heart rate (training.js)
   noRecords,             // true: left out of personal records and race predictions

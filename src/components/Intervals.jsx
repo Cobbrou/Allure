@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { fmtDuration, fmtLength } from '../lib/format.js';
 import { detectIntervals, lapIntervals } from '../lib/intervals.js';
 import { effort } from '../lib/sports.js';
+import { planVsDone } from '../lib/workout.js';
+import { fmtRange } from './WorkoutEditor.jsx';
 import Segmented from './Segmented.jsx';
 
 const SOURCES = [
@@ -15,7 +17,8 @@ const SOURCES = [
  * the interval is long and as tall as it is fast. Tapping one highlights it on the map.
  */
 export default function Intervals({ meta, track, range }) {
-  const laps = useMemo(() => lapIntervals(track, meta.laps), [track, meta.laps]);
+  // A workout recorded in Allure: one lap per step, with its target.
+  const laps = useMemo(() => planVsDone(lapIntervals(track, meta.laps), meta.workout), [track, meta.laps, meta.workout]);
   const auto = useMemo(() => (meta.sport === 'run' ? detectIntervals(track) : []), [track, meta.sport]);
   const [source, setSource] = useState(laps.length ? 'laps' : 'auto');
   const [sel, setSel] = useState(null);
@@ -38,6 +41,8 @@ export default function Intervals({ meta, track, range }) {
     return t(i === 0 ? 'Échauff.' : i === list.length - 1 ? 'Retour|intervalle' : 'Récup');
   };
   const e = (pace) => effort(meta.sport, pace);
+  const targets = source === 'laps' && list.some((l) => l.step?.target?.range);
+  const hits = list.filter((l) => l.hit != null);
 
   return (
     <section className="card">
@@ -48,6 +53,9 @@ export default function Intervals({ meta, track, range }) {
           {work.length} × {fmtLength(work.reduce((s, l) => s + l.dist, 0) / work.length)} · {t('moy.')} {e(avg).value} {e(avg).unit}
         </p>
       )}
+      {targets && hits.length > 0 && (
+        <p className="muted small-label">{t('{n} / {total} efforts dans l’allure cible', { n: hits.filter((l) => l.hit).length, total: hits.length })}</p>
+      )}
       <div className="iv-bars" role="group" aria-label={t('Intervalles')}>
         {list.map((l, i) => (
           <button key={i} type="button" aria-label={`${label(l, i)} ${fmtDuration(l.time)}`} aria-pressed={sel === i}
@@ -57,14 +65,15 @@ export default function Intervals({ meta, track, range }) {
         ))}
       </div>
       <table className="splits intervals">
-        <thead><tr><th></th><th>{t('Dist.')}</th><th>{t('Temps')}</th><th>{e().short}</th><th>{t('FC')}</th></tr></thead>
+        <thead><tr><th></th><th>{t('Dist.')}</th><th>{t('Temps')}</th><th>{e().short}</th>{targets && <th>{t('Cible')}</th>}<th>{t('FC')}</th></tr></thead>
         <tbody>
           {list.map((l, i) => (
             <tr key={i} className={`${l.work === false ? 'rest' : ''} ${sel === i ? 'on' : ''}`} onClick={() => pick(i)}>
               <td>{label(l, i)}</td>
               <td>{fmtLength(l.dist)}</td>
               <td>{fmtDuration(l.time)}</td>
-              <td className="pace">{e(l.pace).value}</td>
+              <td className={`pace ${l.hit === true ? 'hit' : l.hit === false ? 'miss' : ''}`}>{e(l.pace).value}</td>
+              {targets && <td className="muted">{l.step?.target?.range ? fmtRange(l.step.target.range, false) : ''}</td>}
               <td>{l.hr ? Math.round(l.hr) : '—'}</td>
             </tr>
           ))}
