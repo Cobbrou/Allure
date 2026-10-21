@@ -3,6 +3,19 @@
 Lightweight decision log. Newest first. Each entry: context, decision, consequences.
 Open questions sit at the bottom until decided.
 
+## 2026-10-21: Home is the training hub, activities move under Profile
+
+**Context**: with no central social network (2026-10-18), the Home tab only lists your own
+activities, which is not a reason to open the app every day. Adaptive training plans
+(phase 10, `TRAINING_PLANS.md`) give it one: today's session.
+**Decision**: the Home tab shows the training plan (today's session, week, progress,
+adaptation proposals, goal picker without a plan). The activity list moves to
+`#/activities`, opened from Profile. Plans cover running only. A local notifications
+plugin for session reminders is agreed in principle, picked when needed.
+**Consequences**: Home stays the first tab, so the plan is what the app opens on. The
+activity list is one tap deeper; feed items of the roadmap (search, filters) now belong
+to that page. Cycling and other sports get no plans for now.
+
 ## 2026-10-20: Backups are NDJSON, written and restored in batches
 
 **Context**: the backup loaded every track and photo, then ran one `JSON.stringify` over

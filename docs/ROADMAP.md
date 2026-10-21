@@ -308,8 +308,8 @@ Recording
 Training
 - [x] Structured workouts: build intervals (warm-up, reps, recovery), follow them live
       with spoken / haptic prompts, compare plan vs done (each step is a lap; the lap button
-      skips a step). Next: several saved workouts, pace targets per step
-- [ ] Training plans (5 km → marathon) generated from goals and current fitness
+      skips a step). Next: several saved workouts, pace targets per step (phase 10, M2)
+- [ ] Training plans (5 km → marathon) generated from goals and current fitness (phase 10)
 - [ ] Weekly streaks and a year-in-sport recap (shareable story)
 - [ ] Feed search and filters (sport, date range, distance, name)
 
@@ -365,7 +365,7 @@ Records & analysis
 - [ ] Records beyond running: longest ride / hike / swim, biggest climb, fastest 20 / 40 /
       100 km on the bike (`personalRecords` is run-only)
 - [ ] Pace zones for runners without a strap (from threshold pace or the race predictions),
-      time in zone like HR zones
+      time in zone like HR zones (phase 10, M1)
 - [ ] Compare two activities: overlay on the map, pace / HR charts aligned by distance
       (starting point: matched activities)
 - [ ] "This year vs last year to date" on the profile (distance, time, D+ per sport)
@@ -531,6 +531,71 @@ New features
   beyond running (phase 8), import a GPX as a route (phase 8), pace zones (phase 8),
   compare two activities and ghost pacer (phase 8), weather at the start (phase 7),
   indoor recording (phase 7)
+
+## Phase 10: Adaptive training plans
+
+Runna-class coaching: a goal in, a multi-week program of structured sessions out, followed
+live, checked against what was done, adapted along the way. Full plan, reference feature
+table and algorithms: `docs/TRAINING_PLANS.md`. Rule-based and local; no backend, no LLM.
+Running only. The Home tab becomes the training hub (see `DECISIONS.md`, 2026-10-21).
+
+M0 Activities under Profile
+- [ ] `#/activities`: today's feed (cards, paging, pull to refresh, import, demo) moved off
+      Home, opened from the Profile header and a "Mes activités" row; activity pages
+      highlight the Profile tab
+
+M1 Pace engine
+- [ ] `lib/paces.js`: VDOT from a race time (Daniels-Gilbert), race time from VDOT, training
+      paces (easy, marathon, threshold, interval, repetition), tested against Daniels' table
+- [ ] Current fitness from history (`predictRaces` sources, last 90 days)
+- [ ] Pace zones and time in pace zone on runs without a strap (phase 8 item)
+
+M2 Workouts with targets
+- [ ] Step targets: pace range (as an intensity name, resolved at start), HR zone or RPE
+- [ ] Live pace target on the step chip, spoken / buzzed "faster / slower" (30 s rolling
+      pace, outside the range for 20 s, once a minute at most)
+- [ ] Plan vs done per step on the activity page (target, done pace, HR)
+- [ ] Several saved workouts and a library (fartlek, hills, threshold, VO2, progression,
+      strides), startable from Record without a plan
+
+M3 Plan generator
+- [ ] Setup wizard: goal (5 km, 10 km, half, marathon), race date or length, fitness, weekly
+      volume, run days, long-run day, experience, strength; prefilled from history; preview
+- [ ] Periodized plan: base / build / peak / taper, +10 % a week at most, lighter week every
+      3-4 weeks, long-run caps, ~80 % easy, no back-to-back hard days
+- [ ] Plan stored in settings (`plan`, `planHistory`), in backups, no DB version bump
+- [ ] Home tab as the training hub ("Entraînement"): today's session, week strip, plan
+      progress, race countdown; without a plan: goal picker, workout library, import
+- [ ] Plan page (`#/plan`: weeks, planned vs done, phases), session page, today's session
+      preselected on Record
+
+M4 Completion and feedback
+- [ ] Runs matched to sessions (same day, else ±1 day), compliance per session and per step
+- [ ] RPE prompt after a plan session
+- [ ] Missed sessions, move / swap a session, change run days for the rest of the plan
+
+M5 Adaptation
+- [ ] Pace check: proposes a fitness change after key sessions repeatedly beaten or missed,
+      or a better race / best effort
+- [ ] "Not feeling well": 3-14 days easy only / shorter / no running, then a slow / balanced /
+      fast return
+- [ ] Volume check: done vs planned over 3-4 weeks, proposes holding the volume
+- [ ] Regenerate from today (race date, days or fitness changed), past sessions kept
+
+M6 Beginner and non-race plans
+- [ ] Start running: timed walk / run, RPE targets, 6-16 weeks
+- [ ] Return to running (break length, injury: slower ramp)
+- [ ] Fitness / maintenance plan, rolling 4-week blocks
+
+M7 Extras
+- [ ] Session briefings (why, focus) from templates
+- [ ] Heat adjustment from the Open-Meteo forecast (shares `lib/weather.js` with phase 7)
+- [ ] Race page: predicted time vs goal, even-split pacing, taper notes
+- [ ] Strength and mobility sessions in the plan (phase 8 strength workouts)
+- [ ] End-of-plan recap story
+- [ ] Planned session as a FIT workout file for watches (partner sync in phase 6)
+- [ ] Session reminders (local notifications plugin: agreed in principle, package to pick)
+- [ ] Later: ultra / trail plans
 
 ## Cross-cutting
 
