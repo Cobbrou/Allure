@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Accent colour (#ff5500) on a white disc, 108dp adaptive-icon size. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="48" android:viewportHeight="48">
+    <path android:fillColor="#ffffff" android:pathData="M0,24a24,24 0 1,0 48,0a24,24 0 1,0 -48,0" />
+    <group android:translateX="12" android:translateY="12">
+        <path
+            android:strokeColor="#ff5500" android:strokeWidth="2"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M15,17.5a3.5,3.5 0 1,0 7,0a3.5,3.5 0 1,0 -7,0M2,17.5a3.5,3.5 0 1,0 7,0a3.5,3.5 0 1,0 -7,0M14,5a1,1 0 1,0 2,0a1,1 0 1,0 -2,0M12,17.5V14l-3,-3l4,-3l2,3h2" />
+    </group>
+</vector>

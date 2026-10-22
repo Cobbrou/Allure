@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="shortcut_run">Run</string>
+    <string name="shortcut_run_long">Start a run</string>
+    <string name="shortcut_ride">Ride</string>
+    <string name="shortcut_ride_long">Start a ride</string>
+</resources>

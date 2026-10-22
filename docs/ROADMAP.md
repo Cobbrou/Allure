@@ -395,8 +395,10 @@ Recording
       ahead / behind spoken and shown (reuses route following)
 - [ ] Battery saver for long hikes: lower GPS rate and no live map redraws while the
       screen is off
-- [ ] Android app shortcuts (long-press the icon: "Start a run / ride") opening
+- [x] Android app shortcuts (long-press the icon: "Start a run / ride") opening
       `#/record` with the sport preset (static `shortcuts.xml`, no plugin)
+      (`app.allure://record/sport/<sport>` handled in `shell.js`, `#/record/sport/<sport>` route;
+      *to verify on a device*)
 
 Routes
 - [x] Import a GPX file as a route (today a GPX always becomes an activity)

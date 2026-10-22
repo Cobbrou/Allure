@@ -27,8 +27,9 @@ import { DEFAULT_WORKOUT, INTENSITIES, LIBRARY, livePace, startWorkout, stepLabe
 /**
  * routeId: route to preselect (from "#/record/<id>"). workoutId: workout to preselect (from
  * "#/record/workout/<id>"): a LIBRARY id or "plan:<session id>"; today's plan session by default.
+ * sport: sport to preselect (from "#/record/sport/<sport>", the Android app shortcuts).
  */
-export default function RecordPage({ recording, contacts, routes, routeId, workoutId, plan, segments, activities, hr, prefs, onSavePrefs, onSaved }) {
+export default function RecordPage({ recording, contacts, routes, routeId, workoutId, sport, plan, segments, activities, hr, prefs, onSavePrefs, onSaved }) {
   const [editing, setEditing] = useState(null); // sport whose screen layout is being edited
   const live = recording.rec;
   return (
@@ -41,7 +42,7 @@ export default function RecordPage({ recording, contacts, routes, routeId, worko
       )}
       {live
         ? <Live recording={recording} contacts={contacts} layout={layoutFor(prefs.recordScreen, live.sport)} maxHr={hr.max} onSaved={onSaved} />
-        : <Setup recording={recording} contacts={contacts} routes={routes} routeId={routeId} workoutId={workoutId} plan={plan} segments={segments} activities={activities} prefs={prefs} onSavePrefs={onSavePrefs} onEditScreen={setEditing} />}
+        : <Setup key={sport} presetSport={sport} recording={recording} contacts={contacts} routes={routes} routeId={routeId} workoutId={workoutId} plan={plan} segments={segments} activities={activities} prefs={prefs} onSavePrefs={onSavePrefs} onEditScreen={setEditing} />}
       <BottomSheet open={editing != null} onClose={() => setEditing(null)} title={t("Écran d'enregistrement · {sport}", { sport: SPORTS[editing]?.label })}>
         {editing && (
           <RecordScreenEditor
@@ -54,10 +55,10 @@ export default function RecordPage({ recording, contacts, routes, routeId, worko
   );
 }
 
-function Setup({ recording, contacts, routes, routeId, workoutId, plan, segments, activities, prefs, onSavePrefs, onEditScreen }) {
+function Setup({ presetSport, recording, contacts, routes, routeId, workoutId, plan, segments, activities, prefs, onSavePrefs, onEditScreen }) {
   const [routeSel, setRouteSel] = useState(routeId ?? '');
   const route = routes?.find((r) => r.id === routeSel);
-  const [sport, setSport] = useState(route?.sport ?? (SPORTS[prefs?.sport] ? prefs.sport : 'run')); // defaults to the last sport recorded
+  const [sport, setSport] = useState(route?.sport ?? [presetSport, prefs?.sport].find((s) => SPORTS[s]) ?? 'run'); // defaults to the last sport recorded
   const [autoPause, setAutoPause] = useState(prefs?.autoPause ?? true);
   const [audio, setAudio] = useState(prefs?.audio ?? true);
   const [safety, setSafety] = useState(true);

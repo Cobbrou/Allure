@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Opened by src/lib/shell.js (appUrlOpen / getLaunchUrl). -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="record-run"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_run"
+        android:shortcutShortLabel="@string/shortcut_run"
+        android:shortcutLongLabel="@string/shortcut_run_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="app.allure://record/sport/run"
+            android:targetPackage="app.allure"
+            android:targetClass="app.allure.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="record-ride"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_ride"
+        android:shortcutShortLabel="@string/shortcut_ride"
+        android:shortcutLongLabel="@string/shortcut_ride_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="app.allure://record/sport/ride"
+            android:targetPackage="app.allure"
+            android:targetClass="app.allure.MainActivity" />
+    </shortcut>
+</shortcuts>

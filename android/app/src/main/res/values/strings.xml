@@ -9,4 +9,9 @@
     <string name="capacitor_background_geolocation_notification_color">#ff5500</string>
     <!-- Health Connect permission screen links here. TODO: a hosted policy page before the store release. -->
     <string name="privacy_policy_url">https://github.com/Cobbrou/Allure/blob/main/src/pages/LegalPage.jsx</string>
+    <!-- Launcher shortcuts (res/xml/shortcuts.xml). -->
+    <string name="shortcut_run">Course</string>
+    <string name="shortcut_run_long">Démarrer une course</string>
+    <string name="shortcut_ride">Vélo</string>
+    <string name="shortcut_ride_long">Démarrer une sortie vélo</string>
 </resources>
