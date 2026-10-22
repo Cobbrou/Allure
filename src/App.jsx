@@ -11,7 +11,7 @@ import { newlyUnlocked } from './lib/achievements.js';
 import { newlyCompleted } from './lib/challenges.js';
 import { goalLabel, newlyReached } from './lib/goals.js';
 import { healthTasks, importFiles, importTasks } from './lib/importer.js';
-import { extendPlan } from './lib/plan.js';
+import { extendPlan, matchSessions } from './lib/plan.js';
 import { estimateFtp } from './lib/power.js';
 import { setDisplays } from './lib/sports.js';
 import { setWeekStart } from './lib/stats.js';
@@ -167,6 +167,10 @@ export default function App() {
     const next = plan && extendPlan(plan, Date.now());
     if (next && next !== plan) savePlan(next);
   }, [plan]);
+  useEffect(() => { // morning reminders follow the plan and what was run
+    if (!Capacitor.isNativePlatform() || !activities) return;
+    import('./lib/reminders.js').then((m) => m.scheduleReminders(plan, plan && matchSessions(plan, activities))).catch(() => {});
+  }, [plan, activities]);
   // Finished or stopped plans move to 'planHistory'.
   const endPlan = async (status) => {
     const history = (await getSetting('planHistory')) ?? [];

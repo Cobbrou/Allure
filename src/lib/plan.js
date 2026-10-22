@@ -444,8 +444,8 @@ export const sessionsOn = (plan, time) => plan.sessions.filter((s) => s.date ===
 export const nextSession = (plan, now, matches = new Map()) =>
   plan.sessions.find((s) => s.date >= startOfDay(now) && !s.status && !matches.has(s.id)) ?? null;
 
-/** A session as a workout for lib/workout.js startWorkout. */
-export const sessionWorkout = (s) => ({ name: SESSION_TYPES[s.type].label, steps: s.steps });
+/** A session as a workout for lib/workout.js startWorkout; `heat`: pace slowdown accepted for the forecast. */
+export const sessionWorkout = (s) => ({ name: SESSION_TYPES[s.type].label, steps: s.steps, ...(s.heat && { heat: s.heat.factor }) });
 
 // Completion (M4): what was done is computed on read from the activities, never stored. A
 // session only stores what the athlete decided: `status` ('skipped', or 'moved' once a missed
@@ -557,5 +557,48 @@ export function rebuild(plan, inputs, volumes, now, vdot = plan.vdot) {
     sessions: [...plan.sessions.filter((s) => s.week <= week), ...fresh.sessions.filter((s) => s.week > week)],
   };
 }
+
+// Extras (M7)
+
+/** Cumulative even-split times of a race: one per `step` m (a km or a mile), and the finish. [{ dist, time }]. */
+export function evenSplits(time, distance, step) {
+  const out = [];
+  for (let d = step; d < distance - 1; d += step) out.push({ dist: d, time: Math.round((time * d) / distance) });
+  return [...out, { dist: distance, time: Math.round(time) }];
+}
+
+/** Median start hour of the runs of the last 60 days (local time), 8 without any. */
+export function usualHour(metas, now = Date.now()) {
+  const h = metas.filter((a) => a.sport === 'run' && a.date > now - 60 * DAY && a.date <= now).map((a) => new Date(a.date).getHours()).sort((a, b) => a - b);
+  return h.length ? h[Math.floor(h.length / 2)] : 8;
+}
+
+/**
+ * End-of-plan figures: { weeks, planned, done (sessions run), distance, time (s, every run
+ * matched to a session), vdotFrom, vdotTo, race?: { time, distance, activity } }.
+ */
+export function planRecap(plan, matches) {
+  const runs = [...matches.values()];
+  const race = plan.sessions.find((s) => s.type === 'race');
+  const a = race && matches.get(race.id);
+  return {
+    weeks: plan.weeks.length,
+    planned: plan.sessions.filter((s) => s.status !== 'moved').length,
+    done: runs.length,
+    distance: runs.reduce((n, r) => n + r.distance, 0),
+    time: runs.reduce((n, r) => n + r.movingTime, 0),
+    vdotFrom: plan.vdotHistory[0]?.vdot ?? null,
+    vdotTo: plan.vdot,
+    ...(a && { race: { time: a.bestEfforts?.[plan.goal.kind] ?? a.movingTime, distance: a.distance, activity: a } }),
+  };
+}
+
+const REMIND_DAYS = 14; // reminders scheduled ahead; the app schedules again on each launch
+
+/** Sessions to remind of at `hour` on their day, from now on over the next 14 days: [{ at, session }]. */
+export const reminderList = (plan, now, hour, matches = new Map()) => plan.sessions
+  .filter((s) => !s.status && !matches.has(s.id) && s.date < now + REMIND_DAYS * DAY)
+  .map((s) => ({ at: new Date(s.date).setHours(hour), session: s }))
+  .filter((r) => r.at > now);
 
 export { addDays, round500, MIN_RUN, step };

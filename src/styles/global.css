@@ -772,6 +772,9 @@ ol.splits li.best .split-gap { color: var(--on-accent); }
 .plan-steps li.work { border-left-color: var(--accent); }
 .plan-steps li .muted { grid-column: 1 / -1; font-size: var(--fs-sm); }
 .plan-steps li .muted:empty { display: none; }
+.briefing p { margin: 4px 0 0; }
+.briefing p + h3 { margin-top: 14px; }
+.race-notes { margin: 12px 0 0; padding-left: 18px; display: grid; gap: 4px; }
 .wizard h2 { margin-top: 0; }
 .day-picks { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .day-picks button { min-height: 44px; padding: 0; font-size: var(--fs-sm); background: var(--card-2); border-color: var(--border); color: var(--muted); text-transform: capitalize; }

@@ -1,10 +1,10 @@
 import { locale, t, tn } from '../lib/i18n.js';
-import { useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import ImportButton from '../components/ImportButton.jsx';
 import { workoutSummary } from '../components/WorkoutEditor.jsx';
 import { distUnit, fmtDay, fmtDist, fmtDuration } from '../lib/format.js';
 import { raceTime } from '../lib/paces.js';
-import { GOALS, isHard, matchSessions, nextSession, PHASES, planLabel, PROGRAMS, SESSION_TYPES, sessionState, weekDays, weekOf } from '../lib/plan.js';
+import { GOALS, isHard, matchSessions, nextSession, PHASES, planLabel, planRecap, PROGRAMS, SESSION_TYPES, sessionState, weekDays, weekOf } from '../lib/plan.js';
 import { proposals } from '../lib/planAdapt.js';
 import { startOfDay } from '../lib/stats.js';
 import { LIBRARY } from '../lib/workout.js';
@@ -53,8 +53,9 @@ function PlanHub({ plan, activities, onEndPlan }) {
       <section className="card plan-today">
         <h2>{t('Plan terminé 🎉')}</h2>
         <p className="muted">{goal
-          ? t('{goal} le {day}. Bravo pour ces {n} semaines.', { goal: goal.label, day: fmtDay(plan.goal.date), n: weeks })
+          ? t('{goal} le {day} : bravo pour ces {n} semaines.', { goal: goal.label, day: fmtDay(plan.goal.date), n: weeks })
           : t('{goal} : programme terminé. Bravo pour ces {n} semaines.', { goal: planLabel(plan), n: weeks })}</p>
+        <Recap plan={plan} matches={matches} />
         <button type="button" onClick={onEndPlan}>{t('Choisir un nouvel objectif')}</button>
       </section>
     );
@@ -100,6 +101,37 @@ function PlanHub({ plan, activities, onEndPlan }) {
         <span><b>{t('Tout le plan')}</b><span className="muted">{tn(plan.sessions.filter((s) => s.date >= today).length, '{n} séance à venir', '{n} séances à venir')}</span></span>
         <span aria-hidden="true">›</span>
       </a>
+    </>
+  );
+}
+
+/** End-of-plan figures and a story image to share. */
+function Recap({ plan, matches }) {
+  const r = planRecap(plan, matches);
+  const canvas = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const share = async () => {
+    setBusy(true);
+    try {
+      const { drawPlanRecap } = await import('../lib/story.js');
+      const { safeName, shareFile } = await import('../lib/share.js');
+      const c = canvas.current ?? (canvas.current = document.createElement('canvas'));
+      drawPlanRecap(c, r, { title: planLabel(plan), from: plan.inputs.start, to: plan.goal.date });
+      await shareFile(await new Promise((ok) => c.toBlob(ok, 'image/png')), `${safeName(planLabel(plan))}-bilan.png`);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <>
+      <div className="totals">
+        <div><span>{t('Séances')}</span><b>{r.done} / {r.planned}</b></div>
+        <div><span>{t('Distance')}</span><b>{fmtDist(r.distance, 0)} <small>{distUnit()}</small></b></div>
+        <div><span>{t('Temps')}</span><b>{fmtDuration(r.time)}</b></div>
+        {r.race && <div><span>{t('Course')}</span><b>{fmtDuration(r.race.time)}</b></div>}
+        {!r.race && r.vdotFrom && r.vdotTo !== r.vdotFrom && <div><span>VDOT</span><b>{r.vdotFrom} → {r.vdotTo}</b></div>}
+      </div>
+      <button type="button" className="ghost" disabled={busy} onClick={share}>{t('Partager mon bilan')}</button>
     </>
   );
 }

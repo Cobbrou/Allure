@@ -105,3 +105,21 @@ export function timeInPaceZones(track, paces) {
   }
   return out.map(Math.round);
 }
+
+// Heat: slowdown by temperature + dew point in °F, the runners' rule of thumb (Hadley's table:
+// under 100 nothing, 180 and over hard running is not advised). Upper end of each band.
+const HEAT = [[100, 0], [110, 0.005], [120, 0.01], [130, 0.02], [140, 0.03], [150, 0.045], [160, 0.06], [170, 0.08], [180, 0.1]];
+const toF = (c) => c * 1.8 + 32;
+
+/**
+ * Pace slowdown (share, 0..0.1) for an air temperature and dew point (°C), interpolated
+ * in the table; `hot`: too hot for hard efforts (sum ≥ 180 °F).
+ */
+export function heatSlowdown(temp, dew) {
+  const sum = toF(temp) + toF(dew);
+  const i = HEAT.findIndex(([f]) => f >= sum);
+  if (i === 0) return { factor: 0, hot: false };
+  if (i < 0) return { factor: HEAT.at(-1)[1], hot: true };
+  const [[f0, a], [f1, b]] = [HEAT[i - 1], HEAT[i]];
+  return { factor: Math.round((a + ((b - a) * (sum - f0)) / (f1 - f0)) * 1000) / 1000, hot: false };
+}

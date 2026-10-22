@@ -596,13 +596,16 @@ M6 Beginner and non-race plans
 - [x] RPE in place of pace targets wherever a VDOT is missing (plans, library, custom workouts)
 
 M7 Extras
-- [ ] Session briefings (why, focus) from templates
-- [ ] Heat adjustment from the Open-Meteo forecast (shares `lib/weather.js` with phase 7)
-- [ ] Race page: predicted time vs goal, even-split pacing, taper notes
-- [ ] Strength and mobility sessions in the plan (phase 8 strength workouts)
-- [ ] End-of-plan recap story
-- [ ] Planned session as a FIT workout file for watches (partner sync in phase 6)
-- [ ] Session reminders (local notifications plugin: agreed in principle, package to pick)
+- [x] Session briefings (why, focus, lighter / taper week notes) from templates (`lib/briefing.js`)
+- [x] Heat adjustment from the Open-Meteo forecast, on demand, per session (`lib/weather.js`,
+      ready for the phase 7 "weather at the start" item)
+- [x] Race card on the race session: predicted time and pace, time at the plan start, even
+      splits, last-week notes, result and PR check. No goal time (the wizard asks none)
+- [ ] Strength and mobility sessions in the plan: postponed until the phase 8 strength workouts
+- [x] End-of-plan recap on Home, shared as a story image
+- [x] Planned session as a FIT workout file for watches, through the share sheet (partner sync
+      in phase 6)
+- [x] Session reminders (`@capacitor/local-notifications`, native only, an hour per plan)
 - [ ] Later: ultra / trail plans
 
 ## Cross-cutting

@@ -271,3 +271,28 @@ function drawSplits(s, act) {
   const st = stats(act);
   text(s, `${fmtDist(act.distance)} ${distUnit()} · ${st.time[1]} · ${st.effort[1]}`, 90, 1800, '700 44px', STORY.TEXT);
 }
+
+/**
+ * End-of-plan recap story (lib/plan.js planRecap) on the dark background: plan name and
+ * dates, total distance, sessions run, time, fitness before / after, race result.
+ */
+export function drawPlanRecap(canvas, recap, { title, from, to }) {
+  canvas.width = W;
+  canvas.height = H;
+  const g = canvas.getContext('2d');
+  drawDark(g);
+  const s = { g, overlay: false, muted: STORY.TICK };
+  const day = (d) => new Date(d).toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' });
+  text(s, 'ALLURE', 90, 150, '800 40px', ACCENT);
+  g.font = `800 76px ${FONT}`;
+  text(s, truncate(g, title, W - 180), 90, 250, '800 76px', STORY.TEXT);
+  text(s, `${day(from)} → ${day(to)}`, 90, 310, '500 36px', s.muted);
+  distance(s, recap, 90, 900);
+  statGrid(s, [
+    [t('SÉANCES'), `${recap.done} / ${recap.planned}`],
+    [t('SEMAINES'), String(recap.weeks)],
+    [t('TEMPS'), fmtDuration(recap.time)],
+    ...(recap.vdotFrom && recap.vdotTo && recap.vdotTo !== recap.vdotFrom ? [['VDOT', `${recap.vdotFrom} → ${recap.vdotTo}`]] : []),
+    ...(recap.race ? [[t('COURSE'), fmtDuration(recap.race.time)]] : []),
+  ], 1080);
+}

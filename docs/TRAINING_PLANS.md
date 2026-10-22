@@ -247,6 +247,14 @@ Shipped in `lib/plan.js` as `PROGRAMS` (goal kinds `start`, `return`, `fitness`,
 
 ## Extras (M7)
 
+Shipped as below, except strength and mobility (waits for the phase 8 strength workouts) and
+treadmill / ultra / trail. Notes: heat uses the summed temperature + dew point (°F) table,
+0 to 10 %, fetched on demand for the athlete's usual run hour at the last run's start (rounded
+to 0.1°), and stored on the session as `heat` (startWorkout slows the ranges). The FIT file is
+written with `@garmin/fitsdk`'s Encoder, already used to read FIT files: flat steps, speed
+targets, RPE in the step name. Reminders: `plan.reminder` (hour), the next 14 days scheduled
+again whenever the plan or the activities change.
+
 - **Briefings**: per session type and phase, why this session and what to focus on, from
   French templates in `t()` with the session's numbers.
 - **Heat adjustment**: Open-Meteo forecast for the session time (no key, network: platform
@@ -279,7 +287,7 @@ Each milestone ships on its own and is usable. Order follows dependencies.
 | M4 Completion | matching, compliance, RPE prompt, missed / move / swap | `lib/plan.js`, `PlanPage`, `RecordPage` |
 | M5 Adaptation | pace check, not feeling well, volume check, regenerate | `lib/planAdapt.js`, `PlanPage` |
 | M6 Beginners ✅ | start / return to running, fitness plans, effort-based targets | `lib/plan.js`, `PlanSetupPage`, `HomePage` |
-| M7 Extras | briefings, heat, race page, strength, recap, FIT export, reminders | `lib/weather.js`, `story.js`, `formats/` |
+| M7 Extras ✅ | briefings, heat, race card, recap, FIT export, reminders (strength later) | `lib/briefing.js`, `lib/weather.js`, `lib/reminders.js`, `story.js`, `formats/fitWorkout.js` |
 
 Per milestone: tests for every new `src/lib` function, French UI strings in `t()` with their
 `lib/en.js` entry, phone-width check, `ARCHITECTURE.md` (routes, settings keys) and

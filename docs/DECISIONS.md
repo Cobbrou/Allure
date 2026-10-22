@@ -3,6 +3,18 @@
 Lightweight decision log. Newest first. Each entry: context, decision, consequences.
 Open questions sit at the bottom until decided.
 
+## 2026-10-22: Plan extras: FIT workouts with fitsdk, reminders with local notifications
+
+**Context**: M7 exports a planned session to a watch and reminds of sessions on the phone.
+**Decision**: the FIT workout file is written with `@garmin/fitsdk`'s Encoder (already a
+dependency for reading FIT files), raw units, flat steps. Reminders use the official
+`@capacitor/local-notifications` plugin (approved by the owner), native only, loaded behind
+`Capacitor.isNativePlatform()`; every change of the plan or the activities replaces the pending
+notifications with the next 14 days. The heat forecast is fetched only on a tap, with the
+position rounded to ~10 km.
+**Consequences**: no reminder in the browser build. Strength sessions in plans wait for the
+phase 8 strength workouts.
+
 ## 2026-10-22: Beginner and non-race programs run by perceived effort
 
 **Context**: start-running, return-to-running and fitness plans (M6) have no race, and often

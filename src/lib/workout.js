@@ -64,7 +64,8 @@ export const INTENSITY_RPE = { easy: 3, marathon: 5, threshold: 7, interval: 8, 
 
 /**
  * Live state stored in the recording, from a template or a { name?, steps } workout. Pace
- * targets get their s/km range [fast, slow] from the VDOT; without one, an RPE target.
+ * targets get their s/km range [fast, slow] from the VDOT, slowed by `w.heat` (share) on a hot
+ * day; without a VDOT, an RPE target.
  */
 export function startWorkout(w, vdot) {
   const paces = vdot && trainingPaces(vdot);
@@ -72,7 +73,7 @@ export function startWorkout(w, vdot) {
   const steps = (w.steps ?? workoutSteps(w)).map((s) => {
     const out = { ...s, rep: s.kind === 'work' ? ++rep : rep };
     if (s.target?.pace) {
-      if (paces) out.target = { ...s.target, range: paces[s.target.pace] };
+      if (paces) out.target = { ...s.target, range: paces[s.target.pace].map((p) => Math.round(p * (1 + (w.heat ?? 0)))) };
       else out.target = { rpe: INTENSITY_RPE[s.target.pace] };
     }
     return out;
