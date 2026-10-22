@@ -44,6 +44,17 @@ export function totals(metas, { from = -Infinity, to = Infinity, sport } = {}) {
   return t;
 }
 
+/** This year's totals up to now, and last year's up to the same date and time: { current, last }. */
+export function yearToDate(metas, now = Date.now(), sport) {
+  const y = new Date(now).getFullYear();
+  const then = new Date(now);
+  then.setFullYear(y - 1); // 29 Feb -> 1 Mar
+  return {
+    current: totals(metas, { from: new Date(y, 0, 1).getTime(), to: now + 1, sport }),
+    last: totals(metas, { from: new Date(y - 1, 0, 1).getTime(), to: then.getTime() + 1, sport }),
+  };
+}
+
 /** Distance per week for the last `weeks` weeks, oldest first: [{ start, distance }]. */
 export function weeklyDistance(metas, now = Date.now(), weeks = 12, sport) {
   const out = [];

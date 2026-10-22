@@ -8,13 +8,13 @@ import { analyze } from './analyze.js';
 import { BATCH, backupBatches, backupHeader, splitLines } from './backup.js';
 import { thin } from './heatmap.js';
 import { defaultGear } from './gear.js';
-import { bestEfforts } from './records.js';
+import { bestEfforts, effortDistances, RIDE_DISTANCES } from './records.js';
 import { draftWrites, joinDraft } from './recorder.js';
 import { segmentEfforts } from './segments.js';
 import { hrTime } from './training.js';
 
 const DB_NAME = 'allure';
-export const VERSION = 9;
+export const VERSION = 10;
 let dbPromise;
 
 // Meta patches of the data migrations: pure (track points, meta) -> fields, tested on their own.
@@ -26,6 +26,9 @@ export const PATCHES = {
     const { movingTime, avgPace } = analyze(points, meta.sport);
     return { movingTime, avgPace };
   },
+  10: (points, meta) => (points?.length > 1 && effortDistances(meta.sport) === RIDE_DISTANCES
+    ? { bestEfforts: bestEfforts(analyze(points, meta.sport).track, RIDE_DISTANCES) }
+    : {}),
 };
 
 /** v9: a route record split into its meta and its points (`legs`, null when it had none). */
@@ -70,6 +73,8 @@ export const MIGRATIONS = {
       cursor.continue();
     };
   },
+  // v10: rides' best efforts are 20 / 40 / 100 km (were the running distances).
+  10: (db, tx) => backfill(tx, PATCHES[10], (meta) => effortDistances(meta.sport) === RIDE_DISTANCES),
 };
 
 // Patch every meta accepted by `want` with fields computed from its track and the meta.

@@ -1,7 +1,7 @@
 import { t } from './i18n.js';
 import { analyze } from './analyze.js';
 import { powerStats } from './power.js';
-import { bestEfforts } from './records.js';
+import { bestEfforts, effortDistances } from './records.js';
 import { hrTime } from './training.js';
 import { dropSpikes, SPORTS } from './sports.js';
 
@@ -26,7 +26,7 @@ export function createActivity({ name, sport = 'run', points, source = 'gpx', la
     gain: a.gain,
     avgHr: a.avgHr,
     preview: preview(points),
-    bestEfforts: bestEfforts(a.track),
+    bestEfforts: bestEfforts(a.track, effortDistances(sport)),
     hrTime: hrTime(points),
     ...powerStats(points), // avgPower, np, powerCurve: rides with a power meter
   };

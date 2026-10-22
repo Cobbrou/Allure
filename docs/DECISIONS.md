@@ -3,6 +3,18 @@
 Lightweight decision log. Newest first. Each entry: context, decision, consequences.
 Open questions sit at the bottom until decided.
 
+## 2026-10-22: Records per exact sport, ride best efforts over 20 / 40 / 100 km
+
+**Context**: records were run-only (phase 8 asks for rides, hikes, swims, climbs and yearly bests),
+and every activity stored the running best efforts (1 km to marathon), meaningless on a bike.
+**Decision**: `effortDistances(sport)` picks the best-effort distances: running ones for runs and
+trail runs, 20 / 40 / 100 km for every ride variant, none otherwise. Records stay per exact sport
+(a trail or gravel time is not mixed with road ones); every sport also gets its longest
+distance, biggest climb and longest moving time. Yearly bests filter the same metas by calendar
+year: nothing extra is stored.
+**Consequences**: DB v10 recomputes rides' `bestEfforts` from their tracks. New hikes, swims…
+store empty best efforts (nothing read them).
+
 ## 2026-10-22: Sport variants count as a base sport
 
 **Context**: phase 7 adds trail run, gravel, e-bike, virtual ride, ski, workout and yoga.

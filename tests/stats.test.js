@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { analyze } from '../src/lib/analyze.js';
-import { bestEfforts, personalRecords } from '../src/lib/records.js';
-import { byDay, monthGrid, periodStart, setWeekStart, startOfWeek, totals, trainingWeeks, weekdayInitials, weeklyDistance } from '../src/lib/stats.js';
+import { bestEfforts, biggestActivities, effortDistances, personalRecords, RIDE_DISTANCES } from '../src/lib/records.js';
+import { byDay, monthGrid, periodStart, setWeekStart, startOfWeek, totals, trainingWeeks, weekdayInitials, weeklyDistance, yearToDate } from '../src/lib/stats.js';
 
 /** Straight track at constant speed: `km` long, `pace` s/km, one point every 10 m. */
 const steadyRun = (km, pace) =>
@@ -111,4 +111,52 @@ test('trainingWeeks puts activities on their weekday, newest week first', () => 
   assert.equal(w0.totals.distance, 50000);
   assert.deepEqual(w1.days[6].map((a) => a.id), ['c']); // Sunday 11 Oct
   assert.equal(trainingWeeks(metas, 1, now, 'run')[0].totals.count, 1);
+});
+
+test('personalRecords per sport and per calendar year', () => {
+  const d = (y) => new Date(y, 5, 1).getTime();
+  const metas = [
+    { id: 'old', sport: 'run', date: d(2025), bestEfforts: { '1k': 240 } },
+    { id: 'new', sport: 'run', date: d(2026), bestEfforts: { '1k': 260 } },
+    { id: 'r', sport: 'ride', date: d(2026), bestEfforts: { '20k': 2400 } },
+  ];
+  assert.equal(personalRecords(metas)[0].activity.id, 'old');
+  assert.equal(personalRecords(metas, { year: 2026 })[0].activity.id, 'new');
+  const [k20, k40] = personalRecords(metas, { sport: 'ride' });
+  assert.deepEqual([k20.id, k20.time, k40.time], ['20k', 2400, undefined]);
+  assert.deepEqual(personalRecords(metas, { sport: 'swim' }), []);
+});
+
+test('effortDistances: runs and trail runs, every kind of ride, nothing else', () => {
+  assert.equal(effortDistances('trail')[0].id, '1k');
+  assert.equal(effortDistances('gravel'), RIDE_DISTANCES);
+  assert.deepEqual(effortDistances('hike'), []);
+});
+
+test('bestEfforts over ride distances', () => {
+  const be = bestEfforts(steadyRun(41, 90), RIDE_DISTANCES); // 40 km/h
+  assert.ok(Math.abs(be['20k'] - 1800) <= 3, be['20k']);
+  assert.ok(Math.abs(be['40k'] - 3600) <= 4, be['40k']);
+  assert.equal(be['100k'], undefined);
+});
+
+test('biggestActivities: longest, biggest climb and longest time of a sport, records exclusions left out', () => {
+  const metas = [
+    { id: 'a', sport: 'hike', date: 0, distance: 20000, gain: 300, movingTime: 9000 },
+    { id: 'b', sport: 'hike', date: 0, distance: 12000, gain: 1200, movingTime: 9500 },
+    { id: 'c', sport: 'hike', date: 0, distance: 50000, gain: 3000, movingTime: 20000, noRecords: true },
+    { id: 'd', sport: 'run', date: 0, distance: 42000, gain: 0, movingTime: 12000 },
+  ];
+  const b = biggestActivities(metas, { sport: 'hike' });
+  assert.deepEqual([b.distance.id, b.gain.id, b.movingTime.id], ['a', 'b', 'b']);
+  assert.equal(biggestActivities(metas, { sport: 'run' }).gain, undefined);
+});
+
+test('yearToDate compares with last year up to the same date', () => {
+  const now = new Date(2026, 9, 22, 12).getTime();
+  const at = (y, m, day) => ({ sport: 'run', date: new Date(y, m, day, 8).getTime(), distance: 1000, movingTime: 300, gain: 10 });
+  const metas = [at(2026, 0, 5), at(2026, 9, 22), at(2025, 0, 5), at(2025, 9, 22), at(2025, 9, 23), at(2024, 5, 1)];
+  const { current, last } = yearToDate(metas, now);
+  assert.equal(current.count, 2);
+  assert.equal(last.count, 2);
 });

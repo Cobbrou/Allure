@@ -92,6 +92,7 @@ inside the upgrade transaction:
 | 7 | create `photos` |
 | 8 | recompute `movingTime` / `avgPace` of hikes, walks and swims (per-sport moving threshold) |
 | 9 | move route `legs` into `routeLegs` |
+| 10 | recompute rides' `bestEfforts` over 20 / 40 / 100 km |
 
 Full backups (`lib/backup.js`, Profile → Mes données) dump every store except `drafts`
 and the map caches to one JSON file (photos inlined as data URLs on their activity) tagged with `schema` = `VERSION`. Restore puts the
@@ -114,7 +115,7 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
   date,                  // ms epoch (first point, or import time when no timestamps)
   distance, movingTime, avgPace, gain, avgHr,  // summary, same units as analyze()
   preview,               // ≤ 81 [lon, lat] pairs for feed thumbnails
-  bestEfforts,           // { '1k': s, '5k': s, … } fastest elapsed time per distance
+  bestEfforts,           // { '1k': s, '5k': s, … } fastest elapsed time per distance (runs; rides: '20k', '40k', '100k')
   hrTime,                // { [bpm]: s } moving seconds per heart rate (lib/training.js)
   efforts,               // [{ seg, time, from, to }] segment efforts: segment id, elapsed s, point indices
   laps,                  // device lap start times (ms), from FIT / TCX; only when 2+ laps

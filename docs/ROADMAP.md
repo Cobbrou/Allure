@@ -366,17 +366,20 @@ Fixes
 - [x] `.toast` animation uses `both` (Motion rule: `backwards` only)
 
 Records & analysis
-- [ ] Records beyond running: longest ride / hike / swim, biggest climb, fastest 20 / 40 /
+- [x] Records beyond running: longest ride / hike / swim, biggest climb, fastest 20 / 40 /
       100 km on the bike (`personalRecords` is run-only)
+      (per sport, following the Profile sport filter; also the longest moving time)
 - [x] Pace zones for runners without a strap (from threshold pace or the race predictions),
       time in zone like HR zones (phase 10, M1)
 - [ ] Compare two activities: overlay on the map, pace / HR charts aligned by distance
       (starting point: matched activities)
-- [ ] "This year vs last year to date" on the profile (distance, time, D+ per sport)
+- [x] "This year vs last year to date" on the profile (distance, time, D+ per sport)
+      (under the totals on the Année period, hidden without last year's activities)
 - [ ] Commute tag: kept out of goals, challenges and Fitness & Freshness on request,
       filterable in the feed
-- [ ] Yearly best efforts: best time per distance for each calendar year, next to the
+- [x] Yearly best efforts: best time per distance for each calendar year, next to the
       all-time records (Strava "Annual Best Efforts", 2026)
+      (year picker on the records card; an activity page flags a best of its year)
 - [ ] Animated activity replay: the route drawn with a moving marker and the stats ticking
       along, exportable as a short video for stories
 
@@ -532,7 +535,7 @@ New features
       the only real protection against data loss without a backend
 - [ ] "Hide the map" option when sharing a story or a file
 - Already planned, raised again by the audit: feed search and filters (phase 7), records
-  beyond running (phase 8), import a GPX as a route (phase 8), pace zones (phase 8),
+  beyond running (phase 8, done), import a GPX as a route (phase 8), pace zones (phase 8),
   compare two activities and ghost pacer (phase 8), weather at the start (phase 7),
   indoor recording (phase 7)
 

@@ -11,10 +11,10 @@ import RecordsList from '../components/RecordsList.jsx';
 import Segmented from '../components/Segmented.jsx';
 import WeeklyChart from '../components/WeeklyChart.jsx';
 import { distUnit, elevUnit, fmtDist, fmtDuration, fmtElev } from '../lib/format.js';
-import { personalRecords, predictRaces } from '../lib/records.js';
+import { predictRaces } from '../lib/records.js';
 import { leaderboard } from '../lib/segments.js';
 import { SPORTS, sportOptions as sportOptionsOf } from '../lib/sports.js';
-import { periodStart, totals, weeklyDistance, weekStreak, yearRecap } from '../lib/stats.js';
+import { periodStart, totals, weeklyDistance, weekStreak, yearRecap, yearToDate } from '../lib/stats.js';
 
 const PERIODS = [
   { id: 'week', get label() { return t('Semaine'); } },
@@ -32,7 +32,7 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
   const sportOptions = useMemo(() => sportOptionsOf(list), [list]);
   const tot = useMemo(() => totals(list, { from: periodStart(period), sport: sport || undefined }), [list, period, sport]);
   const weeks = useMemo(() => weeklyDistance(list, Date.now(), 12, sport || undefined), [list, sport]);
-  const records = useMemo(() => personalRecords(list), [list]);
+  const ytd = useMemo(() => (period === 'year' ? yearToDate(list, Date.now(), sport || undefined) : null), [list, period, sport]);
   const predictions = useMemo(() => predictRaces(list), [list]);
   const allDist = list.reduce((s, a) => s + a.distance, 0);
 
@@ -76,6 +76,7 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
                 <div><span>{t('Temps')}</span><b>{fmtDuration(tot.movingTime)}</b></div>
                 <div><span>{t('Dénivelé')}</span><b>{fmtElev(tot.gain)} <small>{elevUnit()}</small></b></div>
               </div>
+              {ytd?.last.count > 0 && <YearToDate {...ytd} />}
             </section>
             <WeeklyChart weeks={weeks} />
             <a className="card link-card" href="#/log">
@@ -85,7 +86,7 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
             <FitnessChart activities={list} hr={hr} />
             <PowerCurve activities={list} ftp={ftp} />
             <ActivityCalendar activities={list} sport={sport || undefined} />
-            <RecordsList records={records} />
+            <RecordsList activities={list} sport={sport} />
             <SegmentsList segments={segments} activities={list} />
             <RacePredictions predictions={predictions} />
           </>
@@ -94,6 +95,20 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
         {activities && <Gear gears={gears} activities={list} onSave={onSaveGears} />}
       </main>
     </>
+  );
+}
+
+/** This year so far against last year at the same date: last year's totals and the change. */
+function YearToDate({ current, last }) {
+  const delta = (k) => (last[k] ? ` (${current[k] >= last[k] ? '+' : '−'}${Math.round(Math.abs(current[k] / last[k] - 1) * 100)} %)` : '');
+  return (
+    <p className="muted ytd">
+      {t('À la même date l’an dernier : {dist}{d1} · {time}{d2} · {gain}{d3}', {
+        dist: `${fmtDist(last.distance, 0)} ${distUnit()}`, d1: delta('distance'),
+        time: fmtDuration(last.movingTime), d2: delta('movingTime'),
+        gain: `${fmtElev(last.gain)} ${elevUnit()}`, d3: delta('gain'),
+      })}
+    </p>
   );
 }
 

@@ -954,3 +954,5 @@ button:active:not(:disabled), .button:active, .activity-card:active, .sport-pick
 .explore-list { max-height: 60vh; overflow-y: auto; display: grid; gap: 10px; padding: 0 12px 12px; }
 .map-pane input[type='range'] { width: 100%; min-height: 44px; padding: 0; accent-color: var(--accent); }
 .map-pane label:not(.switch) { display: grid; gap: 6px; font-size: var(--fs-sm); color: var(--muted); }
+.ytd { margin: 8px 0 0; font-size: var(--fs-xs); }
+.year-head + select { width: auto; margin-bottom: 4px; }

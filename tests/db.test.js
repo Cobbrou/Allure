@@ -31,6 +31,14 @@ test('v8 patch: slow sports get their moving time back, others untouched', () =>
   assert.deepEqual(PATCHES[8](undefined, { sport: 'hike' }), {});
 });
 
+test('v10 patch: rides get 20 / 40 / 100 km best efforts, other sports untouched', () => {
+  const ride = track(2100, 10); // 21 km at 36 km/h
+  const { bestEfforts } = PATCHES[10](ride, { sport: 'ride' });
+  assert.deepEqual(Object.keys(bestEfforts), ['20k']);
+  assert.deepEqual(PATCHES[10](ride, { sport: 'run' }), {});
+  assert.deepEqual(PATCHES[10](undefined, { sport: 'ride' }), {});
+});
+
 test('v9 split: route points move out of the meta', () => {
   const legs = [[[6, 45], [6.01, 45]]];
   assert.deepEqual(splitRoute({ id: 'r', name: 'Loop', legs }), { meta: { id: 'r', name: 'Loop' }, legs });
