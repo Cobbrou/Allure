@@ -1,4 +1,12 @@
 /* Mobile-first: base styles target a ~390px portrait phone; wider screens get a centered column. */
+/* Inter, bundled (variable 400-800, Latin subset) so the app works offline and calls no font CDN. */
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+}
 /* Design tokens. Dark by default, light as a setting (data-theme on <html>): GPS tracks and
    charts carry the colour. The accent (a setting too, set inline on <html>) is reserved for
    calls to action, active states, records and the main GPS track. */
@@ -181,7 +189,7 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 .route-preview .glow { stroke-width: 3; opacity: 0.25; }
 
 /* Detail */
-.detail { display: grid; gap: 12px; padding-top: 12px; }
+.detail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding-top: 12px; } /* one column: wide content never widens the page */
 .title { display: flex; gap: 12px; align-items: center; }
 .title h1 { font-size: var(--fs-2xl); letter-spacing: -0.02em; }
 .title p { color: var(--muted); margin-top: 2px; font-size: var(--fs-md); }
@@ -259,7 +267,7 @@ table.splits .pace { font-weight: 600; width: 56px; }
   transform-origin: left; animation: grow-x 0.5s var(--ease-out) backwards; animation-delay: calc(var(--i) * 40ms);
 }
 @keyframes grow-x { from { transform: scaleX(0); } }
-.totals.fitness-now { grid-template-columns: repeat(3, 1fr); margin: 0 0 4px; }
+.totals.fitness-now, .totals.week-totals { grid-template-columns: repeat(3, 1fr); margin: 0 0 4px; }
 .fitness-now .fit { color: var(--accent-text); }
 .fitness-now .fat { color: var(--fatigue); }
 .edit legend { font-size: var(--fs-sm); color: var(--muted); font-weight: 500; margin-bottom: 6px; }
@@ -528,7 +536,7 @@ a.round { display: inline-grid; place-items: center; height: 44px; }
 .dot { display: inline-block; vertical-align: middle; margin: -2px 5px 0 0; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
 .dock-go { width: 76px; height: 76px; border-radius: 50%; padding: 0; box-shadow: 0 0 0 8px var(--accent-15), 0 8px 24px var(--accent-35); }
 .dock-go svg { width: 32px; height: 32px; margin-left: 4px; color: var(--on-accent); }
-.pick-list { display: grid; gap: 6px; padding-bottom: 12px; }
+.pick-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; padding-bottom: 12px; }
 .pick-list button { justify-content: flex-start; gap: 12px; min-height: 52px; text-align: left; background: var(--card-2); border-color: var(--border); color: var(--text); }
 .pick-list button.on { background: var(--accent-15); border-color: var(--accent); }
 .pick-list svg { width: 22px; height: 22px; flex: none; color: var(--muted); }

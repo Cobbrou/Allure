@@ -159,6 +159,11 @@ test('matchSessions: same day first, else ±1 day, by closest duration; links by
   assert.equal(m.has(a.id), false);
   assert.equal(m.get(b.id).id, 'far');
   assert.equal([...m.values()].filter((x) => x.id === 'on').length, 0); // Tuesday's run is not pushed to another session
+  // Runs are cut to the plan's dates: a run the day after the last session still counts.
+  const race = plan.sessions.at(-1);
+  m = matchSessions(plan, [run('after', race.date + DAY + 3600e3, race), run('old', a.date - 30 * DAY, a)]);
+  assert.equal(m.get(race.id)?.id, 'after');
+  assert.equal(m.size, 1);
 });
 
 test('sessionState', () => {

@@ -477,7 +477,8 @@ export function matchSessions(plan, metas) {
     if (a) { out.set(s.id, a); used.add(a.id); }
   }
   const open = plan.sessions.filter((s) => s.activity === undefined && !s.status);
-  const runs = metas.filter((a) => isRun(a.sport) && !used.has(a.id)).sort((a, b) => a.date - b.date);
+  const from = (plan.sessions[0]?.date ?? 0) - DAY, to = (plan.sessions.at(-1)?.date ?? 0) + 2 * DAY; // the whole archive needn't be scored
+  const runs = metas.filter((a) => isRun(a.sport) && !used.has(a.id) && a.date >= from && a.date < to).sort((a, b) => a.date - b.date);
   for (const off of [0, 1]) {
     for (const a of runs) {
       if (used.has(a.id)) continue;

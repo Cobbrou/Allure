@@ -1052,6 +1052,7 @@ export default {
   'Min ({unit})': 'Min ({unit})',
   'Max ({unit})': 'Max ({unit})',
   'Série': 'Streak',
+  'Série : {n}': 'Streak: {n}',
   'record : {n}': 'best: {n}',
   'semaine d’affilée avec au moins une activité': 'week in a row with at least one activity',
   'semaines d’affilée avec au moins une activité': 'weeks in a row with at least one activity',

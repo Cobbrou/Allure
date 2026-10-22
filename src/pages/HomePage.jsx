@@ -1,5 +1,6 @@
 import { locale, t, tn } from '../lib/i18n.js';
 import { useMemo, useRef, useState } from 'react';
+import ActivityCard from '../components/ActivityCard.jsx';
 import ImportButton from '../components/ImportButton.jsx';
 import { workoutSummary } from '../components/WorkoutEditor.jsx';
 import { distUnit, fmtDay, fmtDist, fmtDuration } from '../lib/format.js';
@@ -7,7 +8,7 @@ import { raceTime } from '../lib/paces.js';
 import { GOALS, isHard, matchSessions, nextSession, PHASES, planLabel, planRecap, PROGRAMS, SESSION_TYPES, sessionState, weekDays, weekOf } from '../lib/plan.js';
 import { proposals } from '../lib/planAdapt.js';
 import { isRun } from '../lib/sports.js';
-import { startOfDay } from '../lib/stats.js';
+import { startOfDay, startOfWeek, totals, weekStreak } from '../lib/stats.js';
 import { LIBRARY } from '../lib/workout.js';
 
 const DAY = 86400e3;
@@ -20,7 +21,7 @@ function runDays(activities) {
 }
 
 /** Home tab: the training hub. Today's plan session, the week, progress; a goal picker without a plan. */
-export default function HomePage({ plan, activities, onImport, onEndPlan }) {
+export default function HomePage({ plan, activities, name, onImport, onEndPlan }) {
   return (
     <>
       <header className="topbar">
@@ -28,7 +29,7 @@ export default function HomePage({ plan, activities, onImport, onEndPlan }) {
         {plan && <a className="button ghost small" href="#/plan">{t('Mon plan')}</a>}
       </header>
       <main className="detail">
-        {plan ? <PlanHub plan={plan} activities={activities} onEndPlan={onEndPlan} /> : <NoPlan activities={activities} onImport={onImport} />}
+        {plan ? <PlanHub plan={plan} activities={activities} onEndPlan={onEndPlan} /> : <NoPlan activities={activities} name={name} onImport={onImport} />}
       </main>
     </>
   );
@@ -153,9 +154,29 @@ function TodayCard({ session: s, today }) {
   );
 }
 
-function NoPlan({ activities, onImport }) {
+/** Every sport, for athletes without a running plan: the week so far and the latest activity. */
+function ThisWeek({ activities, name }) {
+  const week = useMemo(() => totals(activities, { from: startOfWeek(Date.now()) }), [activities]);
+  const streak = useMemo(() => weekStreak(activities).current, [activities]);
   return (
     <>
+      <section className="card">
+        <h3>{t('Cette semaine')} {streak > 1 && <span className="muted small-label">{t('Série : {n}', { n: tn(streak, '{n} semaine', '{n} semaines') })}</span>}</h3>
+        <div className="totals week-totals">
+          <div><span>{t('Activités')}</span><b>{week.count}</b></div>
+          <div><span>{t('Distance')}</span><b>{fmtDist(week.distance, 0)} <small>{distUnit()}</small></b></div>
+          <div><span>{t('Temps')}</span><b>{fmtDuration(week.movingTime)}</b></div>
+        </div>
+      </section>
+      <ActivityCard a={activities[0]} name={name} />
+    </>
+  );
+}
+
+function NoPlan({ activities, name, onImport }) {
+  return (
+    <>
+      {activities?.length > 0 && <ThisWeek activities={activities} name={name} />}
       <section className="card plan-goals">
         <h2>{t('Prépare ta prochaine course')}</h2>
         <p className="muted">{t('Un plan sur mesure, de ton niveau actuel au jour de la course, qui suit ce que tu fais vraiment.')}</p>

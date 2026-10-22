@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import CheckIn from './components/CheckIn.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import TabBar from './components/TabBar.jsx';
 import { addWatchHr, createActivity, needsWatchHr } from './lib/activity.js';
@@ -57,12 +58,15 @@ const PlanSetupPage = lazy(pages.planSetup);
 // Detail pages and where "back" lands when the app was opened on them (deep link).
 const BACK_TO = { plan: '/', activities: '/profile', activity: '/activities', manual: '/record', log: '/profile', segment: '/profile', route: '/maps', settings: '/profile', legal: '/settings' };
 
-/** A stored setting as state: [value, save]. `initial` until loaded, or when never saved. */
+/** A stored setting as state: [value, save, loaded]. `initial` until loaded, or when never saved. */
 function useSetting(key, initial) {
   const [value, setValue] = useState(initial);
-  useEffect(() => { getSetting(key).then((v) => v != null && setValue(v), () => {}); }, [key]);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    getSetting(key).then((v) => v != null && setValue(v), () => {}).finally(() => setLoaded(true));
+  }, [key]);
   const save = useCallback(async (v) => { await setSetting(key, v); setValue(v); }, [key]);
-  return [value, save];
+  return [value, save, loaded];
 }
 
 export default function App() {
@@ -132,15 +136,15 @@ export default function App() {
   const removeRoute = async (rid) => { await deleteRoute(rid); await loadRoutes(); back('/maps'); };
   const [zones, saveZones] = useSetting('privacy', []); // privacy zones
   const [contacts, saveContacts] = useSetting('contacts', []); // emergency contacts
-  const [units, saveUnits] = useSetting('units', 'metric'); // 'metric' | 'imperial'
+  const [units, saveUnits, unitsLoaded] = useSetting('units', 'metric'); // 'metric' | 'imperial'
   setUnits(units); // read by format.js during render; the page remounts on change (key below)
-  const [lang, saveLang] = useSetting('lang', deviceLang); // 'fr' | 'en'
+  const [lang, saveLang, langLoaded] = useSetting('lang', deviceLang); // 'fr' | 'en'
   setLang(lang); // read by t() during render, like the units
   useEffect(() => {
     document.documentElement.lang = getLang();
     document.title = t('Allure — Analyse de course');
   }, [lang]);
-  const [prefs, savePrefs] = useSetting('prefs', {}); // { name?, autoPause?, audio?, voice?, sport?, recordScreen?, theme?, accent?, map?, weekStart?, display?, commuteOut? }
+  const [prefs, savePrefs, prefsLoaded] = useSetting('prefs', {}); // { name?, autoPause?, audio?, voice?, sport?, recordScreen?, theme?, accent?, map?, weekStart?, display?, commuteOut? }
   const counted = useMemo(() => activities && forTraining(activities, prefs.commuteOut), [activities, prefs.commuteOut]);
   const [systemLight, setSystemLight] = useState(() => matchMedia('(prefers-color-scheme: light)').matches);
   useEffect(() => {
@@ -317,7 +321,7 @@ ${cur.text}` } : summary));
   else if (page === 'legal') content = <LegalPage id={id} />;
   else if (page === 'manual') content = <ManualPage id={id} activities={activities} onSaved={async (mid) => { await reload(); if (id) back(`/activity/${mid}`); else go(`/activity/${mid}`, true); }} />;
   else if (page === 'activities') content = <FeedPage activities={activities} name={prefs.name} zones={zones} onRefresh={reload} onImport={onImport} onDemo={addDemo} />;
-  else content = <HomePage plan={plan} activities={activities} onImport={onImport} onEndPlan={() => endPlan('done')} />;
+  else content = <HomePage plan={plan} activities={activities} name={prefs.name} onImport={onImport} onEndPlan={() => endPlan('done')} />;
 
   return (
     <div
@@ -345,8 +349,10 @@ ${cur.text}` } : summary));
         </div>
       )}
       <ErrorBoundary key={`${page}/${id ?? ''}/${sub ?? ''}/${units}/${lang}/${look}`}>
-        <Suspense fallback={<main className="detail" aria-busy="true" />}>{content}</Suspense>
+        {/* Units, language and look are in the page key: wait for them, or the page mounts twice. */}
+        <Suspense fallback={<main className="detail" aria-busy="true" />}>{unitsLoaded && langLoaded && prefsLoaded ? content : <main className="detail" aria-busy="true" />}</Suspense>
       </ErrorBoundary>
+      {recording.rec?.safety && contacts.length > 0 && <CheckIn rec={recording.rec} contacts={contacts} />}
       {!(page === 'record' && recording.rec) && <TabBar active={page === 'plan' ? '' : page === 'manual' ? 'record' : ['activities', 'activity', 'segment', 'log', 'settings', 'legal'].includes(page) ? 'profile' : page === 'route' ? 'maps' : page} recording={recording.rec && (recording.rec.paused ? 'paused' : 'live')} />}
     </div>
   );
