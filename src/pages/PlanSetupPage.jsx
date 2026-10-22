@@ -2,15 +2,12 @@ import { t, tn } from '../lib/i18n.js';
 import { useMemo, useState } from 'react';
 import RunDays from '../components/RunDays.jsx';
 import Segmented from '../components/Segmented.jsx';
-import { distLen, distUnit, fmtDay, fmtDist, fmtDuration, parseNum } from '../lib/format.js';
+import { distLen, distUnit, fmtDay, fmtDist, fmtDuration, fromInput, parseNum, toInput } from '../lib/format.js';
 import { raceTime, vdot as vdotOf } from '../lib/paces.js';
 import { defaultRaceDate, EXPERIENCE, generatePlan, GOALS, PHASES, planDefaults, planWeeks } from '../lib/plan.js';
 import { back, go } from '../router.js';
 
 const DAY = 86400e3;
-// <input type="date"> value <-> local midnight.
-const toInput = (ms) => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-const fromInput = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d).getTime(); };
 const EXPERIENCE_LABELS = { get beginner() { return t('Débutant'); }, get intermediate() { return t('Intermédiaire'); }, get advanced() { return t('Confirmé'); } };
 
 /** `#/plan/new(/:goal)`: one question per screen, prefilled from history, ending on a preview. */

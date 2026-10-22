@@ -1,5 +1,5 @@
 import { t, tn } from '../lib/i18n.js';
-import { fmtDay } from '../lib/format.js';
+import { fmtDay, fromInput, toInput } from '../lib/format.js';
 import { useEffect, useState } from 'react';
 import ConfirmButton from './ConfirmButton.jsx';
 import { getSetting, setSetting } from '../lib/db.js';
@@ -10,9 +10,6 @@ import { SPORTS } from '../lib/sports.js';
 
 const DAY = 86400000;
 const fmtValue = (metric, v) => (METRICS[metric].unit ? `${fmtGoalValue(metric, v)} ${METRICS[metric].unit}` : tn(v, '{n} activité', '{n} activités'));
-// <input type="date"> value <-> local midnight.
-const toInput = (ms) => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-const fromInput = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d).getTime(); };
 
 /**
  * Challenges with friends, no account: create one, share its link, and every friend who

@@ -129,7 +129,7 @@ export function useRecording({ onSensorLost } = {}) {
       if (r.points.length < 2) return null;
       const points = await correctElevation(r.points);
       const act = createActivity({ sport: r.sport, points, source: 'record', laps: lapStarts(r) });
-      if (r.workout) act.meta.workout = savedWorkout(r.workout);
+      if (r.workout) act.meta.workout = savedWorkout(r, Date.now());
       await saveActivities([act]);
       hideLock();
       haptic('success');

@@ -147,8 +147,21 @@ export function stepCue(rec) {
   return `${stepLabel(step, w.reps, true)} : ${amount(step)}.`;
 }
 
-/** The workout as stored on the saved activity: its name and steps reached, one per lap. */
-export const savedWorkout = (w) => ({ ...(w.name && { name: w.name }), steps: w.steps.slice(0, w.i + 1).map(({ kind, type, value, rep, target }) => ({ kind, type, value, rep, ...(target && { target }) })) });
+/**
+ * The workout as stored on the saved activity: its name and steps reached, one per lap, each
+ * with its done `pace` (s/km, over 50 m or more) so plans check paces without loading tracks.
+ */
+export function savedWorkout(rec, now) {
+  const w = rec.workout, laps = rec.laps ?? [];
+  const end = { at: elapsed(rec, now), dist: rec.distance };
+  return {
+    ...(w.name && { name: w.name }),
+    steps: w.steps.slice(0, w.i + 1).map(({ kind, type, value, rep, target }, k) => {
+      const a = laps[k - 1] ?? { at: 0, dist: 0 }, b = laps[k] ?? end, d = b.dist - a.dist;
+      return { kind, type, value, rep, ...(target && { target }), ...(d >= 50 && { pace: Math.round((b.at - a.at) / (d / 1000)) }) };
+    }),
+  };
+}
 
 /**
  * Laps of a recorded workout (lapIntervals) with their planned step: work set from the step

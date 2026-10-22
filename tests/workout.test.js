@@ -80,8 +80,10 @@ test('paceCheck cues after 20 s off the range, then at most once a minute', () =
 test('savedWorkout keeps the steps reached, one per lap', () => {
   let rec = startRecording({ workout: startWorkout(W, 50) }, 0);
   rec = nextStep(nextStep(rec, 10_000), 20_000);
-  const saved = savedWorkout(rec.workout);
+  const saved = savedWorkout(rec, 30_000);
   assert.deepEqual(saved.steps.map((s) => s.kind), ['warmup', 'work', 'rest']);
+  const run = { ...rec, laps: [{ at: 10, dist: 0 }, { at: 20, dist: 1000 }], distance: 1100 };
+  assert.deepEqual(savedWorkout(run, 30_000).steps.map((s) => s.pace), [undefined, 10, 100]); // standing still, 1 km in 10 s, 100 m in 10 s
   assert.equal(rec.laps.length, 2);
 });
 

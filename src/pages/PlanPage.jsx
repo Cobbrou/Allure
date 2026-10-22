@@ -1,10 +1,13 @@
-import { t } from '../lib/i18n.js';
+import { t, tn } from '../lib/i18n.js';
 import { useMemo, useState } from 'react';
 import ConfirmButton from '../components/ConfirmButton.jsx';
 import RunDays, { dayName } from '../components/RunDays.jsx';
+import Segmented from '../components/Segmented.jsx';
 import { fmtRange, workoutSummary } from '../components/WorkoutEditor.jsx';
-import { distUnit, fmtDate, fmtDay, fmtDist, fmtDuration, fmtLength } from '../lib/format.js';
-import { changeDays, compliance, GOALS, hardNextTo, isHard, makeUp, makeUpSlot, matchSessions, moveSession, PHASES, SESSION_TYPES, sessionState, sessionWorkout, weekDays, weekOf } from '../lib/plan.js';
+import { distUnit, fmtDate, fmtDay, fmtDist, fmtDuration, fmtLength, fromInput, toInput } from '../lib/format.js';
+import { raceTime } from '../lib/paces.js';
+import { changeDays, compliance, GOALS, hardNextTo, isHard, makeUp, makeUpSlot, matchSessions, moveSession, PHASES, planDefaults, SESSION_TYPES, sessionState, sessionWorkout, weekDays, weekOf } from '../lib/plan.js';
+import { earliestRace, holdVolume, logAdjustment, proposals, RAMPS, regenerate, setVdot, unwell } from '../lib/planAdapt.js';
 import { startOfDay } from '../lib/stats.js';
 import { back } from '../router.js';
 import { startWorkout, stepLabel } from '../lib/workout.js';
@@ -45,6 +48,7 @@ export default function PlanPage({ plan, activities, sessionId, onSave, onStop }
             {Object.keys(PHASES).filter((p) => plan.weeks.some((w) => w.phase === p)).map((p) => <span key={p} className={p}>{PHASES[p].label}</span>)}
           </p>
         </section>
+        <Proposals plan={plan} activities={activities ?? []} matches={matches} onSave={onSave} />
         {plan.weeks.map((w, i) => {
           const sessions = plan.sessions.filter((s) => s.week === i + 1);
           const done = sessions.reduce((n, s) => n + (matches.get(s.id)?.distance ?? 0), 0);
@@ -74,7 +78,9 @@ export default function PlanPage({ plan, activities, sessionId, onSave, onStop }
             </details>
           );
         })}
+        {current < plan.weeks.length && <UnwellCard plan={plan} matches={matches} onSave={onSave} />}
         {current < plan.weeks.length - 1 && <DaysCard plan={plan} onSave={onSave} />}
+        {current < plan.weeks.length - 1 && <RegenerateCard plan={plan} activities={activities ?? []} onSave={onSave} />}
         <ConfirmButton onConfirm={onStop} confirmLabel={t('Arrêter le plan ?')}>{t('Arrêter le plan')}</ConfirmButton>
       </main>
     </>
@@ -92,6 +98,101 @@ function DaysCard({ plan, onSave }) {
       <RunDays days={days} longDay={longDay} onDays={setDays} onLongDay={setLongDay} />
       <p className="muted small-label">{t('Les semaines suivantes sont recalculées ; la semaine en cours ne change pas.')}</p>
       <button type="button" disabled={!changed || days.length < 2 || days.length > 6} onClick={() => onSave(changeDays(plan, days, longDay, Date.now()))}>{t('Appliquer')}</button>
+    </details>
+  );
+}
+
+/** Adaptation proposals (lib/planAdapt.js): accepted or dismissed, both logged so they don't come back. */
+function Proposals({ plan, activities, matches, onSave }) {
+  const now = Date.now();
+  const list = proposals(plan, activities, matches, now);
+  if (!list.length) return null;
+  const goal = GOALS[plan.goal.kind];
+  const dismiss = (p) => onSave(logAdjustment(plan, { kind: p.kind, date: now, dismissed: true }));
+  return list.map((p) => {
+    let text, accept;
+    if (p.kind === 'pace') {
+      text = p.why === 'effort'
+        ? t('Ton effort du {day} vaut un VDOT de {vdot} (plan : {old}).', { day: fmtDay(p.activity.date), vdot: p.vdot, old: plan.vdot })
+        : p.why === 'faster'
+          ? t('Tes 3 dernières séances clés étaient plus rapides que prévu, sans forcer. Passer à un VDOT de {vdot} ?', { vdot: p.vdot })
+          : t('Tes 2 dernières séances clés étaient trop dures. Passer à un VDOT de {vdot} ?', { vdot: p.vdot });
+      accept = () => onSave(logAdjustment(setVdot(plan, p.vdot, p.why, now), { kind: 'pace', date: now, from: plan.vdot, to: p.vdot }));
+    } else if (p.hold) {
+      text = t('Tu as couru {n} % du volume prévu ces 3 dernières semaines. Garder le volume la semaine prochaine au lieu de l’augmenter ?', { n: Math.round(p.ratio * 100) });
+      accept = () => onSave(logAdjustment(holdVolume(plan, now), { kind: 'volume', date: now, ratio: p.ratio }));
+    } else {
+      text = t('Tu as couru {n} % du volume prévu ces 3 dernières semaines : le risque de blessure augmente. Reste proche du plan.', { n: Math.round(p.ratio * 100) });
+    }
+    return (
+      <section key={p.kind} className="card plan-today proposal">
+        <h3>{p.kind === 'pace' ? t('Tes allures') : t('Ton volume')}</h3>
+        <p>{text}</p>
+        {p.kind === 'pace' && (
+          <p className="muted small-label">{t('Objectif estimé : {old} → {new}', { old: fmtDuration(raceTime(plan.vdot, goal.m)), new: fmtDuration(raceTime(p.vdot, goal.m)) })}</p>
+        )}
+        <div className="edit-actions">
+          {accept && <button type="button" onClick={accept}>{p.kind === 'pace' ? t('Mettre à jour mes allures') : t('Garder le volume')}</button>}
+          <button type="button" className="ghost" onClick={() => dismiss(p)}>{accept ? t('Ignorer') : t('Compris')}</button>
+        </div>
+      </section>
+    );
+  });
+}
+
+const UNWELL_MODES = { get easy() { return t('Footing seulement'); }, get shorter() { return t('Plus court'); }, get rest() { return t('Repos'); } };
+const RAMP_LABELS = { get slow() { return t('Lente'); }, get balanced() { return t('Équilibrée'); }, get fast() { return t('Rapide'); } };
+
+/** "Not feeling well": the next days easier, then a return ramp. */
+function UnwellCard({ plan, matches, onSave }) {
+  const [days, setDays] = useState(7);
+  const [mode, setMode] = useState('easy');
+  const [ramp, setRamp] = useState('balanced');
+  return (
+    <details className="card edit">
+      <summary><b>{t('Pas en forme ?')}</b></summary>
+      <label>{t('Pendant')} · <b>{tn(days, '{n} jour', '{n} jours')}</b>
+        <input type="range" min={3} max={14} step={1} value={days} onChange={(e) => setDays(Number(e.target.value))} />
+      </label>
+      <fieldset>
+        <legend>{t('Pendant ces jours')}</legend>
+        <Segmented label={t('Pendant ces jours')} value={mode} onChange={setMode} options={Object.keys(UNWELL_MODES).map((id) => ({ id, label: UNWELL_MODES[id] }))} />
+      </fieldset>
+      <fieldset>
+        <legend>{t('Reprise')}</legend>
+        <Segmented label={t('Reprise')} value={ramp} onChange={setRamp} options={Object.keys(RAMPS).map((id) => ({ id, label: RAMP_LABELS[id] }))} />
+      </fieldset>
+      <p className="muted small-label">
+        {t('Reprise : {weeks} à {share} % du volume, les séances dures reviennent {when}.', {
+          weeks: tn(RAMPS[ramp].length, '{n} semaine', '{n} semaines'),
+          share: RAMPS[ramp].map((x) => Math.round(x * 100)).join(' → '),
+          when: ramp === 'slow' ? t('la 2e semaine') : t('tout de suite'),
+        })}
+      </p>
+      <button type="button" onClick={() => onSave(unwell(plan, { days, mode, ramp }, Date.now(), matches))}>{t('Adapter mon plan')}</button>
+    </details>
+  );
+}
+
+/** Plan again from next week: new race date, current fitness and recent volume. */
+function RegenerateCard({ plan, activities, onSave }) {
+  const now = Date.now();
+  const [raceDate, setRaceDate] = useState(plan.goal.date);
+  const { fit, weekly } = useMemo(() => planDefaults(activities, Date.now()), [activities]);
+  const vdot = fit?.vdot ?? plan.vdot;
+  const min = earliestRace(plan, now), max = plan.inputs.start + (7 * GOALS[plan.goal.kind].weeks[2] - 1) * DAY;
+  const valid = raceDate >= min && raceDate <= max;
+  return (
+    <details className="card edit">
+      <summary><b>{t('Recalculer le plan')}</b></summary>
+      <label>{t('Date de la course')}
+        <input type="date" value={toInput(raceDate)} min={toInput(min)} max={toInput(max)} onChange={(e) => e.target.value && setRaceDate(fromInput(e.target.value))} />
+      </label>
+      {!valid && <p className="record-status bad">{t('Choisis une date entre le {from} et le {to}.', { from: fmtDay(min), to: fmtDay(max, 'numeric') })}</p>}
+      <p className="muted small-label">
+        {t('À partir de la semaine prochaine, avec ton niveau actuel (VDOT {vdot}) et ton volume récent ({dist} {unit} par semaine). Les semaines passées ne changent pas.', { vdot, dist: fmtDist(weekly, 0), unit: distUnit() })}
+      </p>
+      <button type="button" disabled={!valid} onClick={() => onSave(regenerate(plan, { raceDate, vdot, weekly }, Date.now()))}>{t('Recalculer')}</button>
     </details>
   );
 }

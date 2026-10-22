@@ -264,7 +264,7 @@ Each milestone ships on its own and is usable. Order follows dependencies.
 | M2 Workouts with targets | step targets, live pace cues, plan vs done per step, saved workouts, library | `lib/workout.js`, `WorkoutEditor`, `RecordPage`, `ActivityPage` |
 | M3 Plan generator | wizard, 5 km → marathon plans, storage, Home hub, plan / session pages | `lib/plan.js`, `pages/HomePage.jsx`, `pages/PlanPage.jsx`, `pages/PlanSetupPage.jsx`, `router.js` |
 | M4 Completion | matching, compliance, RPE prompt, missed / move / swap | `lib/plan.js`, `PlanPage`, `RecordPage` |
-| M5 Adaptation | pace check, not feeling well, volume check, regenerate | `lib/plan.js` (or `planAdapt.js`) |
+| M5 Adaptation | pace check, not feeling well, volume check, regenerate | `lib/planAdapt.js`, `PlanPage` |
 | M6 Beginners | start / return to running, fitness plans, effort-based targets | `lib/plan.js` |
 | M7 Extras | briefings, heat, race page, strength, recap, FIT export, reminders | `lib/weather.js`, `story.js`, `formats/` |
 

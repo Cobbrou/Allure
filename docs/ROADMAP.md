@@ -579,12 +579,13 @@ M4 Completion and feedback
       move / swap a session, skip, link / unlink a run by hand, change run days for the rest of the plan
 
 M5 Adaptation
-- [ ] Pace check: proposes a fitness change after key sessions repeatedly beaten or missed,
+- [x] Pace check: proposes a fitness change after key sessions repeatedly beaten or missed,
       or a better race / best effort
-- [ ] "Not feeling well": 3-14 days easy only / shorter / no running, then a slow / balanced /
+- [x] "Not feeling well": 3-14 days easy only / shorter / no running, then a slow / balanced /
       fast return
-- [ ] Volume check: done vs planned over 3-4 weeks, proposes holding the volume
-- [ ] Regenerate from today (race date, days or fitness changed), past sessions kept
+- [x] Volume check: done vs planned over 3-4 weeks, proposes holding the volume
+- [x] Regenerate from today (race date, days or fitness changed), past sessions kept. Pushing
+      the peak back after a break and the TSB hint before key sessions are left for later
 
 M6 Beginner and non-race plans
 - [ ] Start running: timed walk / run, RPE targets, 6-16 weeks

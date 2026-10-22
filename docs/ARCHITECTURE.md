@@ -62,7 +62,7 @@ IndexedDB database `allure`, version 7:
   `gear` → `[{ id, name, kind, initial, alert, isDefault, retired }]` (see `lib/gear.js`),
   `privacy` → `[{ id, name, lat, lon, radius }]` privacy zones (see `lib/privacy.js`)
   `contacts` → `[{ id, name, phone }]` emergency contacts (see `lib/safety.js`)
-  `plan` → the active training plan `{ id, created, goal: { kind, date }, inputs, vdot, vdotHistory, weeks: [{ volume, kind, phase }], sessions: [{ id, date, week, phase, type, steps, distance, duration, status?, activity?, from? }], adjustments }` (see `lib/plan.js`; done is computed from activities, never stored); `planHistory` → finished or stopped plans, with `ended` and `status`
+  `plan` → the active training plan `{ id, created, goal: { kind, date }, inputs, vdot, vdotHistory, weeks: [{ volume, kind, phase }], sessions: [{ id, date, week, phase, type, steps, distance, duration, status?, activity?, from? }], adjustments: [{ kind: 'pace' | 'volume' | 'unwell', date, dismissed?, ... }] }` (see `lib/plan.js`, `lib/planAdapt.js`; done is computed from activities, never stored); `planHistory` → finished or stopped plans, with `ended` and `status`
   `units` → `'metric' | 'imperial'` display unit system (see `lib/format.js`)
   `lang` → `'fr' | 'en'` UI language, device language when unset (see `lib/i18n.js`)
   `prefs` → `{ name, autoPause, audio, recordScreen, workout, workouts }` display name and recording defaults (Settings page); `workout` is the custom workout template being edited, `workouts` the saved ones `[{ id, ...template }]`;
@@ -118,7 +118,7 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
   hrTime,                // { [bpm]: s } moving seconds per heart rate (lib/training.js)
   efforts,               // [{ seg, time, from, to }] segment efforts: segment id, elapsed s, point indices
   laps,                  // device lap start times (ms), from FIT / TCX; only when 2+ laps
-  workout,               // recorded in Allure only: { name?, steps } reached, one per lap; pace targets resolved to s/km (lib/workout.js)
+  workout,               // recorded in Allure only: { name?, steps } reached, one per lap; pace targets resolved to s/km, done `pace` per step (lib/workout.js)
   description, notes,    // free text; notes are private (never exported)
   rpe,                   // perceived exertion 1-10; effort source without heart rate (training.js)
   noRecords,             // true: left out of personal records and race predictions
@@ -167,6 +167,14 @@ and `lib/sports.js` (`effort()` picks km/h, min/km or min/100 m by sport).
   marathon from the race time, repetition 15 s/km under interval). Current fitness is the
   best VDOT of the last 90 days of runs, from efforts of 3 km or more when any. Time in
   pace zone takes pace over ~10 s chunks of moving time (point-to-point GPS pace is noise).
+- **Plan adaptation** (`lib/planAdapt.js`): proposals only, logged in `plan.adjustments`
+  (accepted or dismissed) so the same runs never ask twice. Pace check: a better current
+  VDOT, or the done pace of work steps (stored on the activity's `workout`) against the
+  target middle: 3 key sessions in a row > 2 % faster at RPE ≤ 7 → +1, 2 > 3 % slower or
+  RPE ≥ 9 → -1; accepting re-estimates future sessions. Volume check: run distance of the
+  last 3 plan weeks vs planned, < 75 % → hold next week then +10 %, > 115 % → warning.
+  "Not feeling well" and "regenerate" rewrite sessions from today / next week, never the race
+  or sessions already done or decided.
 - **Duplicates on import**: same sport and overlapping time ranges, start to start + moving time (`isDuplicate`).
 - **Profile stats** (`lib/stats.js`): local time, weeks start on Monday or Sunday (`setWeekStart`, a setting).
 - **Segment efforts** (`lib/segments.js`): a pass starts at the fix closest to the

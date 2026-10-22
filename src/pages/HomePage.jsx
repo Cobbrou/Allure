@@ -5,6 +5,7 @@ import { workoutSummary } from '../components/WorkoutEditor.jsx';
 import { distUnit, fmtDay, fmtDist, fmtDuration } from '../lib/format.js';
 import { raceTime } from '../lib/paces.js';
 import { GOALS, isHard, matchSessions, nextSession, PHASES, SESSION_TYPES, sessionState, weekDays, weekOf } from '../lib/plan.js';
+import { proposals } from '../lib/planAdapt.js';
 import { startOfDay } from '../lib/stats.js';
 import { LIBRARY } from '../lib/workout.js';
 
@@ -40,6 +41,7 @@ function PlanHub({ plan, activities, onEndPlan }) {
   const week = Math.min(Math.max(weekOf(plan, now), 1), weeks);
   const matches = useMemo(() => matchSessions(plan, activities ?? []), [plan, activities]);
   const next = nextSession(plan, now, matches);
+  const adjust = useMemo(() => proposals(plan, activities ?? [], matches, Date.now()).length, [plan, activities, matches]);
   const daysLeft = Math.round((plan.goal.date - today) / DAY);
   const thisWeek = plan.sessions.filter((s) => s.week === week);
   const planned = thisWeek.reduce((n, s) => n + s.distance, 0);
@@ -64,6 +66,14 @@ function PlanHub({ plan, activities, onEndPlan }) {
         </div>
         <span className="plan-countdown">{daysLeft ? t('J-{n}', { n: daysLeft }) : t('Jour J')}</span>
       </section>
+      {adjust > 0 && (
+        <section className="card">
+          <a className="link-card" href="#/plan">
+            <span><b>{t('Ajustement proposé')}</b><span className="muted">{t('Ton plan peut s’adapter à tes dernières sorties.')}</span></span>
+            <span aria-hidden="true">›</span>
+          </a>
+        </section>
+      )}
       {next && <TodayCard session={next} today={today} />}
       <section className="card">
         <h3>{t('Semaine {n} / {total}', { n: week, total: weeks })} <span className="muted small-label">{PHASES[plan.weeks[week - 1].phase].label}</span></h3>

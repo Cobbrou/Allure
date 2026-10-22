@@ -360,14 +360,25 @@ export const makeUp = (plan, id, slot) => {
  * the same volumes (capped for fewer days), the current and past weeks are kept.
  */
 export function changeDays(plan, runDays, longDay, now) {
-  const week = Math.max(weekOf(plan, now), 0);
   const inputs = { ...plan.inputs, days: runDays, longDay, runs: runDays.length };
-  const volumes = plan.weeks.map(({ volume, kind }) => ({ volume: Math.min(volume, runDays.length * RUN_CAP), kind }));
-  const fresh = generatePlan({ ...inputs, vdot: plan.vdot }, now, volumes);
+  return rebuild(plan, inputs, plan.weeks.map(({ volume, kind }) => ({ volume: Math.min(volume, runDays.length * RUN_CAP), kind })), now);
+}
+
+/**
+ * The plan generated again from next week on, from `inputs` (same start) and the week
+ * `volumes` (one per week up to the race); the current and past weeks are kept.
+ */
+export function rebuild(plan, inputs, volumes, now, vdot = plan.vdot) {
+  const week = Math.max(weekOf(plan, now), 0);
+  const fresh = generatePlan({ ...inputs, vdot }, now, volumes);
   return {
     ...plan,
     inputs,
-    weeks: plan.weeks.map((w, i) => (i < week ? w : { ...w, volume: volumes[i].volume })),
+    vdot,
+    goal: fresh.goal,
+    weeks: [...plan.weeks.slice(0, week), ...fresh.weeks.slice(week)],
     sessions: [...plan.sessions.filter((s) => s.week <= week), ...fresh.sessions.filter((s) => s.week > week)],
   };
 }
+
+export { addDays, round500, MIN_RUN, step };

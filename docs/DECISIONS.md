@@ -3,6 +3,16 @@
 Lightweight decision log. Newest first. Each entry: context, decision, consequences.
 Open questions sit at the bottom until decided.
 
+## 2026-10-22: Done pace per workout step is stored on the activity
+
+**Context**: the M5 pace check compares the done pace of key sessions with their targets,
+across several activities. Lap paces come from the track, which only the activity page loads.
+**Decision**: `savedWorkout` stores each step's done `pace` (s/km, from the recorder's laps)
+on the activity's `workout`, next to its target range. Plan adaptations are proposals; each
+decision is logged in `plan.adjustments` so the same runs never ask again.
+**Consequences**: the pace check reads metas only. Workouts recorded before this change, and
+imported or free runs, have no done pace and are left out of the check.
+
 ## 2026-10-22: Training plans are stored, not regenerated
 
 **Context**: a plan is generated from the wizard inputs by `lib/plan.js`. It could be
