@@ -1053,6 +1053,7 @@ export default {
   'Max ({unit})': 'Max ({unit})',
   'Série': 'Streak',
   'Série : {n}': 'Streak: {n}',
+  'Masquer le tracé': 'Hide the route',
   'Sauvegarde automatique chaque semaine': 'Automatic weekly backup',
   'Dans Documents/{dir} sur le téléphone : elle reste même si tu désinstalles Allure. Les 2 dernières sont gardées.': 'In Documents/{dir} on the phone: it stays even if you uninstall Allure. The 2 latest are kept.',
   'Sauvegarde automatique impossible : {error}': 'Automatic backup failed: {error}',

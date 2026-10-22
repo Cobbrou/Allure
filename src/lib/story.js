@@ -35,10 +35,10 @@ export const BACKGROUNDS = [
 
 /**
  * Draw a story on `canvas` (resized to 1080x1920). opts: { template, bg: 'dark'|'clear'|'photo',
- * photo: ImageBitmap, zones: privacy zones }. The track inside privacy zones is left out:
- * a story is meant to be posted publicly.
+ * photo: ImageBitmap, zones: privacy zones, noLine: no track line at all }. The track inside
+ * privacy zones is left out: a story is meant to be posted publicly.
  */
-export function drawStory(canvas, act, { template = 'track', bg = 'dark', photo, zones = [] } = {}) {
+export function drawStory(canvas, act, { template = 'track', bg = 'dark', photo, zones = [], noLine = false } = {}) {
   canvas.width = W;
   canvas.height = H;
   const g = canvas.getContext('2d');
@@ -46,7 +46,7 @@ export function drawStory(canvas, act, { template = 'track', bg = 'dark', photo,
   if (bg === 'photo' && photo) drawPhoto(g, photo);
   else if (bg !== 'clear') drawDark(g);
   // Over a photo or an unknown background, text needs a shadow and a lighter label colour.
-  const s = { g, overlay: bg !== 'dark', track: hidePrivate(act.track, zones) };
+  const s = { g, overlay: bg !== 'dark', track: hidePrivate(act.track, zones), noLine };
   s.muted = s.overlay ? 'rgba(255,255,255,0.8)' : STORY.TICK;
   g.textBaseline = 'alphabetic';
   ({ track: drawTrackTemplate, sticker: drawSticker, profile: drawProfile, splits: drawSplits })[template](s, act);
@@ -154,7 +154,7 @@ function statGrid(s, pairs, y) {
 
 /** Glowing track fitted into `box`, with start and end dots. */
 function drawTrack(s, box, width = 14) {
-  if (s.track.length < 2) return;
+  if (s.noLine || s.track.length < 2) return;
   const { g } = s;
   const pts = fitToBox(toPlane(s.track), box);
   const path = () => {

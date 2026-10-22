@@ -12,6 +12,7 @@ import Segmented from './Segmented.jsx';
 export default function ShareSheet({ act, zones, photos, open, onClose, children }) {
   const [bg, setBg] = useState('dark');
   const [photo, setPhoto] = useState();
+  const [noLine, setNoLine] = useState(false); // the track's shape gives the place away
   const [index, setIndex] = useState(0);
   const [busy, setBusy] = useState(false);
   const canvases = useRef([]);
@@ -24,10 +25,10 @@ export default function ShareSheet({ act, zones, photos, open, onClose, children
     let live = true;
     document.fonts.ready.then(() => live && list.forEach((tpl, k) => {
       const c = canvases.current[k];
-      if (c) drawStory(c, act, { template: tpl.id, bg, photo, zones });
+      if (c) drawStory(c, act, { template: tpl.id, bg, photo, zones, noLine });
     }));
     return () => { live = false; };
-  }, [open, act, list, bg, photo, zones]);
+  }, [open, act, list, bg, photo, zones, noLine]);
   useEffect(() => { if (!open) setIndex(0); }, [open]);
   useEffect(() => {
     if (!open || photo || !photos?.length) return;
@@ -62,6 +63,7 @@ export default function ShareSheet({ act, zones, photos, open, onClose, children
           </div>
           <Segmented label={t('Modèle')} options={list} value={list[index]?.id} onChange={goTo} />
           <Segmented label={t('Fond')} options={BACKGROUNDS} value={bg} onChange={pickBg} />
+          <label className="switch"><input type="checkbox" checked={noLine} onChange={(e) => setNoLine(e.target.checked)} />{t('Masquer le tracé')}</label>
           <input ref={picker} type="file" accept="image/*" hidden onChange={onPhoto} />
           <div className="sheet-actions">
             <button type="button" onClick={share} disabled={busy}>{t(busy ? 'Préparation…' : "Partager l'image")}</button>
