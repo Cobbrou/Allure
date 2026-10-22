@@ -75,6 +75,9 @@ IndexedDB database `allure`, version 7:
 - `photos` (key = activity id): the activity's pictures, an array of JPEG Blobs shrunk to
   1600 px on import (`shrinkPhoto` in `lib/story.js`); the first one is the default story
   background. Deleted with the activity
+- `originals` (key = activity id): `{ points, laps }` from before the activity's first crop or
+  elevation fix, so "Revenir à la trace d'origine" can undo them. Deleted with the activity
+  or on restore
 - Cache Storage (not IndexedDB): offline map downloads, one cache per route
   (`allure-route-<id>`, see `lib/offline.js`)
 
@@ -93,9 +96,10 @@ inside the upgrade transaction:
 | 8 | recompute `movingTime` / `avgPace` of hikes, walks and swims (per-sport moving threshold) |
 | 9 | move route `legs` into `routeLegs` |
 | 10 | recompute rides' `bestEfforts` over 20 / 40 / 100 km |
+| 11 | create `originals` |
 
-Full backups (`lib/backup.js`, Profile → Mes données) dump every store except `drafts`
-and the map caches to one JSON file (photos inlined as data URLs on their activity) tagged with `schema` = `VERSION`. Restore puts the
+Full backups (`lib/backup.js`, Profile → Mes données) dump every store except `drafts`,
+`originals` and the map caches to one JSON file (photos inlined as data URLs on their activity) tagged with `schema` = `VERSION`. Restore puts the
 records back as they are, so a backup from a newer schema is refused. A migration that
 backfills metas must also be applied to older backups on restore.
 

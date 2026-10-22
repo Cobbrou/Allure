@@ -454,8 +454,8 @@ Reliability
       `finally`: the global toast covers them)
 - [x] Elevation correction triggered by a tap on its hint and impossible to undo [I6]:
       `<div>` instead of the wrapping `<label>` (same for watch HR), `ConfirmButton`
-- [ ] Keep the original track before a crop or an elevation correction, so both can be
-      undone
+- [x] Keep the original track before a crop or an elevation correction, so both can be
+      undone (`originals` store, v11; not in backups)
 - [x] GPS drift while auto-paused adds distance [I7]: don't add stopped jitter to the
       distance, so the live clock and the saved activity agree (size it on a device)
       (fixes under the stop speed are not stored; an auto-pause ends 15 m from the stop

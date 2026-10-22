@@ -19,7 +19,7 @@ import TrackMap from '../components/TrackMap.jsx';
 import { analyze, computeSplits } from '../lib/analyze.js';
 import { addWatchHr, cropActivity } from '../lib/activity.js';
 import { correctElevation } from '../lib/elevation.js';
-import { deleteActivities, getActivity, getPhotos, saveActivities, setPhotos, updateActivity } from '../lib/db.js';
+import { deleteActivities, dropOriginal, getActivity, getOriginal, getPhotos, hasOriginal, keepOriginal, saveActivities, setPhotos, updateActivity } from '../lib/db.js';
 import { distUnit, fmtDate, fmtDist, fmtDuration } from '../lib/format.js';
 import { defaultGear, GEAR_KINDS, gearFor } from '../lib/gear.js';
 import { SPORTS, splitSize as splitSizeOf } from '../lib/sports.js';
@@ -37,6 +37,7 @@ export default function ActivityPage({ id, activities, plan, hr, ftp, weight, zo
   const [cropping, setCropping] = useState(false);
   const [photos, setPhotoList] = useState([]);
   const [health, setHealth] = useState(false); // Health Connect ready (Android shell)
+  const [edited, setEdited] = useState(false); // the track from before a crop or elevation fix is kept
   const hover = useRef(() => {});
   const range = useRef(() => {});
 
@@ -44,6 +45,7 @@ export default function ActivityPage({ id, activities, plan, hr, ftp, weight, zo
   const listedHr = activities?.find((a) => a.id === id)?.avgHr;
   useEffect(() => { getActivity(id).then((d) => setData(d ?? null), () => setData(null)); }, [id, listedHr]);
   useEffect(() => { getPhotos(id).then(setPhotoList, () => setPhotoList([])); }, [id]);
+  useEffect(() => { hasOriginal(id).then(setEdited, () => {}); }, [id]);
   useEffect(() => { import('../lib/health.js').then((m) => m.healthStatus()).then((s) => setHealth(s === 'ready')); }, []);
   // Keyed on points only, so renaming doesn't rebuild the map and chart.
   const sport = data?.meta.sport;
@@ -81,6 +83,8 @@ export default function ActivityPage({ id, activities, plan, hr, ftp, weight, zo
     onChange();
   };
   const crop = async (from, to) => {
+    await keepOriginal(data.meta, data.points);
+    setEdited(true);
     await saveActivities([cropActivity(data.meta, data.points, from, to)]);
     setData(await getActivity(id));
     setCropping(false);
@@ -90,11 +94,23 @@ export default function ActivityPage({ id, activities, plan, hr, ftp, weight, zo
   const fixElevation = async () => {
     const points = await correctElevation(data.points, 15000);
     if (points === data.points) return false;
+    await keepOriginal(data.meta, data.points);
+    setEdited(true);
     await saveActivities([cropActivity(data.meta, points, 0, points.length - 1)]);
     setData(await getActivity(id));
     setSheet(null);
     onChange();
     return true;
+  };
+  // Back to the track (and laps) from before the first crop or elevation fix.
+  const restoreOriginal = async () => {
+    const o = await getOriginal(id);
+    await saveActivities([cropActivity({ ...data.meta, laps: o.laps ?? undefined }, o.points, 0, o.points.length - 1)]);
+    await dropOriginal(id);
+    setEdited(false);
+    setData(await getActivity(id));
+    setSheet(null);
+    onChange();
   };
   // Heart rate a watch wrote to Health Connect during a recording made without a strap.
   // False when there is none (yet: watches sync with a delay).
@@ -137,7 +153,8 @@ export default function ActivityPage({ id, activities, plan, hr, ftp, weight, zo
         <EditForm meta={data.meta} gears={gears} onSave={save} onDelete={remove}
           onFixElevation={hasTrack && data.meta.source !== 'record' && fixElevation}
           onWatchHr={health && hasTrack && data.meta.source === 'record' && !data.meta.avgHr && fetchWatchHr}
-          onCrop={hasTrack && (() => { setSheet(null); setCropping(true); })} />
+          onCrop={hasTrack && (() => { setSheet(null); setCropping(true); })}
+          onRestore={edited && restoreOriginal} />
       </BottomSheet>
       <ShareSheet key={id} act={act} zones={zones} photos={photos} open={sheet === 'share'} onClose={() => setSheet(null)}>
         {hasTrack && <button type="button" className="ghost" onClick={exportGpx}>{t('Fichier GPX')}</button>}
@@ -194,7 +211,7 @@ function TopBar({ children }) {
   );
 }
 
-function EditForm({ meta, gears, onSave, onDelete, onCrop, onFixElevation, onWatchHr }) {
+function EditForm({ meta, gears, onSave, onDelete, onCrop, onFixElevation, onWatchHr, onRestore }) {
   const [fixing, setFixing] = useState(null); // null | 'busy' | 'failed'
   const [watchHr, setWatchHr] = useState(null); // null | 'busy' | message
   const [name, setName] = useState(meta.name);
@@ -257,6 +274,12 @@ function EditForm({ meta, gears, onSave, onDelete, onCrop, onFixElevation, onWat
         ? <button type="button" className="ghost" onClick={onCrop}>{t('Recadrer le début ou la fin')}</button>
         : !meta.preview?.length && <a className="button ghost" href={`#/manual/${meta.id}`}>{t('Modifier la date, la durée ou la distance')}</a>}
       {/* <div>, not <label>: a tap on the hint must not run the action. */}
+      {onRestore && (
+        <div className="field">
+          <ConfirmButton className="ghost" confirmLabel={t('Confirmer')} onConfirm={onRestore}>{t('Revenir à la trace d’origine')}</ConfirmButton>
+          <span className="hint">{t('Annule les recadrages et la correction d’altitude.')}</span>
+        </div>
+      )}
       {onFixElevation && (
         <div className="field">
           {fixing === 'busy'

@@ -1,6 +1,7 @@
 // Local store (IndexedDB): `activities` holds light meta records for lists, `tracks` the
 // raw points by activity id (loaded only on the detail screen), plus `drafts`, `settings`
-// `segments`, planned `routes` (metas; their points in `routeLegs`) and activity `photos`.
+// `segments`, planned `routes` (metas; their points in `routeLegs`), activity `photos` and
+// `originals` (tracks from before a crop or an elevation fix).
 // Platform module: a native storage plugin can replace it without touching components.
 
 import { t } from './i18n.js';
@@ -14,7 +15,7 @@ import { segmentEfforts } from './segments.js';
 import { hrTime } from './training.js';
 
 const DB_NAME = 'allure';
-export const VERSION = 10;
+export const VERSION = 11;
 let dbPromise;
 
 // Meta patches of the data migrations: pure (track points, meta) -> fields, tested on their own.
@@ -75,6 +76,9 @@ export const MIGRATIONS = {
   },
   // v10: rides' best efforts are 20 / 40 / 100 km (were the running distances).
   10: (db, tx) => backfill(tx, PATCHES[10], (meta) => effortDistances(meta.sport) === RIDE_DISTANCES),
+  // v11: `originals` keeps { points, laps } of an activity from before its first crop or
+  // elevation fix, by activity id, so the edit can be undone. Not in backups.
+  11: (db) => db.createObjectStore('originals'),
 };
 
 // Patch every meta accepted by `want` with fields computed from its track and the meta.
@@ -167,14 +171,24 @@ export function updateActivity(meta) {
 }
 
 export function deleteActivities(ids) {
-  return tx(['activities', 'tracks', 'photos'], 'readwrite', (acts, tracks, photos) => {
+  return tx(['activities', 'tracks', 'photos', 'originals'], 'readwrite', (acts, tracks, photos, originals) => {
     for (const id of ids) {
       acts.delete(id);
       tracks.delete(id);
       photos.delete(id);
+      originals.delete(id);
     }
   });
 }
+
+/** Keeps an activity's track before an edit replaces it; only the first edit's, so undoing goes back to the start. */
+export const keepOriginal = (meta, points) => tx(['originals'], 'readwrite', (s) => {
+  s.getKey(meta.id).onsuccess = (e) => e.target.result === undefined && s.put({ points, laps: meta.laps ?? null }, meta.id);
+});
+/** { points, laps } of an activity before it was edited, or undefined. */
+export const getOriginal = (id) => tx(['originals'], 'readonly', (s) => s.get(id));
+export const hasOriginal = async (id) => (await tx(['originals'], 'readonly', (s) => s.count(id))) > 0;
+export const dropOriginal = (id) => tx(['originals'], 'readwrite', (s) => s.delete(id));
 
 /** The in-progress live recording (one at a time), stored in parts: see draftWrites. */
 let savedDraft = null;
