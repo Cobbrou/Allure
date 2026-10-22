@@ -4,8 +4,8 @@ import CheckIn from './components/CheckIn.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import TabBar from './components/TabBar.jsx';
 import { addWatchHr, createActivity, needsWatchHr } from './lib/activity.js';
-import { backupDue } from './lib/backup.js';
-import { deleteRoute, deleteSegment, getActivity, getSetting, listActivities, listRoutes, listSegments, persistStorage, saveActivities, saveRoute, saveSegment, setSetting } from './lib/db.js';
+import { autoBackupDue, backupDue } from './lib/backup.js';
+import { autoBackup, deleteRoute, deleteSegment, getActivity, getSetting, listActivities, listRoutes, listSegments, persistStorage, saveActivities, saveRoute, saveSegment, setSetting } from './lib/db.js';
 import { setUnits } from './lib/format.js';
 import { deviceLang, getLang, setLang, t, tn } from './lib/i18n.js';
 import { newlyUnlocked } from './lib/achievements.js';
@@ -246,7 +246,12 @@ export default function App() {
     if (!activities?.length || backupChecked.current) return;
     backupChecked.current = true;
     persistStorage().catch(() => {});
-    Promise.all([getSetting('backup'), getSetting('backupNudge')]).then(([last, nudged]) => {
+    // The weekly automatic backup (native shell) runs first: when it does, no reminder is due.
+    const auto = Capacitor.isNativePlatform()
+      ? getSetting('autoBackup').then((a) => autoBackupDue(a, activities.length) && autoBackup(activities.length))
+        .catch((e) => setToast({ kind: 'error', text: t('Sauvegarde automatique impossible : {error}', { error: e.message }) }))
+      : Promise.resolve();
+    auto.then(() => Promise.all([getSetting('backup'), getSetting('backupNudge')])).then(([last, nudged]) => {
       if (!backupDue({ last, nudged, activities })) return;
       setSetting('backupNudge', Date.now());
       setToast((cur) => cur ?? {

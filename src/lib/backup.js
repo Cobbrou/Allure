@@ -107,4 +107,19 @@ export function backupDue({ last, nudged, activities, now = Date.now() }) {
   return fresh >= 20 || (fresh > 0 && now - since.at > 30 * DAY);
 }
 
-export const backupName =(now = Date.now()) => `allure-sauvegarde-${new Date(now).toISOString().slice(0, 10)}.json`;
+export const backupName = (now = Date.now()) => `allure-sauvegarde-${new Date(now).toISOString().slice(0, 10)}.json`;
+
+// Automatic backup (native shell): a weekly file in Documents/Allure, which outlives the app.
+export const AUTO_DIR = 'Allure';
+export const AUTO_KEEP = 2; // newest automatic backups kept
+const AUTO = /^allure-auto-\d{4}-\d{2}-\d{2}\.json$/;
+export const autoBackupName = (now = Date.now()) => `allure-auto-${new Date(now).toISOString().slice(0, 10)}.json`;
+
+/** Whether the weekly automatic backup is due. auto: the 'autoBackup' setting { on, at? }. */
+export const autoBackupDue = (auto, count, now = Date.now()) => !!auto?.on && count > 0 && now - (auto.at ?? 0) >= 7 * DAY;
+
+/** Files of the backup folder to delete: automatic backups past the newest `keep`, and leftovers of a cut write. */
+export function staleBackups(names, keep = AUTO_KEEP) {
+  const autos = names.filter((n) => AUTO.test(n)).sort().reverse();
+  return [...autos.slice(keep), ...names.filter((n) => n.endsWith('.part'))];
+}

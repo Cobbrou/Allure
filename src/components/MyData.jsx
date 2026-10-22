@@ -1,9 +1,10 @@
+import { Capacitor } from '@capacitor/core';
 import { t } from '../lib/i18n.js';
 import { fmtDate } from '../lib/format.js';
 import { useEffect, useState } from 'react';
 import ConfirmButton from './ConfirmButton.jsx';
-import { backupName } from '../lib/backup.js';
-import { deleteAllData, exportBackup, getSetting, persistStorage, restoreBackup, setSetting } from '../lib/db.js';
+import { AUTO_DIR, backupName } from '../lib/backup.js';
+import { autoBackup, deleteAllData, exportBackup, getSetting, persistStorage, restoreBackup, setSetting } from '../lib/db.js';
 import { shareFile } from '../lib/share.js';
 
 /** Full backup to a JSON file, restore from one, and erase everything on this device. */
@@ -12,8 +13,10 @@ export default function MyData({ count }) {
   const [busy, setBusy] = useState(false);
   const [last, setLast] = useState(null); // { at, count } of the last backup
   const [persisted, setPersisted] = useState(null); // false: the browser may evict the data
+  const [auto, setAuto] = useState(null); // 'autoBackup' setting: { on, at? }
   useEffect(() => {
     getSetting('backup').then(setLast, () => {});
+    getSetting('autoBackup').then(setAuto, () => {});
     persistStorage().then(setPersisted, () => {});
   }, []);
 
@@ -30,6 +33,19 @@ export default function MyData({ count }) {
     const b = { at: Date.now(), count };
     await setSetting('backup', b);
     setLast(b);
+  });
+
+  // Turned on: a first backup now (Android 10 and lower ask for storage access here).
+  const toggleAuto = (on) => run(async () => {
+    if (!on) {
+      const a = { ...auto, on: false };
+      await setSetting('autoBackup', a);
+      return setAuto(a);
+    }
+    const now = Date.now();
+    await autoBackup(count, now);
+    setAuto({ on: true, at: now });
+    setLast({ at: now, count });
   });
 
   const restore = (file) => run(async () => {
@@ -63,6 +79,12 @@ export default function MyData({ count }) {
         </label>
         <ConfirmButton onConfirm={wipe} confirmLabel={t('Tout effacer ?')}>{t('Supprimer mes données')}</ConfirmButton>
       </div>
+      {Capacitor.isNativePlatform() && (
+        <>
+          <label className="switch"><input type="checkbox" checked={!!auto?.on} disabled={busy} onChange={(e) => toggleAuto(e.target.checked)} />{t('Sauvegarde automatique chaque semaine')}</label>
+          <p className="muted small-label">{t('Dans Documents/{dir} sur le téléphone : elle reste même si tu désinstalles Allure. Les 2 dernières sont gardées.', { dir: AUTO_DIR })}</p>
+        </>
+      )}
       {status && <p className="record-status bad" role="alert">{status}</p>}
     </section>
   );

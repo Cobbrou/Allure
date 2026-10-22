@@ -443,6 +443,19 @@ in both languages rather than split into keys.
 plurals. Stored data (default activity names, demo names) keeps the language it was
 created in.
 
+## 2026-10-22: Weekly automatic backup to Documents/Allure
+
+**Context**: without a backend, uninstalling the app or clearing its data loses everything,
+and a backup by hand is easily forgotten.
+**Decision**: the native shell writes the usual backup file to the public Documents/Allure
+folder, which outlives the app: opt-in under My data, weekly at launch, the 2 newest kept.
+It is written in 3 MB slices (`appendFile`) to a `.part` file then renamed, so a big
+archive is never one string and a cut write never replaces a good file. Android 11+ needs no
+permission for files the app creates; Android 8-10 get `WRITE_EXTERNAL_STORAGE` (max SDK 29)
+and legacy storage. After a reinstall the old files belong to the previous install: they are
+restored through the file picker and never pruned. The privacy policy says other apps with
+file access can read the folder.
+
 ## Open questions
 
 - **Backend stack** (phase 3). Candidates: Supabase (Postgres + PostGIS + auth, fastest

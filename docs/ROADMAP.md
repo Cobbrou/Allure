@@ -542,8 +542,9 @@ UI/UX
       move the choice)
 
 New features
-- [ ] Automatic weekly backup to Documents (`@capacitor/filesystem`, already installed):
-      the only real protection against data loss without a backend
+- [x] Automatic weekly backup to Documents (`@capacitor/filesystem`, already installed):
+      the only real protection against data loss without a backend (opt-in under My data,
+      native shell; see `DECISIONS.md`)
 - [ ] "Hide the map" option when sharing a story or a file
 - Already planned, raised again by the audit: feed search and filters (phase 7), records
   beyond running (phase 8, done), import a GPX as a route (phase 8), pace zones (phase 8),

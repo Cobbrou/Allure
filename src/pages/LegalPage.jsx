@@ -59,7 +59,9 @@ const FR = {
           sauvegarde ou SMS d'alerte vers tes contacts d'urgence passent par l'application que
           tu choisis. Les zones de confidentialité masquent le départ et l'arrivée des images et
           fichiers GPX partagés. Les données de l'app sont exclues de la sauvegarde automatique
-          d'Android (Google Drive) : seule ta propre sauvegarde les copie.
+          d'Android (Google Drive) : seule ta propre sauvegarde les copie. Si tu actives la
+          sauvegarde automatique, elle est écrite chaque semaine dans le dossier Documents/Allure du
+          téléphone, que les applications ayant accès à tes fichiers peuvent lire.
         </p>
         <h3>Tes droits</h3>
         <p>
@@ -193,7 +195,9 @@ const EN = {
           Nothing leaves your phone without you acting: GPX export, share image, backup or
           alert SMS to your emergency contacts go through the app you choose. Privacy zones
           hide the start and finish of shared images and GPX files. The app's data is left out
-          of Android's automatic backup (Google Drive): only your own backup copies it.
+          of Android's automatic backup (Google Drive): only your own backup copies it. If you turn
+          on the automatic backup, it is written every week to the phone's Documents/Allure
+          folder, which apps with access to your files can read.
         </p>
         <h3>Your rights</h3>
         <p>

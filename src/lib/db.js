@@ -5,7 +5,7 @@
 
 import { t } from './i18n.js';
 import { analyze } from './analyze.js';
-import { BATCH, backupBatches, backupHeader, splitLines } from './backup.js';
+import { AUTO_DIR, autoBackupName, BATCH, backupBatches, backupHeader, splitLines, staleBackups } from './backup.js';
 import { thin } from './heatmap.js';
 import { defaultGear } from './gear.js';
 import { bestEfforts, effortDistances, RIDE_DISTANCES } from './records.js';
@@ -299,6 +299,14 @@ export async function exportBackup(now = Date.now()) {
     parts.push(new Blob(lines));
   }
   return new Blob(parts, { type: 'application/json' });
+}
+
+/** Automatic backup (native shell): written to Documents/Allure, then recorded as the last backup of `count` activities. */
+export async function autoBackup(count, now = Date.now()) {
+  const { keepFile } = await import('./share.js');
+  await keepFile(await exportBackup(now), AUTO_DIR, autoBackupName(now), staleBackups);
+  await setSetting('autoBackup', { on: true, at: now });
+  await setSetting('backup', { at: now, count });
 }
 
 /** Restore a backup File over the local data, BATCH activities per transaction (same ids replaced, others kept). */

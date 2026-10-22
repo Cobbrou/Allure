@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { backupBatches, backupDue, backupHeader, backupName, parseBackup, splitLines } from '../src/lib/backup.js';
+import { autoBackupDue, autoBackupName, backupBatches, backupDue, backupHeader, backupName, parseBackup, splitLines, staleBackups } from '../src/lib/backup.js';
 import { createActivity } from '../src/lib/activity.js';
 import { demoHistory } from '../src/lib/demo.js';
 
@@ -91,4 +91,18 @@ test('backupBatches: settings alone, a single-object backup, other files', async
 test('splitLines rebuilds lines across chunks', async () => {
   assert.deepEqual(await collect(splitLines(['ab', 'c\nd', 'e\n', '\nf', 'g'])), ['abc', 'de', '', 'fg']);
   assert.deepEqual(await collect(splitLines(['x\n'])), ['x']);
+});
+
+test('automatic backup: weekly when on and there is something to save; prunes old ones and cut writes', () => {
+  const now = Date.UTC(2026, 9, 22, 8);
+  assert.equal(autoBackupName(now), 'allure-auto-2026-10-22.json');
+  assert.equal(autoBackupDue(null, 5, now), false);
+  assert.equal(autoBackupDue({ on: false }, 5, now), false);
+  assert.equal(autoBackupDue({ on: true }, 0, now), false);
+  assert.equal(autoBackupDue({ on: true }, 5, now), true); // never run
+  assert.equal(autoBackupDue({ on: true, at: now - 6 * 86400e3 }, 5, now), false);
+  assert.equal(autoBackupDue({ on: true, at: now - 7 * 86400e3 }, 5, now), true);
+  const names = ['allure-auto-2026-10-08.json', 'notes.txt', 'allure-auto-2026-10-22.json', 'allure-auto-2026-10-15.json', 'allure-auto-2026-10-01.json.part', 'allure-sauvegarde-2026-10-01.json'];
+  assert.deepEqual(staleBackups(names), ['allure-auto-2026-10-08.json', 'allure-auto-2026-10-01.json.part']);
+  assert.deepEqual(staleBackups(names.slice(0, 2)), []);
 });
