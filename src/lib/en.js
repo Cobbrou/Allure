@@ -334,7 +334,7 @@ export default {
   // Tabs, map controls
   'Enregistrer|onglet': 'Record',
   'Cartes': 'Maps',
-  'Groupes': 'Groups',
+  'Défis': 'Challenges',
   'Relief : Mapzen, AWS Terrain Tiles': 'Relief: Mapzen, AWS Terrain Tiles',
   'Relief 3D': '3D relief',
   'Afficher les crédits': 'Show credits',
@@ -431,7 +431,7 @@ export default {
   'Lien ou code de défi invalide.': 'Invalid challenge link or code.',
   'Défi « {title} » à jour.': 'Challenge “{title}” updated.',
   'Rejoins mon défi « {title} » sur Allure : {link}': 'Join my challenge “{title}” on Allure: {link}',
-  'Rejoins mon défi « {title} » sur Allure. Colle ce code dans Groupes > Rejoindre un défi : {code}': 'Join my challenge “{title}” on Allure. Paste this code in Groups > Join a challenge: {code}',
+  'Rejoins mon défi « {title} » sur Allure. Colle ce code dans Défis > Rejoindre un défi : {code}': 'Join my challenge “{title}” on Allure. Paste this code in Challenges > Join a challenge: {code}',
   'Lien copié : envoie-le à tes amis.': 'Link copied: send it to your friends.',
   'Commence bientôt': 'Starts soon',
   'Quitter le défi ?': 'Leave the challenge?',

@@ -18,7 +18,7 @@ export default function GroupsPage({ activities, name, incoming }) {
 
   return (
     <>
-      <header className="topbar"><h1>{t('Groupes')}</h1></header>
+      <header className="topbar"><h1>{t('Défis')}</h1></header>
       <main className="detail">
         <h2 className="section-title">{t('Défis de {month}', { month: monthName(d.getFullYear(), d.getMonth()) })}</h2>
         <p className="muted small-label">{tn(month.daysLeft, 'Plus que {n} jour', 'Plus que {n} jours')} · {t('{done}/{total} terminés', { done: month.list.filter((c) => c.done).length, total: month.list.length })}</p>

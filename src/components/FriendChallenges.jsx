@@ -41,7 +41,7 @@ export default function FriendChallenges({ activities, name, incoming }) {
     const link = appLink(`/challenge/${code}`);
     const text = link
       ? t('Rejoins mon défi « {title} » sur Allure : {link}', { title: ch.title, link })
-      : t('Rejoins mon défi « {title} » sur Allure. Colle ce code dans Groupes > Rejoindre un défi : {code}', { title: ch.title, code });
+      : t('Rejoins mon défi « {title} » sur Allure. Colle ce code dans Défis > Rejoindre un défi : {code}', { title: ch.title, code });
     try {
       setMsg((await shareText(text)) === 'copied' ? t('Lien copié : envoie-le à tes amis.') : '');
     } catch (e) {

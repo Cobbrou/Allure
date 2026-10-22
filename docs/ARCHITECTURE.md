@@ -45,7 +45,7 @@ Route changes run inside `document.startViewTransition` (slide or fade, see
 | `#/segment/:id`  | `SegmentPage`: segment map, distance / grade, your efforts fastest first |
 | `#/maps`         | `MapsPage` (tab): full-screen map around you; filter chips + Search route loops from the area in view (ranked on distance, difficulty, terrain, surface, novelty), drawn together and synced with a bottom carousel; Saved swaps in your routes; heatmap layer |
 | `#/route/:id`    | `RoutePage`: route builder (`new`) or a saved route, editable |
-| `#/groups`       | `GroupsPage` (tab): clubs and events (placeholders until accounts land) |
+| `#/groups`       | `GroupsPage` (Challenges tab): monthly challenges, trophies, friend challenges |
 | `#/profile`      | `ProfilePage`  |
 
 ## Storage (`lib/db.js`)
