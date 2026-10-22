@@ -1,9 +1,9 @@
 import { t } from '../lib/i18n.js';
 import { useEffect, useRef, useState } from 'react';
 import { Marker } from 'maplibre-gl';
-import { createMap } from '../map.js';
+import { arrowImage, arrowLayer, createMap } from '../map.js';
 import { haversine } from '../lib/geo.js';
-import { ACCENT, ROUTE } from '../theme.js';
+import { ACCENT, BG, ROUTE } from '../theme.js';
 
 
 const GAP = 5; // m between drawn vertices: invisible at street zoom, fewer for slow sports
@@ -47,10 +47,13 @@ export default function LiveMap({ points, pos, route }) {
     const m = createMap({ container: el.current, center: [pos.lon, pos.lat], zoom: 16, cooperativeGestures: true });
     m.on('load', () => {
       el.current?.classList.add('ready');
+      // Arrows on the route to follow: which way to go where it crosses or comes back on itself.
       if (route) {
         m.addSource('planned', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: route } } });
         m.addLayer({ id: 'planned', type: 'line', source: 'planned', layout: { 'line-join': 'round', 'line-cap': 'round' },
-          paint: { 'line-color': ROUTE, 'line-width': 6, 'line-opacity': 0.6 } });
+          paint: { 'line-color': ROUTE, 'line-width': 8, 'line-opacity': 0.7 } });
+        m.addImage('arrow', arrowImage(BG), { pixelRatio: 2 });
+        m.addLayer(arrowLayer('planned-arrows', 'planned', 60));
       }
       feed();
       const { done, tail } = drawn.current;

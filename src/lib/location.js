@@ -92,6 +92,26 @@ export function speak(text) {
   speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance(text), { lang: locale() }));
 }
 
+let tones;
+/** Short tone (countdown). The first call must come from a tap: browsers start audio suspended. */
+export function beep(ms = 150, hz = 880) {
+  const Ctx = window.AudioContext ?? window.webkitAudioContext;
+  if (!Ctx) return;
+  tones ??= new Ctx();
+  tones.resume();
+  const osc = tones.createOscillator();
+  const gain = tones.createGain();
+  const at = tones.currentTime;
+  const end = at + ms / 1000;
+  osc.frequency.value = hz;
+  gain.gain.setValueAtTime(0.4, at);
+  gain.gain.setValueAtTime(0.4, end - 0.03);
+  gain.gain.linearRampToValueAtTime(0, end); // no click at the cut
+  osc.connect(gain).connect(tones.destination);
+  osc.start(at);
+  osc.stop(end);
+}
+
 /** One position fix ({ lat, lon }), or null if the GPS gives nothing within `timeout` ms. */
 export function currentPosition(timeout = 10000) {
   return new Promise((resolve) => {

@@ -11,7 +11,7 @@ import { followRoute } from '../lib/follow.js';
 import { liveSegments } from '../lib/liveSegments.js';
 import { distUnit, fmtDist, fmtDuration, fmtLength, fmtPaceUnit } from '../lib/format.js';
 import { haptic } from '../lib/haptics.js';
-import { hush, speak, watchPosition } from '../lib/location.js';
+import { beep, hush, speak, watchPosition } from '../lib/location.js';
 import { FIELDS, layoutFor } from '../lib/liveFields.js';
 import { elapsed, lapStatus, MAX_ACCURACY } from '../lib/recorder.js';
 import { getRoute } from '../lib/db.js';
@@ -88,7 +88,9 @@ function Setup({ presetSport, recording, contacts, routes, routeId, workoutId, p
 
   const [count, setCount] = useState(null); // 3, 2, 1 before the clock starts
   const go = () => {
-    if (audio) speak('3'); // also unlocks speech on iOS, which needs a user gesture
+    // Beeps, not speech: a spoken number outlasts its second and got cut. The tap also unlocks
+    // speech on iOS and Web Audio, which both need a user gesture.
+    if (audio) { speak(''); beep(); }
     haptic('tap');
     setCount(3);
   };
@@ -97,7 +99,7 @@ function Setup({ presetSport, recording, contacts, routes, routeId, workoutId, p
   const begin = async () => {
     setCount(null);
     if (sport !== prefs?.sport) onSavePrefs({ ...prefs, sport });
-    if (audio) { hush(); speak(t('Enregistrement démarré.')); }
+    if (audio) { beep(600, 1320); speak(t('Enregistrement démarré.')); }
     const full = route && (await getRoute(route.id)); // the list holds metas, not points
     recording.start({ sport, indoor, autoPause, audio, voice: prefs?.voice, safety: safety && contacts.length > 0, route: !indoor && full && followRoute(full, joinLegs(full.legs)), liveSegs: indoor ? [] : liveSegments(segments, sport, activities), workout: withWorkout ? startWorkout(workout, fit?.vdot) : null });
   };
@@ -105,7 +107,7 @@ function Setup({ presetSport, recording, contacts, routes, routeId, workoutId, p
     if (count == null) return;
     const timer = setTimeout(() => {
       if (count === 1) return begin();
-      if (audio) speak(String(count - 1));
+      if (audio) beep();
       haptic('tap');
       setCount(count - 1);
     }, 1000);

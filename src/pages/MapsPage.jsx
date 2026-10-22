@@ -1,7 +1,7 @@
 import { t } from '../lib/i18n.js';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { LngLatBounds, Marker } from 'maplibre-gl';
-import { createMap } from '../map.js';
+import { arrowImage, arrowLayer, createMap } from '../map.js';
 import BottomSheet from '../components/BottomSheet.jsx';
 import Icon from '../components/Icon.jsx';
 import RoutePreview from '../components/RoutePreview.jsx';
@@ -281,19 +281,6 @@ const boundsOf = (coords) => coords.reduce((b, c) => b.extend(c), new LngLatBoun
 const FIT = { top: 190, bottom: 200, left: 30, right: 80 }; // clear of the floating controls and the carousel
 const PICKED = ['route-shadow', 'route-casing', 'route-on', 'route-arrows'];
 
-/** Chevron pointing along +x, drawn once for the direction arrows on the picked route. */
-function arrowImage(color) {
-  const c = Object.assign(document.createElement('canvas'), { width: 20, height: 20 });
-  const g = c.getContext('2d');
-  Object.assign(g, { strokeStyle: color, lineWidth: 4, lineCap: 'round', lineJoin: 'round' });
-  g.beginPath();
-  g.moveTo(7, 4);
-  g.lineTo(13, 10);
-  g.lineTo(7, 16);
-  g.stroke();
-  return g.getImageData(0, 0, 20, 20);
-}
-
 /**
  * The map itself. api: ref set to the MapLibre map; last: last known position, to open on;
  * heat: heatmap lines, or null when hidden; routes: [{ id, line }]; picked: highlighted id;
@@ -332,8 +319,7 @@ function ExploreMap({ api, start, last, pos, heat, routes, picked, focus, callou
       m.addLayer({ id: 'route-casing', type: 'line', source: 'routes', layout: round, paint: { 'line-color': CASING, 'line-width': 9 } });
       m.addLayer({ id: 'route-on', type: 'line', source: 'routes', layout: round, paint: { 'line-color': ACCENT, 'line-width': 6 } });
       m.addImage('arrow', arrowImage(BG), { pixelRatio: 2 });
-      m.addLayer({ id: 'route-arrows', type: 'symbol', source: 'routes',
-        layout: { 'symbol-placement': 'line', 'symbol-spacing': 80, 'icon-image': 'arrow', 'icon-allow-overlap': true, 'icon-ignore-placement': true, 'icon-rotation-alignment': 'map' } });
+      m.addLayer(arrowLayer('route-arrows', 'routes'));
       for (const id of PICKED) m.setFilter(id, ['==', ['get', 'id'], '']);
       // Wide invisible line: a finger-sized target to tap a route.
       m.addLayer({ id: 'routes-hit', type: 'line', source: 'routes', layout: round, paint: { 'line-color': ACCENT, 'line-width': 24, 'line-opacity': 0 } });
