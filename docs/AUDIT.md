@@ -1,5 +1,8 @@
 # Audit (2026-10-20)
 
+> **Status (2026-10-22):** snapshot kept for its IDs. Progress is tracked in ROADMAP phase 9;
+> the unticked items there are what is still open (C3 device test, B7, a few features).
+
 Third full review of the codebase (after the ones behind ROADMAP phases 7 and 8), covering
 features, code, UI/UX and next steps. Nothing was changed while auditing.
 

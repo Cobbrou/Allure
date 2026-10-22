@@ -196,7 +196,8 @@ talks to these third-party services, which see your IP address:
 - **Amazon Web Services** terrain tiles, for the 3D view and to correct the elevation of
   your recordings (the area of the track)
 - **BRouter** (`brouter.de`), when you build or request a route (its waypoints)
-- **Google Fonts**, for the Inter typeface
+- **Open-Meteo**, when you add the weather to an activity or check a session's forecast
+  heat (a position rounded to about 10 km)
 
 The full privacy policy is in the app (Settings → Privacy policy). Back up your data from
 Settings → My data: uninstalling the app (or clearing the site data) deletes everything.

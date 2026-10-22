@@ -9,11 +9,11 @@ const CSP = [
   "script-src 'self'",
   "worker-src 'self' blob:",
   // React and MapLibre set inline style attributes.
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
   "img-src 'self' data: blob: https://*.cartocdn.com",
-  // Map tiles and style (CARTO), relief tiles (AWS), routing (BRouter); data: for restoring backup photos.
-  "connect-src 'self' data: blob: https://*.cartocdn.com https://s3.amazonaws.com https://brouter.de",
+  // Map tiles and style (CARTO), relief tiles (AWS), routing (BRouter), weather (Open-Meteo); data: for restoring backup photos.
+  "connect-src 'self' data: blob: https://*.cartocdn.com https://s3.amazonaws.com https://brouter.de https://api.open-meteo.com https://archive-api.open-meteo.com",
   "object-src 'none'",
   "base-uri 'self'",
 ].join('; ');

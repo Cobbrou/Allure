@@ -434,8 +434,8 @@ Privacy & safety (critical)
       live screen component, on throttled WebView timers, and Android 10+ blocks opening
       the SMS from the background, while it is on by default. Test on a device; if it
       fails, a native full-screen local notification (plugin, to approve) and an honest
-      warning text (warning done under Emergency contacts; device test and native
-      notification to do)
+      warning text (warning done under Emergency contacts; the check-in now runs from `App`,
+      so it keeps watching on every tab; device test and native notification to do)
 
 Broken flows
 - [x] Watch heart rate never fetched after a recording [I1]: `App.jsx` filters the stale
@@ -502,7 +502,8 @@ Performance & battery
       is shown. Left as is until a phone measurement says otherwise; the gap with the
       DEM-corrected total needs the DEM live, i.e. network while recording)
 - [x] Demo data (58 KB) in the start-up bundle [B6]: dynamic `import()` (own 61 KB chunk)
-- [ ] Self-hosted Inter font: no Google request (helps C2), right font offline in the app
+- [x] Self-hosted Inter font: no Google request (helps C2), right font offline in the app
+      (variable Latin subset in `public/fonts/`, Google dropped from the CSP and the policy)
 
 Code health
 - [x] `useSetting(key, default)` hook to shrink `App.jsx` and `SettingsPage`'s 18 props [I13]

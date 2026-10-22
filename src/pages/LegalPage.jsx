@@ -4,7 +4,7 @@ import { back } from '../router.js';
 // Legal texts shown in the app. Keep them in sync with what the app actually sends out:
 // every new network service or permission must be listed in the privacy policy, in both
 // languages (FR and EN below say the same thing), and its host in the CSP (vite.config.js).
-const UPDATED = { fr: '20 octobre 2026', en: '20 October 2026' };
+const UPDATED = { fr: '22 octobre 2026', en: '22 October 2026' };
 const REPO = 'https://github.com/Cobbrou/Allure';
 
 const Ext = ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>;
@@ -49,7 +49,8 @@ const FR = {
             enregistrement ou quand tu corriges l'altitude d'une activité, les tuiles de relief
             (environ 10 km de côté) couvertes par sa trace, pour corriger son altitude.</li>
           <li><b>BRouter</b> (brouter.de, tracé d'itinéraires et boucles suggérées) : les points de passage de l'itinéraire.</li>
-          <li><b>Google Fonts</b> (police de caractères) : une requête au démarrage.</li>
+          <li><b>Open-Meteo</b> (météo, quand tu l'ajoutes à une activité ou consultes la chaleur prévue d'une séance) :
+            une position arrondie à environ 10 km et la date.</li>
         </ul>
         <p>Ni ton nom, ni tes données de santé, ni tes traces ne leur sont envoyés : seulement les zones et points listés.</p>
         <h3>Partage</h3>
@@ -121,12 +122,14 @@ const FR = {
           <li>Fond de carte © <Ext href="https://carto.com/attributions">CARTO</Ext>.</li>
           <li>Relief : <Ext href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</Ext> (Mapzen, AWS Open Data), d'après SRTM, GMTED, ETOPO1 et d'autres sources.</li>
           <li>Itinéraires calculés par <Ext href="https://brouter.de">BRouter</Ext>.</li>
+          <li>Météo : <Ext href="https://open-meteo.com">Open-Meteo</Ext> (CC BY 4.0).</li>
         </ul>
         <h3>Logiciels</h3>
         <ul>
           <li>React et React DOM : MIT</li>
           <li>MapLibre GL JS : BSD-3-Clause</li>
           <li>Recharts : MIT</li>
+          <li>Police Inter : SIL Open Font License 1.1</li>
           <li>Capacitor et ses plugins : MIT</li>
           <li>Capacitor Background Geolocation : MIT</li>
           <li>Capacitor Health : MIT</li>
@@ -181,7 +184,8 @@ const EN = {
             recording or when you correct an activity's elevation, the relief tiles (about 10 km
             across) its track covers, to correct its elevation.</li>
           <li><b>BRouter</b> (brouter.de, route drawing and suggested loops): the route's waypoints.</li>
-          <li><b>Google Fonts</b> (typeface): one request at startup.</li>
+          <li><b>Open-Meteo</b> (weather, when you add it to an activity or check a session's forecast heat): a
+            position rounded to about 10 km, and the date.</li>
         </ul>
         <p>Your name, health data and tracks are never sent to them: only the areas and points listed.</p>
         <h3>Sharing</h3>
@@ -252,12 +256,14 @@ const EN = {
           <li>Basemap © <Ext href="https://carto.com/attributions">CARTO</Ext>.</li>
           <li>Relief: <Ext href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</Ext> (Mapzen, AWS Open Data), from SRTM, GMTED, ETOPO1 and other sources.</li>
           <li>Routes computed by <Ext href="https://brouter.de">BRouter</Ext>.</li>
+          <li>Weather: <Ext href="https://open-meteo.com">Open-Meteo</Ext> (CC BY 4.0).</li>
         </ul>
         <h3>Software</h3>
         <ul>
           <li>React and React DOM: MIT</li>
           <li>MapLibre GL JS: BSD-3-Clause</li>
           <li>Recharts: MIT</li>
+          <li>Inter typeface: SIL Open Font License 1.1</li>
           <li>Capacitor and its plugins: MIT</li>
           <li>Capacitor Background Geolocation: MIT</li>
           <li>Capacitor Health: MIT</li>
