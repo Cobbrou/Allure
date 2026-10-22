@@ -116,6 +116,8 @@ test('addWatchHr merges a watch heart rate into a phone recording, needsWatchHr 
   const points = Array.from({ length: 60 }, (_, i) => ({ lat: 45.9 + i * 0.00003, lon: 6.87, ele: 1040, time: t0 + i * 1000 }));
   const { meta } = createActivity({ points, source: 'record' });
   meta.name = 'Typed';
+  meta.workout = { name: 'Seuil', steps: [] }; // a plan session: its steps feed the plan's checks
+  meta.weather = { temp: 12 };
   assert.equal(meta.avgHr, null);
   assert.ok(needsWatchHr(meta, t0 + 86400e3));
   assert.ok(!needsWatchHr(meta, t0 + 4 * 86400e3));
@@ -123,6 +125,8 @@ test('addWatchHr merges a watch heart rate into a phone recording, needsWatchHr 
   const merged = addWatchHr(meta, points, [{ time: t0 + 10e3, bpm: 140 }, { time: t0 + 40e3, bpm: 150 }]);
   assert.equal(merged.meta.id, meta.id);
   assert.equal(merged.meta.name, 'Typed');
+  assert.deepEqual(merged.meta.workout, meta.workout);
+  assert.deepEqual(merged.meta.weather, meta.weather);
   assert.ok(merged.meta.avgHr >= 140 && merged.meta.avgHr <= 150);
   assert.ok(!needsWatchHr(merged.meta, t0 + 86400e3));
 });
