@@ -204,6 +204,7 @@ function EditForm({ meta, gears, onSave, onDelete, onCrop, onFixElevation, onWat
   const [notes, setNotes] = useState(meta.notes ?? '');
   const [rpe, setRpe] = useState(meta.rpe ?? 0); // 0: not set
   const [noRecords, setNoRecords] = useState(!!meta.noRecords);
+  const [commute, setCommute] = useState(!!meta.commute);
   // Active gear for the chosen sport, plus the current one even if retired.
   const options = gearFor(gears, sport);
   const current = gears.find((g) => g.id === meta.gear);
@@ -211,7 +212,7 @@ function EditForm({ meta, gears, onSave, onDelete, onCrop, onFixElevation, onWat
   // Gear that doesn't fit a newly picked sport gives way to that sport's default.
   const gearId = !gear || options.some((g) => g.id === gear) ? gear : (defaultGear(gears, sport) ?? '');
   return (
-    <form className="card edit" onSubmit={(e) => { e.preventDefault(); onSave({ name: name.trim() || meta.name, sport, gear: gearId || undefined, description: description.trim() || undefined, notes: notes.trim() || undefined, rpe: rpe || undefined, noRecords: noRecords || undefined }); }}>
+    <form className="card edit" onSubmit={(e) => { e.preventDefault(); onSave({ name: name.trim() || meta.name, sport, gear: gearId || undefined, description: description.trim() || undefined, notes: notes.trim() || undefined, rpe: rpe || undefined, noRecords: noRecords || undefined, commute: commute || undefined }); }}>
       <label>
         {t('Titre')}
         <input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
@@ -251,6 +252,7 @@ function EditForm({ meta, gears, onSave, onDelete, onCrop, onFixElevation, onWat
         <span className="hint">{t('Jamais partagées ni exportées.')}</span>
       </label>
       <label className="switch"><input type="checkbox" checked={noRecords} onChange={(e) => setNoRecords(e.target.checked)} />{t('Exclure des records')}</label>
+      <label className="switch"><input type="checkbox" checked={commute} onChange={(e) => setCommute(e.target.checked)} />{t('Trajet (domicile, travail…)')}</label>
       {onCrop
         ? <button type="button" className="ghost" onClick={onCrop}>{t('Recadrer le début ou la fin')}</button>
         : !meta.preview?.length && <a className="button ghost" href={`#/manual/${meta.id}`}>{t('Modifier la date, la durée ou la distance')}</a>}

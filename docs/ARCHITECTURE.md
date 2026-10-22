@@ -123,6 +123,7 @@ still blocks the upgrade, `open()` rejects with a "close the other tab" message.
   description, notes,    // free text; notes are private (never exported)
   rpe,                   // perceived exertion 1-10; effort source without heart rate (training.js)
   noRecords,             // true: left out of personal records and race predictions
+  commute,               // true: a commute, left out of goals, challenges and fitness if `prefs.commuteOut`
   weather,               // { temp, feels (°C), humidity (%), wind (m/s), code (WMO) } at the start, fetched on a tap (lib/weather.js)
   gear,                  // gear id (settings `gear`); `saveActivities` sets the sport's default
   avgPower, np,          // W, rides with a power meter only (lib/power.js)

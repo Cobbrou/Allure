@@ -375,8 +375,9 @@ Records & analysis
       (starting point: matched activities)
 - [x] "This year vs last year to date" on the profile (distance, time, D+ per sport)
       (under the totals on the Année period, hidden without last year's activities)
-- [ ] Commute tag: kept out of goals, challenges and Fitness & Freshness on request,
+- [x] Commute tag: kept out of goals, challenges and Fitness & Freshness on request,
       filterable in the feed
+      (switch in the activity edit form; Settings → Unités "Trajets hors objectifs, défis et forme")
 - [x] Yearly best efforts: best time per distance for each calendar year, next to the
       all-time records (Strava "Annual Best Efforts", 2026)
       (year picker on the records card; an activity page flags a best of its year)
@@ -396,9 +397,14 @@ Recording
       `#/record` with the sport preset (static `shortcuts.xml`, no plugin)
 
 Routes
-- [ ] Import a GPX file as a route (today a GPX always becomes an activity)
-- [ ] Share a route by link, like friend challenges: URL-safe code in `#/route/…`, no
+- [x] Import a GPX file as a route (today a GPX always becomes an activity)
+      (also TCX / FIT, from "Nouvel itinéraire": a straight-line route, editable waypoints every
+      km or more, up to 40)
+- [x] Share a route by link, like friend challenges: URL-safe code in `#/route/…`, no
       account
+      (`#/route/link/<code>`: waypoints and the line simplified to 5 m, ~4 KB for 60 km; the
+      native app shares a code to paste in "Nouvel itinéraire". D+ of a noisy GPS track comes
+      out ~15 % lower: smoothing over fewer points)
 
 ## Phase 9: Third audit (2026-10-20)
 

@@ -9,9 +9,9 @@ import Terrain3D from '../components/Terrain3D.js';
 import { analyze } from '../lib/analyze.js';
 import { distUnit, elevUnit, fmtDist, fmtElev } from '../lib/format.js';
 import { toGpx } from '../lib/formats/gpxExport.js';
-import { createRoute, fetchLeg, joinLegs, legKey, straightLeg } from '../lib/routes.js';
-import { safeName, shareFile } from '../lib/share.js';
-import { SPORTS } from '../lib/sports.js';
+import { createRoute, decodeRoute, encodeRoute, fetchLeg, joinLegs, legKey, routeFromPoints, straightLeg } from '../lib/routes.js';
+import { appLink, safeName, shareFile, shareText } from '../lib/share.js';
+import { baseSport, sportFromGpxType, SPORTS } from '../lib/sports.js';
 import { back } from '../router.js';
 import { getRoute } from '../lib/db.js';
 import { downloadRoute, offlineInfo, removeOffline } from '../lib/offline.js';
@@ -19,15 +19,23 @@ import { ACCENT } from '../theme.js';
 
 
 const sportOptions = () => ['run', 'ride', 'hike', 'walk'].map((id) => ({ id, label: `${SPORTS[id].icon} ${SPORTS[id].label}` }));
+/** The builder sport for a file's sport type: its base sport when the builder offers it, else run. */
+const routeSport = (type) => { const s = baseSport(sportFromGpxType(type)); return ['run', 'ride', 'hike', 'walk'].includes(s) ? s : 'run'; };
 const snapOptions = () => [{ id: true, label: t('Suivre les chemins') }, { id: false, label: t('Ligne droite') }];
 const FALLBACK_CENTER = [6.8696, 45.9237]; // Chamonix, where the demo history lives
 
-/** Route builder: tap the map to add waypoints, drag them to adjust. `id` is 'new' or a saved route. */
-export default function RoutePage({ id, activities, onSave, onDelete }) {
+/**
+ * Route builder: tap the map to add waypoints, drag them to adjust. `id` is 'new', 'link'
+ * (a shared route, `code` from the URL) or a saved route.
+ */
+export default function RoutePage({ id, code, activities, onSave, onDelete }) {
+  const fresh = id === 'new' || id === 'link';
   // The route with its points (the app keeps metas only): undefined while loading, null if none.
-  const [saved, setSaved] = useState(id === 'new' ? null : undefined);
+  const [saved, setSaved] = useState(fresh ? null : undefined);
+  // A new route from a file or a link, not saved yet; false: a link that isn't a valid route.
+  const [draft, setDraft] = useState(() => (id === 'link' ? decodeRoute(code ?? '') ?? false : null));
   useEffect(() => {
-    if (id === 'new') { setSaved(null); return; }
+    if (fresh) { setSaved(null); return; }
     setSaved(undefined);
     getRoute(id).then((r) => setSaved(r ?? null), () => setSaved(null));
   }, [id]);
@@ -39,18 +47,60 @@ export default function RoutePage({ id, activities, onSave, onDelete }) {
     </header>
   );
   if (saved === undefined) return top;
-  if (id !== 'new' && !saved) return (<>{top}<p className="empty">{t('Itinéraire introuvable.')}</p></>);
-  return (<>{top}<Builder key={id} saved={saved} activities={activities} onSave={onSave} onDelete={onDelete} /></>);
+  if (!fresh && !saved) return (<>{top}<p className="empty">{t('Itinéraire introuvable.')}</p></>);
+  if (draft === false) return (<>{top}<p className="empty">{t('Ce lien ne contient pas d’itinéraire valide.')}</p></>);
+  return (
+    <>
+      {top}
+      {fresh && !draft && <RouteImport onRoute={setDraft} />}
+      <Builder key={draft?.id ?? id} saved={saved} draft={draft || null} activities={activities} onSave={onSave} onDelete={onDelete} />
+    </>
+  );
 }
 
-function Builder({ saved, activities, onSave, onDelete }) {
-  const [name, setName] = useState(saved?.name ?? t('Nouvel itinéraire'));
-  const [sport, setSport] = useState(saved?.sport ?? 'run');
-  const [snap, setSnap] = useState(saved?.snap ?? true);
-  const [waypoints, setWaypoints] = useState(saved?.waypoints ?? []);
+/** "Import a file" on a new route: a GPX, TCX or FIT track becomes an editable route. */
+function RouteImport({ onRoute }) {
+  const [error, setError] = useState(null);
+  const [code, setCode] = useState('');
+  const open = () => {
+    const r = decodeRoute(code);
+    if (r) onRoute(r);
+    else setError(t('Ce lien ne contient pas d’itinéraire valide.'));
+  };
+  const pick = async (file) => {
+    setError(null);
+    try {
+      const { parseActivityFile } = await import('../lib/importer.js');
+      const { name, type, points } = await parseActivityFile(file.name, new Uint8Array(await file.arrayBuffer()));
+      onRoute(routeFromPoints({ name: name || file.name.replace(/.[^.]+$/, ''), sport: routeSport(type), points }));
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+  return (
+    <div className="route-import">
+      <label className="button ghost small">
+        {t('Importer un fichier (.gpx, .tcx, .fit)')}
+        <input type="file" accept=".gpx,.tcx,.fit,.gz" hidden onChange={(e) => { if (e.target.files[0]) pick(e.target.files[0]); e.target.value = ''; }} />
+      </label>
+      <form className="search-row" onSubmit={(e) => { e.preventDefault(); open(); }}>
+        <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={t('Coller un lien ou un code d’itinéraire')} aria-label={t('Coller un lien ou un code d’itinéraire')} />
+        <button type="submit" className="ghost small" disabled={!code.trim()}>{t('Ouvrir')}</button>
+      </form>
+      {error && <p className="error" role="alert">{error}</p>}
+    </div>
+  );
+}
+
+function Builder({ saved, draft, activities, onSave, onDelete }) {
+  const init = saved ?? draft;
+  const [name, setName] = useState(init?.name ?? t('Nouvel itinéraire'));
+  const [sport, setSport] = useState(init?.sport ?? 'run');
+  const [snap, setSnap] = useState(init?.snap ?? true);
+  const [waypoints, setWaypoints] = useState(init?.waypoints ?? []);
   // Routed legs by legKey, seeded with the saved ones; 'error' falls back to a straight line.
   const [legCache, setLegCache] = useState(() => Object.fromEntries(
-    saved?.legs.map((leg, i) => [legKey(saved.waypoints[i], saved.waypoints[i + 1], saved.sport, saved.snap), leg]) ?? []));
+    init?.legs.map((leg, i) => [legKey(init.waypoints[i], init.waypoints[i + 1], init.sport, init.snap), leg]) ?? []));
   const inFlight = useRef(new Set());
   const [busy, setBusy] = useState(false);
   const hover = useRef(() => {});
@@ -84,6 +134,19 @@ function Builder({ saved, activities, onSave, onDelete }) {
       await onSave(createRoute({ id: saved?.id, created: saved?.created, name: name.trim() || t('Itinéraire'), sport, snap, waypoints, legs }));
     } finally { setBusy(false); }
   };
+  const [shareMsg, setShareMsg] = useState('');
+  const shareLink = async () => {
+    const code = encodeRoute(saved);
+    const link = appLink(`/route/link/${code}`);
+    const text = link
+      ? t('Itinéraire « {name} » sur Allure : {link}', { name: saved.name, link })
+      : t('Itinéraire « {name} » sur Allure. Colle ce code dans Cartes > Créer un itinéraire : {code}', { name: saved.name, code });
+    try {
+      setShareMsg((await shareText(text)) === 'copied' ? t('Lien copié.') : '');
+    } catch (e) {
+      setShareMsg(e.message);
+    }
+  };
   const exportGpx = () => {
     const meta = { name: name.trim() || t('Itinéraire'), sport, date: saved?.created ?? Date.now() };
     shareFile(new Blob([toGpx(meta, points)], { type: 'application/gpx+xml' }), `${safeName(meta.name)}.gpx`);
@@ -94,7 +157,7 @@ function Builder({ saved, activities, onSave, onDelete }) {
       <section className="card map-card">
         <BuilderMap
           center={center}
-          fit={saved?.waypoints}
+          fit={init?.waypoints}
           waypoints={waypoints}
           points={points}
           hover={hover}
@@ -141,9 +204,11 @@ function Builder({ saved, activities, onSave, onDelete }) {
             {t(busy ? 'Enregistrement…' : "Enregistrer l'itinéraire")}
           </button>
           {saved && <a className="button ghost" href={`#/record/${saved.id}`}>{t('Suivre')}</a>}
+          {saved && <button type="button" className="ghost" onClick={shareLink}>{t('Partager le lien')}</button>}
           {points.length > 1 && <button type="button" className="ghost" onClick={exportGpx}>{t('Exporter .gpx')}</button>}
           {saved && <ConfirmButton onConfirm={() => { removeOffline(saved.id); onDelete(saved.id); }}>{t('Supprimer')}</ConfirmButton>}
         </div>
+        {shareMsg && <p className="muted" role="status">{shareMsg}</p>}
       </section>
     </main>
   );

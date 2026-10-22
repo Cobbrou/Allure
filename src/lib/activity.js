@@ -44,7 +44,7 @@ export function cropActivity(meta, points, from, to) {
   const start = kept[0].time, end = kept.at(-1).time;
   const inside = (meta.laps ?? []).filter((t) => t > start && t < end);
   const { meta: fresh, points: clean } = createActivity({ sport: meta.sport, points: kept, source: meta.source, laps: inside.length ? [start, ...inside] : null });
-  const typed = Object.fromEntries(['name', 'gear', 'description', 'notes', 'rpe', 'noRecords'].filter((k) => meta[k] !== undefined).map((k) => [k, meta[k]]));
+  const typed = Object.fromEntries(['name', 'gear', 'description', 'notes', 'rpe', 'noRecords', 'commute'].filter((k) => meta[k] !== undefined).map((k) => [k, meta[k]]));
   return { meta: { ...fresh, ...typed, id: meta.id }, points: clean };
 }
 

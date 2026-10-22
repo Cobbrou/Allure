@@ -23,7 +23,7 @@ const PERIODS = [
   { id: 'all', get label() { return t('Total'); } },
 ];
 
-export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGoals, segments, gears, onSaveGears }) {
+export default function ProfilePage({ activities, counted, hr, ftp, name, goals, onSaveGoals, segments, gears, onSaveGears }) {
   const list = activities ?? [];
   const [sport, setSport] = useState('');
   const [period, setPeriod] = useState('week');
@@ -61,7 +61,7 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
             <span aria-hidden="true">›</span>
           </a>
         )}
-        {activities && <Goals goals={goals} activities={list} onSave={onSaveGoals} />}
+        {activities && <Goals goals={goals} activities={counted ?? list} onSave={onSaveGoals} />}
         {activities && <Achievements activities={list} />}
         {list.length > 0 && <StreakAndYear activities={list} />}
 
@@ -83,7 +83,7 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
               <span><b>{t("Journal d'entraînement")}</b><span className="muted">{t('Toutes tes semaines, jour par jour')}</span></span>
               <span aria-hidden="true">›</span>
             </a>
-            <FitnessChart activities={list} hr={hr} />
+            <FitnessChart activities={counted ?? list} hr={hr} />
             <PowerCurve activities={list} ftp={ftp} />
             <ActivityCalendar activities={list} sport={sport || undefined} />
             <RecordsList activities={list} sport={sport} />

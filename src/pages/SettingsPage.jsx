@@ -116,6 +116,7 @@ export default function SettingsPage({ activities, hr, hrSaved, ftpEstimate, onS
           ))}
           <h3 className="small-label">{t('Début de semaine')}</h3>
           <Segmented label={t('Début de semaine')} options={WEEK_STARTS} value={prefs.weekStart === 0 ? 0 : 1} onChange={(v) => savePref({ weekStart: v })} />
+          <label className="switch"><input type="checkbox" checked={!!prefs.commuteOut} onChange={(e) => savePref({ commuteOut: e.target.checked })} />{t('Trajets hors objectifs, défis et forme')}</label>
         </section>
         <section className="card">
           <h3>{t('Apparence')}</h3>

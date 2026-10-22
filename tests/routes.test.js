@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createRoute, joinLegs, legKey, legUrl, nearestFirst, parseLeg, routeUrl, straightLeg } from '../src/lib/routes.js';
+import { createRoute, joinLegs, legKey, decodeRoute, encodeRoute, legUrl, nearestFirst, parseLeg, routeFromPoints, routeUrl, straightLeg } from '../src/lib/routes.js';
 
 const M = 0.000009; // ≈ 1 m of latitude in degrees
 
@@ -39,4 +39,35 @@ test('nearestFirst orders routes by the closest point of their thumbnail', () =>
 test('routeUrl keeps to paved ways when roads are asked for, whatever the sport', () => {
   for (const sport of ['run', 'ride', 'hike']) assert.match(routeUrl([[6, 45], [6.1, 45.1]], sport, 'paved'), /profile=fastbike&/);
   assert.match(routeUrl([[6, 45], [6.1, 45.1]], 'run', 'trail'), /profile=hiking-mountain&/);
+});
+
+test('routeFromPoints: an imported track becomes an editable straight-line route', () => {
+  // 10.5 km north, a point every 50 m.
+  const points = Array.from({ length: 211 }, (_, i) => ({ lat: 45 + (i * 50) / 111195, lon: 6, ele: 1000 + i, time: i * 1000 }));
+  const r = routeFromPoints({ name: 'Col', sport: 'ride', points });
+  assert.equal(r.snap, false);
+  assert.equal(r.waypoints.length, 11); // every km, the last one merged into the end
+  assert.equal(r.legs.length, r.waypoints.length - 1);
+  assert.deepEqual(joinLegs(r.legs).length, points.length);
+  assert.ok(Math.abs(r.distance - 10500) < 20, r.distance);
+  assert.deepEqual(r.waypoints.at(-1), [6, points.at(-1).lat]);
+  assert.equal(joinLegs(r.legs)[5].time, undefined);
+});
+
+test('route links: encode then decode keeps the route, rejects junk', () => {
+  // 3 km east with a 200 m bump north halfway, a point every 10 m, climbing.
+  const points = Array.from({ length: 301 }, (_, i) => ({ lon: 6 + (i * 10) / 78600, lat: 45 + (i === 150 ? 200 / 111195 : 0), ele: 1000 + i }));
+  const r = routeFromPoints({ name: 'Boucle « test »', sport: 'hike', points });
+  const code = encodeRoute(r);
+  assert.match(code, /^[\w-]+$/);
+  const back = decodeRoute(`Regarde : https://x.app/#/route/link/${code}`);
+  assert.equal(back.name, 'Boucle « test »');
+  assert.equal(back.sport, 'hike');
+  assert.notEqual(back.id, r.id);
+  assert.deepEqual(back.waypoints, r.waypoints.map(([x, y]) => [Math.round(x * 1e5) / 1e5, Math.round(y * 1e5) / 1e5]));
+  assert.ok(code.length < 400, `straight stretches simplified: ${code.length} chars`);
+  assert.ok(Math.abs(back.distance - r.distance) < 15, `${back.distance} vs ${r.distance}`);
+  assert.ok(Math.abs(back.gain - r.gain) <= 2, `${back.gain} vs ${r.gain}`);
+  assert.equal(decodeRoute('nope'), null);
+  assert.equal(decodeRoute(btoa(JSON.stringify({ v: 1, w: '??', p: '??' }))), null);
 });

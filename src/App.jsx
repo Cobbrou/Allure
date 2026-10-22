@@ -14,7 +14,7 @@ import { healthTasks, importFiles, importTasks } from './lib/importer.js';
 import { extendPlan, matchSessions } from './lib/plan.js';
 import { estimateFtp } from './lib/power.js';
 import { setDisplays } from './lib/sports.js';
-import { setWeekStart } from './lib/stats.js';
+import { forTraining, setWeekStart } from './lib/stats.js';
 import { DEFAULT_REST_HR, estimateMaxHr } from './lib/training.js';
 import { useEdgeSwipeBack } from './gestures.js';
 import FeedPage from './pages/FeedPage.jsx';
@@ -140,7 +140,8 @@ export default function App() {
     document.documentElement.lang = getLang();
     document.title = t('Allure — Analyse de course');
   }, [lang]);
-  const [prefs, savePrefs] = useSetting('prefs', {}); // { name?, autoPause?, audio?, voice?, sport?, recordScreen?, theme?, accent?, map?, weekStart?, display? }
+  const [prefs, savePrefs] = useSetting('prefs', {}); // { name?, autoPause?, audio?, voice?, sport?, recordScreen?, theme?, accent?, map?, weekStart?, display?, commuteOut? }
+  const counted = useMemo(() => activities && forTraining(activities, prefs.commuteOut), [activities, prefs.commuteOut]);
   const [systemLight, setSystemLight] = useState(() => matchMedia('(prefers-color-scheme: light)').matches);
   useEffect(() => {
     const mq = matchMedia('(prefers-color-scheme: light)');
@@ -181,12 +182,14 @@ export default function App() {
   // Reloading after a save, import or demo is when a goal can be crossed: celebrate it.
   const goalsRef = useRef(goals);
   goalsRef.current = goals;
+  const commuteOut = useRef(false);
+  commuteOut.current = !!prefs.commuteOut;
   const prevList = useRef(null);
   const reload = useCallback(async () => {
     try {
       const list = await listActivities();
-      const won = prevList.current ? newlyReached(goalsRef.current, prevList.current, list) : [];
-      const done = prevList.current ? newlyCompleted(prevList.current, list) : [];
+      const won = prevList.current ? newlyReached(goalsRef.current, forTraining(prevList.current, commuteOut.current), forTraining(list, commuteOut.current)) : [];
+      const done = prevList.current ? newlyCompleted(forTraining(prevList.current, commuteOut.current), forTraining(list, commuteOut.current)) : [];
       const unlocked = prevList.current ? newlyUnlocked(prevList.current, list) : [];
       prevList.current = list;
       setActivities(list);
@@ -303,13 +306,13 @@ ${cur.text}` } : summary));
   if (page === 'activity') content = <ActivityPage id={id} activities={activities} plan={plan} hr={hr} ftp={ftp} weight={hrSaved?.weight} zones={zones} segments={segments ?? []} onSegment={addSegment} gears={gears} onChange={reload} onDeleted={onDeleted} />;
   else if (page === 'log') content = <TrainingLogPage activities={activities} hr={hr} />;
   else if (page === 'maps') content = <MapsPage activities={activities} routes={routes} onSave={keepRoute} />;
-  else if (page === 'route') content = <RoutePage id={id} activities={activities} onSave={addRoute} onDelete={removeRoute} />;
-  else if (page === 'groups' || page === 'challenge') content = <GroupsPage activities={activities} name={prefs.name} incoming={page === 'challenge' ? id : null} />;
+  else if (page === 'route') content = <RoutePage id={id} code={sub} activities={activities} onSave={addRoute} onDelete={removeRoute} />;
+  else if (page === 'groups' || page === 'challenge') content = <GroupsPage activities={counted} name={prefs.name} incoming={page === 'challenge' ? id : null} />;
   else if (page === 'segment') content = <SegmentPage id={id} segments={segments} activities={activities} onDelete={() => removeSegment(id)} />;
   else if (page === 'plan' && id === 'new') content = <PlanSetupPage activities={activities} goal={sub} onCreate={savePlan} />;
   else if (page === 'plan') content = <PlanPage plan={plan} activities={activities} onSave={savePlan} sessionId={id === 'session' ? sub : null} onStop={async () => { await endPlan('stopped'); go('/', true); }} />;
   else if (page === 'record') content = <RecordPage recording={recording} contacts={contacts} routes={routes} routeId={id === 'workout' ? null : id} workoutId={id === 'workout' ? sub : null} plan={plan} segments={segments ?? []} activities={activities ?? []} hr={hr} prefs={prefs} onSavePrefs={savePrefs} onSaved={onRecorded} />;
-  else if (page === 'profile') content = <ProfilePage activities={activities} hr={hr} ftp={ftp} name={prefs.name} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} />;
+  else if (page === 'profile') content = <ProfilePage activities={activities} counted={counted} hr={hr} ftp={ftp} name={prefs.name} goals={goals} onSaveGoals={saveGoals} segments={segments ?? []} gears={gears} onSaveGears={saveGears} />;
   else if (page === 'settings') content = <SettingsPage activities={activities} hr={hr} hrSaved={hrSaved} ftpEstimate={ftpEstimate} onSaveHr={saveHr} units={units} onSaveUnits={saveUnits} lang={lang} onSaveLang={saveLang} prefs={prefs} onSavePrefs={savePrefs} zones={zones} onSaveZones={saveZones} contacts={contacts} onSaveContacts={saveContacts} onDemo={addDemo} onHealthImport={onHealthImport} onChange={reload} />;
   else if (page === 'legal') content = <LegalPage id={id} />;
   else if (page === 'manual') content = <ManualPage id={id} activities={activities} onSaved={async (mid) => { await reload(); if (id) back(`/activity/${mid}`); else go(`/activity/${mid}`, true); }} />;

@@ -22,7 +22,7 @@ export default function ActivityCard({ a, i = 0, name, onShare }) {
         <span className="avatar sm" aria-hidden="true">{(name || 'A')[0].toUpperCase()}</span>
         <div>
           <b>{name || t('Athlète Allure')}</b>
-          <span className="muted">{SPORTS[a.sport]?.icon} {SPORTS[a.sport]?.label} · <time>{fmtDate(a.date)}</time></span>
+          <span className="muted">{SPORTS[a.sport]?.icon} {SPORTS[a.sport]?.label} · <time>{fmtDate(a.date)}</time>{a.commute && ` · ${t('Trajet')}`}</span>
         </div>
       </header>
       <h2><a className="stretched" href={`#/activity/${a.id}`}>{a.name}</a></h2>

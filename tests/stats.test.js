@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { analyze } from '../src/lib/analyze.js';
 import { bestEfforts, biggestActivities, effortDistances, personalRecords, RIDE_DISTANCES } from '../src/lib/records.js';
-import { byDay, monthGrid, periodStart, setWeekStart, startOfWeek, totals, trainingWeeks, weekdayInitials, weeklyDistance, yearToDate } from '../src/lib/stats.js';
+import { byDay, monthGrid, periodStart, setWeekStart, startOfWeek, totals, filterActivities, forTraining, trainingWeeks, weekdayInitials, weeklyDistance, yearToDate } from '../src/lib/stats.js';
 
 /** Straight track at constant speed: `km` long, `pace` s/km, one point every 10 m. */
 const steadyRun = (km, pace) =>
@@ -159,4 +159,14 @@ test('yearToDate compares with last year up to the same date', () => {
   const { current, last } = yearToDate(metas, now);
   assert.equal(current.count, 2);
   assert.equal(last.count, 2);
+});
+
+test('commutes: feed filter both ways, left out of training only on request', () => {
+  const metas = [{ id: 'a', name: 'Boulot', sport: 'ride', date: 0, distance: 8000, commute: true }, { id: 'b', name: 'Col', sport: 'ride', date: 0, distance: 60000 }];
+  const ids = (l) => l.map((a) => a.id);
+  assert.deepEqual(ids(filterActivities(metas, { commute: true })), ['a']);
+  assert.deepEqual(ids(filterActivities(metas, { commute: false })), ['b']);
+  assert.deepEqual(ids(filterActivities(metas, {})), ['a', 'b']);
+  assert.deepEqual(ids(forTraining(metas, true)), ['b']);
+  assert.equal(forTraining(metas, false), metas);
 });

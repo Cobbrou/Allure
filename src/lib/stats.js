@@ -44,6 +44,9 @@ export function totals(metas, { from = -Infinity, to = Infinity, sport } = {}) {
   return t;
 }
 
+/** The activities that count for goals, challenges and fitness: commutes left out when the athlete asks. */
+export const forTraining = (metas, commuteOut) => (commuteOut ? metas.filter((a) => !a.commute) : metas);
+
 /** This year's totals up to now, and last year's up to the same date and time: { current, last }. */
 export function yearToDate(metas, now = Date.now(), sport) {
   const y = new Date(now).getFullYear();
@@ -164,12 +167,13 @@ export function yearRecap(metas, year) {
 
 /**
  * Activities matching a search: q (in the name, description or notes, case and accents
- * ignored), sport, from / to (ms, to excluded), min / max distance (m).
+ * ignored), sport, from / to (ms, to excluded), min / max distance (m), commute (true: only
+ * commutes, false: none).
  */
-export function filterActivities(metas, { q = '', sport, from, to, min, max } = {}) {
+export function filterActivities(metas, { q = '', sport, from, to, min, max, commute } = {}) {
   const fold = (s) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
   const words = fold(q).split(/\s+/).filter(Boolean);
-  return metas.filter((a) => (!sport || a.sport === sport)
+  return metas.filter((a) => (!sport || a.sport === sport) && (commute == null || !!a.commute === commute)
     && !(from != null && a.date < from) && !(to != null && a.date >= to)
     && !(min != null && a.distance < min) && !(max != null && a.distance > max)
     && words.every((w) => fold(`${a.name} ${a.description ?? ''} ${a.notes ?? ''}`).includes(w)));

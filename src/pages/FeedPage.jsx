@@ -23,13 +23,13 @@ export default function FeedPage({ activities, name, zones, onRefresh, onImport,
   };
   const ptr = usePullToRefresh(onRefresh);
   const [shown, setShown] = useState(PAGE);
-  const [f, setF] = useState({ q: '', sport: '', from: '', to: '', min: '', max: '' }); // search and filters, as typed
+  const [f, setF] = useState({ q: '', sport: '', from: '', to: '', min: '', max: '', commute: '' }); // search and filters, as typed
   const [open, setOpen] = useState(false);
   const set = (patch) => { setF({ ...f, ...patch }); setShown(PAGE); };
   const km = (v) => (v === '' || !Number.isFinite(parseNum(v)) ? null : parseNum(v) * distLen());
-  const filtered = !!(f.q.trim() || f.sport || f.from || f.to || f.min || f.max);
+  const filtered = !!(f.q.trim() || f.sport || f.from || f.to || f.min || f.max || f.commute);
   const list = useMemo(() => activities && (filtered
-    ? filterActivities(activities, { q: f.q, sport: f.sport, from: f.from ? fromInput(f.from) : null, to: f.to ? startOfDay(fromInput(f.to) + 30 * 3600e3) : null, min: km(f.min), max: km(f.max) })
+    ? filterActivities(activities, { q: f.q, sport: f.sport, from: f.from ? fromInput(f.from) : null, to: f.to ? startOfDay(fromInput(f.to) + 30 * 3600e3) : null, min: km(f.min), max: km(f.max), commute: f.commute ? f.commute === 'only' : undefined })
     : activities), [activities, f]);
   const more = useRef();
   // Re-observed after each page, so a sentinel still in view loads the next one too.
@@ -82,6 +82,13 @@ export default function FeedPage({ activities, name, zones, onRefresh, onImport,
                     {sportOptions(activities).map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
                   </select>
                 </label>
+                <label>{t('Trajets')}
+                  <select value={f.commute} onChange={(e) => set({ commute: e.target.value })}>
+                    <option value="">{t('Tous')}</option>
+                    <option value="only">{t('Trajets seulement')}</option>
+                    <option value="none">{t('Sans les trajets')}</option>
+                  </select>
+                </label>
                 <div className="field-pair">
                   <label>{t('Du')}<input type="date" value={f.from} onChange={(e) => set({ from: e.target.value })} /></label>
                   <label>{t('Au')}<input type="date" value={f.to} onChange={(e) => set({ to: e.target.value })} /></label>
@@ -94,7 +101,7 @@ export default function FeedPage({ activities, name, zones, onRefresh, onImport,
             )}
             {filtered && (
               <p className="muted small-label">
-                {tn(list.length, '{n} activité', '{n} activités')} · <button type="button" className="ghost small" onClick={() => set({ q: '', sport: '', from: '', to: '', min: '', max: '' })}>{t('Effacer')}</button>
+                {tn(list.length, '{n} activité', '{n} activités')} · <button type="button" className="ghost small" onClick={() => set({ q: '', sport: '', from: '', to: '', min: '', max: '', commute: '' })}>{t('Effacer')}</button>
               </p>
             )}
           </section>

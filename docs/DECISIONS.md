@@ -3,6 +3,19 @@
 Lightweight decision log. Newest first. Each entry: context, decision, consequences.
 Open questions sit at the bottom until decided.
 
+## 2026-10-22: Route links carry the line, not just the waypoints
+
+**Context**: sharing a route by link (no backend). Waypoints alone are tiny, but the receiver
+would route them again through BRouter (network, rate limits, a possibly different path), and
+straight-line or imported routes have no routing to redo.
+**Decision**: the code holds the name, sport, waypoints and the joined line simplified by
+Douglas-Peucker (5 m sideways, 2 m in height), delta-encoded like Google polylines with
+elevation, as base64url JSON. The receiver puts points back every 10 m and cuts the legs at
+the waypoints, so the builder edits it like any route. The code is untrusted input: decoded
+values are checked and capped.
+**Consequences**: ~4 KB of URL for a 60 km route. Elevation gain of a noisy GPS track drops
+~15 % through the coarser smoothing; routes drawn on BRouter (smooth DEM elevation) keep it.
+
 ## 2026-10-22: Records per exact sport, ride best efforts over 20 / 40 / 100 km
 
 **Context**: records were run-only (phase 8 asks for rides, hikes, swims, climbs and yearly bests),
