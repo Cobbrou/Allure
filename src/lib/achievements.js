@@ -6,7 +6,8 @@ import { startOfDay, startOfWeek } from './stats.js';
 
 // metric: count | distance | gain (sums), longest (one activity's distance), streakDays,
 // streakWeeks (longest run of consecutive active days / weeks), sports (distinct sports),
-// dawn (activities started before 6:00), night (started from 21:00).
+// dawn (activities started before 6:00), night (started from 21:00), prs (best efforts that
+// beat an earlier one of the same sport and distance), yearDistance (best calendar year's distance).
 // sports: activity sports that count (all when absent). Targets are SI.
 export const ACHIEVEMENTS = [
   { id: 'first', icon: '👟', get title() { return t('Premier pas'); }, get text() { return t('Termine ta première activité'); }, metric: 'count', target: 1 },
@@ -22,6 +23,10 @@ export const ACHIEVEMENTS = [
   { id: 'weeks-12', icon: '📆', get title() { return t('Régulier'); }, get text() { return t('Au moins une activité par semaine, 12 semaines de suite'); }, metric: 'streakWeeks', target: 12 },
   { id: 'sports-3', icon: '🧭', get title() { return t('Touche-à-tout'); }, get text() { return t('Pratique 3 sports différents'); }, metric: 'sports', target: 3 },
   { id: 'dawn', icon: '🌅', get title() { return t('Lève-tôt'); }, get text() { return t('Pars avant 6 h du matin'); }, metric: 'dawn', target: 1 },
+  { id: 'pr-1', icon: '⚡', get title() { return t('Record battu'); }, get text() { return t('Bats un de tes records personnels'); }, metric: 'prs', target: 1 },
+  { id: 'pr-10', icon: '🚀', get title() { return t('Chasseur de records'); }, get text() { return t('Bats tes records personnels 10 fois'); }, metric: 'prs', target: 10 },
+  { id: 'year-1000', icon: '📅', get title() { return t('Année solide'); }, get text() { return t('Cumule 1 000 km en une année civile'); }, metric: 'yearDistance', target: 1000e3 },
+  { id: 'year-3000', icon: '🌍', get title() { return t('Année de feu'); }, get text() { return t('Cumule 3 000 km en une année civile'); }, metric: 'yearDistance', target: 3000e3 },
   { id: 'night', icon: '🌙', get title() { return t('Oiseau de nuit'); }, get text() { return t('Pars à 21 h ou plus tard'); }, metric: 'night', target: 1 },
 ];
 
@@ -37,7 +42,8 @@ export function achievementProgress(ach, metas) {
   const list = metas.filter((a) => !ach.sports || ach.sports.includes(a.sport)).sort((a, b) => a.date - b.date);
   const streak = ach.metric === 'streakDays' ? [startOfDay, 1] : ach.metric === 'streakWeeks' ? [startOfWeek, 7] : null;
   const seen = new Set();
-  let value = 0, doneAt = null, run = 0, last = null;
+  const best = new Map(); // `${sport}:${distance id}` -> fastest time so far
+  let value = 0, doneAt = null, run = 0, last = null, year = null, yearSum = 0;
   for (const a of list) {
     const hour = new Date(a.date).getHours();
     if (streak) {
@@ -50,6 +56,17 @@ export function achievementProgress(ach, metas) {
     else if (ach.metric === 'sports') value = seen.add(a.sport).size;
     else if (ach.metric === 'dawn') value += hour < 6 ? 1 : 0;
     else if (ach.metric === 'night') value += hour >= 21 ? 1 : 0;
+    else if (ach.metric === 'prs') {
+      for (const [id, time] of a.noRecords ? [] : Object.entries(a.bestEfforts ?? {})) {
+        const key = `${a.sport}:${id}`;
+        if (best.get(key) > time) value++;
+        if (!(best.get(key) <= time)) best.set(key, time);
+      }
+    } else if (ach.metric === 'yearDistance') {
+      const y = new Date(a.date).getFullYear();
+      if (y !== year) [year, yearSum] = [y, 0];
+      value = Math.max(value, (yearSum += a.distance ?? 0));
+    }
     else value += a[ach.metric] ?? 0;
     if (doneAt == null && value >= ach.target) doneAt = a.date;
   }

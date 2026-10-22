@@ -48,3 +48,23 @@ test('achievements lists unlocked first, newest first; newlyUnlocked reports onl
   assert.deepEqual(newlyUnlocked(after, after), []);
   assert.equal(achievements([]).some((a) => a.done), false);
 });
+
+test('record breaks count beaten best efforts per sport and distance, not first efforts', () => {
+  const metas = [
+    act(at(2026, 0, 1), 'run', 5000, { bestEfforts: { '1k': 300, '5k': 1600 } }),
+    act(at(2026, 0, 3), 'run', 5000, { bestEfforts: { '1k': 290, '5k': 1650 } }), // 1k beaten
+    act(at(2026, 0, 2), 'ride', 20000, { bestEfforts: { '20k': 2400 } }), // first ride effort
+    act(at(2026, 0, 4), 'run', 5000, { bestEfforts: { '1k': 280 }, noRecords: true }), // excluded
+    act(at(2026, 0, 5), 'run', 5000, { bestEfforts: { '1k': 285, '5k': 1590 } }), // both beaten
+  ];
+  const p = achievementProgress(ach('pr-10'), metas);
+  assert.equal(p.value, 3);
+  assert.equal(achievementProgress(ach('pr-1'), metas).doneAt, at(2026, 0, 3));
+});
+
+test('yearly distance keeps the best calendar year', () => {
+  const metas = [act(at(2025, 11, 31), 'run', 600e3), act(at(2026, 0, 1), 'ride', 700e3), act(at(2026, 5, 1), 'run', 400e3)];
+  const p = achievementProgress(ach('year-1000'), metas);
+  assert.equal(p.value, 1100e3);
+  assert.equal(p.doneAt, at(2026, 5, 1));
+});

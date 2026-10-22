@@ -132,7 +132,9 @@ Sharing
       night start, 3 sports). Derived from local activities (`lib/achievements.js`), so
       retroactive on existing history; unlock toast, gallery on the Profile tab with locked
       badges and progress
-- [ ] More achievements: PR-based ones (beat a record N times), yearly totals
+- [x] More achievements: PR-based ones (beat a record N times), yearly totals
+      (beat a record once / 10 times, counted on best efforts per sport and distance, first
+      efforts and activities excluded from records don't count; 1,000 / 3,000 km in a calendar year)
 - [x] Share an activity file (GPX) through the native share sheet (FIT export: later)
 - [x] Group challenges with friends (distance, time, elevation, activities) **(premium)**:
       the challenge is a URL-safe code in a `#/challenge/…` link (or pasted as is in the native
