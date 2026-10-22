@@ -551,8 +551,8 @@ M1 Pace engine
 - [x] Pace zones and time in pace zone on runs without a strap (phase 8 item)
 
 M2 Workouts with targets
-- [x] Step targets: pace range (as an intensity name, resolved at start); HR zone and RPE
-      targets left for M6
+- [x] Step targets: pace range (as an intensity name, resolved at start); RPE targets came
+      with M6, HR zone targets are left for later
 - [x] Live pace target on the step chip, spoken / buzzed "faster / slower" (30 s rolling
       pace, outside the range for 20 s, once a minute at most)
 - [x] Plan vs done per step on the activity page (target, done pace, HR)
@@ -588,9 +588,12 @@ M5 Adaptation
       the peak back after a break and the TSB hint before key sessions are left for later
 
 M6 Beginner and non-race plans
-- [ ] Start running: timed walk / run, RPE targets, 6-16 weeks
-- [ ] Return to running (break length, injury: slower ramp)
-- [ ] Fitness / maintenance plan, rolling 4-week blocks
+- [x] Start running: timed walk / run ladder up to 30 min non-stop, RPE targets, 6-16 weeks
+      (time only: no switch to distance once continuous)
+- [x] Return to running (break length, injury: lower start, +5 % a week, lighter week every
+      3rd), easy runs by RPE, 4-16 weeks
+- [x] Fitness / maintenance plan, rolling 4-week blocks at a steady volume
+- [x] RPE in place of pace targets wherever a VDOT is missing (plans, library, custom workouts)
 
 M7 Extras
 - [ ] Session briefings (why, focus) from templates

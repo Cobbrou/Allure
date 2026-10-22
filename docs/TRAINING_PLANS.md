@@ -225,12 +225,25 @@ All are proposals in a card on the plan page, accepted or dismissed.
 
 ## Beginner and non-race plans (M6)
 
-- **Start running**: 6-16 weeks, 3 sessions a week, timed walk / run steps (e.g. 8 × 1 min
-  run / 1 min 30 walk → 30 min continuous), RPE targets, no paces. Switches to distance only
-  once 20-30 min continuous is done.
-- **Return to running**: 4-16 weeks, asks the break length and cause (injury: slower ramp).
-- **Fitness / maintenance**: open-ended, rolling 4-week blocks at a steady volume.
-- Effort-based targets everywhere a VDOT is missing: RPE, or HR zone with a strap.
+Shipped in `lib/plan.js` as `PROGRAMS` (goal kinds `start`, `return`, `fitness`, no race:
+`goal.date` is the last day, null when open-ended).
+
+- **Start running**: 6-16 weeks, 2-4 sessions a week, a walk / run ladder (`LADDER`, 8 × 1 min
+  run / 1 min 30 walk → 30 min non-stop) spread over the weeks from the rung the athlete
+  reaches ("how long can you run non-stop?"). 5 min walks around; run RPE 3, walk RPE 2, no
+  paces. Time only: the switch to distance once continuous is left for later.
+- **Return to running**: asks the break length (< 1 month, 1-3, > 3 months: restart at 60 /
+  40 / 25 % of the old weekly volume) and injury (a quarter lower, +5 % a week, a lighter week
+  every 3rd); grows back to the old volume, 4-16 weeks. Easy and long runs by RPE (the old
+  paces are too fast), strides in the last 2 weeks unless injured.
+- **Fitness / maintenance**: open-ended, 4-week blocks (3 steady, 1 at -20 %) at the current
+  volume, hills / fartlek blocks and intervals / threshold blocks in turn; `extendPlan` adds
+  a block once the athlete reaches the second-to-last week (App, on load).
+- Effort-based targets everywhere a VDOT is missing: `startWorkout` turns a pace target into
+  an RPE (`INTENSITY_RPE`). HR zone targets are left for later.
+- Adaptation: no pace check on effort programs, no volume check on start running, no
+  hold on fitness; no "not feeling well" on start running (skip sessions instead), no
+  regenerate outside race plans.
 
 ## Extras (M7)
 
@@ -265,7 +278,7 @@ Each milestone ships on its own and is usable. Order follows dependencies.
 | M3 Plan generator | wizard, 5 km → marathon plans, storage, Home hub, plan / session pages | `lib/plan.js`, `pages/HomePage.jsx`, `pages/PlanPage.jsx`, `pages/PlanSetupPage.jsx`, `router.js` |
 | M4 Completion | matching, compliance, RPE prompt, missed / move / swap | `lib/plan.js`, `PlanPage`, `RecordPage` |
 | M5 Adaptation | pace check, not feeling well, volume check, regenerate | `lib/planAdapt.js`, `PlanPage` |
-| M6 Beginners | start / return to running, fitness plans, effort-based targets | `lib/plan.js` |
+| M6 Beginners ✅ | start / return to running, fitness plans, effort-based targets | `lib/plan.js`, `PlanSetupPage`, `HomePage` |
 | M7 Extras | briefings, heat, race page, strength, recap, FIT export, reminders | `lib/weather.js`, `story.js`, `formats/` |
 
 Per milestone: tests for every new `src/lib` function, French UI strings in `t()` with their

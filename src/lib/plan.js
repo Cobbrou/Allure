@@ -19,6 +19,20 @@ export const GOALS = {
   marathon: { m: 42195, label: 'Marathon', weeks: [12, 16, 20], taper: 3, longCap: 32000, peak: [50000, 70000, 100000] },
 };
 
+/**
+ * Programs without a race (M6). weeks: [shortest, default, longest]; effort: steps carry RPE
+ * targets, never paces (beginners, or fitness too old after a break).
+ */
+export const PROGRAMS = {
+  start: { get label() { return t('Débuter la course'); }, weeks: [6, 9, 16], effort: true },
+  return: { get label() { return t('Reprendre la course'); }, effort: true },
+  fitness: { get label() { return t('Garder la forme'); } },
+};
+
+/** True for a race plan (GOALS), false for a program. */
+export const isRace = (plan) => !!GOALS[plan.goal.kind];
+export const planLabel = (plan) => (GOALS[plan.goal.kind] ?? PROGRAMS[plan.goal.kind]).label;
+
 export const EXPERIENCE = ['beginner', 'intermediate', 'advanced'];
 
 export const PHASES = {
@@ -30,6 +44,7 @@ export const PHASES = {
 
 export const SESSION_TYPES = {
   easy: { get label() { return t('Footing'); } },
+  walkRun: { get label() { return t('Course et marche'); } },
   long: { get label() { return t('Sortie longue'); } },
   hills: { get label() { return t('Côtes'); } },
   fartlek: { get label() { return t('Fartlek'); } },
@@ -143,12 +158,17 @@ function qualitySteps(type, goal, r) {
 }
 
 const mid = ([a, b]) => (a + b) / 2;
+const WALK_PACE = 600; // s/km, brisk walk
+const NO_FITNESS_PACE = 450; // s/km, easy jog assumed without a VDOT
 
-/** Estimated { distance, duration } of steps; untargeted steps at the slow end of easy. */
+/**
+ * Estimated { distance, duration } of steps; untargeted steps at the slow end of easy. paces:
+ * trainingPaces, or null without a VDOT.
+ */
 export function estimate(steps, paces) {
   let distance = 0, duration = 0;
   for (const s of steps) {
-    const pace = s.target?.pace ? mid(paces[s.target.pace]) : paces.easy[1];
+    const pace = s.kind === 'walk' ? WALK_PACE : !paces ? NO_FITNESS_PACE : s.target?.pace ? mid(paces[s.target.pace]) : paces.easy[1];
     const d = s.type === 'dist' ? s.value : (s.value / pace) * 1000;
     distance += d;
     duration += s.type === 'time' ? s.value : (s.value / 1000) * pace;
@@ -163,27 +183,76 @@ function qualityTypes(phase, count, week) {
   return { base: ['hills', 'fartlek'], build: ['intervals', 'tempo'], peak: ['racePace', 'tempo'], taper: ['racePace'] }[phase];
 }
 
+/** Long run, quality sessions and easy runs (strides on the first one in base / build) of a week. */
+function trainingWeek(add, { inputs, days, weekStart, week, phase, volume, r, nq, longCap, paces }) {
+  const qDays = qualityDays(days, inputs.longDay, nq);
+  const types = qualityTypes(phase, qDays.length, week - 1);
+  const quality = qDays.map((d, i) => ({ d, type: types[i], steps: qualitySteps(types[i], inputs.goal, r) }));
+  const qDist = quality.reduce((s, q) => s + estimate(q.steps, paces).distance, 0);
+  const longShare = days.length <= 3 ? 0.35 : 0.3;
+  const long = Math.min(longCap, Math.max(MIN_RUN, round500(volume * longShare)));
+  const easyDays = days.filter((d) => d !== inputs.longDay && !qDays.includes(d));
+  const easy = easyDays.length && Math.min(round500(long * EASY_SHARE), Math.max(MIN_RUN, round500((volume - long - qDist) / easyDays.length)));
+
+  // Goal pace at the end of the long run, in the peak weeks of the long races.
+  const goalFinish = phase === 'peak' && (inputs.goal === 'half' || inputs.goal === 'marathon');
+  const finish = goalFinish ? round500(long * 0.25) : 0;
+  add(dateIn(weekStart, inputs.longDay), week, phase, 'long',
+    finish ? [step('work', 'dist', long - finish, 'easy'), step('work', 'dist', finish, 'marathon')] : [step('work', 'dist', long, 'easy')]);
+  for (const q of quality) add(dateIn(weekStart, q.d), week, phase, q.type, q.steps);
+  easyDays.forEach((d, i) => {
+    const strides = i === 0 && (phase === 'base' || phase === 'build');
+    add(dateIn(weekStart, d), week, phase, 'easy', strides
+      ? [step('work', 'dist', easy, 'easy'), ...repeat(6, step('work', 'time', 20, 'repetition'), step('rest', 'time', 60))]
+      : [step('work', 'dist', easy, 'easy')]);
+  });
+}
+
+/** Session list and its builder: ids are "<week>-<weekday>", estimates from `paces` (null: no VDOT). */
+function sessionList(paces) {
+  const sessions = [];
+  const add = (date, week, phase, type, steps) => {
+    sessions.push({ id: `${week}-${new Date(date).getDay()}`, date, week, phase, type, steps, ...estimate(steps, paces) });
+  };
+  return { sessions, add };
+}
+
+/** The stored plan. date: race day or last day of the program, null when open-ended. */
+const planOf = (inputs, now, weeks, sessions, date) => ({
+  id: String(now),
+  created: now,
+  goal: { kind: inputs.goal, date },
+  inputs,
+  vdot: inputs.vdot ?? null,
+  vdotHistory: [{ date: now, vdot: inputs.vdot ?? null, why: 'start' }],
+  weeks,
+  sessions: sessions.sort((a, b) => a.date - b.date),
+  adjustments: [],
+});
+
+const longCapOf = (cap, paces) => Math.min(cap, round500((LONG_TIME / (paces?.easy[1] ?? NO_FITNESS_PACE)) * 1000));
+const qualityCount = (inputs, days) => (EXPERIENCE.indexOf(inputs.experience) > 0 && days.length >= 4 ? 2 : 1);
+
 /**
  * The plan for the wizard inputs:
  * { goal, raceDate, start (first day of week 1), vdot, weekly (m, recent average), runs,
- *   days (getDay values), longDay, experience }.
+ *   days (getDay values), longDay, experience }; programs (PROGRAMS) take their own inputs.
  * Same inputs, same plan. `now` stamps it. `fixed`: week volumes to keep (changeDays).
  */
 export function generatePlan(inputs, now = Date.now(), fixed = null) {
+  if (inputs.goal === 'start') return startPlan(inputs, now);
+  if (inputs.goal === 'return') return returnPlan(inputs, now, fixed);
+  if (inputs.goal === 'fitness') return fitnessPlan(inputs, now, fixed);
   const g = GOALS[inputs.goal];
   const paces = trainingPaces(inputs.vdot);
   const weeks = Math.max(g.taper + 1, planWeeks(inputs));
   const phases = planPhases(weeks, g.taper);
   const volumes = fixed ?? weeklyVolumes(inputs, weeks);
   const days = [...new Set([...inputs.days, inputs.longDay])].slice(0, 7);
-  const x = Math.max(0, EXPERIENCE.indexOf(inputs.experience));
-  const nq = x > 0 && days.length >= 4 ? 2 : 1;
-  const longCap = Math.min(g.longCap, round500((LONG_TIME / paces.easy[1]) * 1000));
+  const nq = qualityCount(inputs, days);
+  const longCap = longCapOf(g.longCap, paces);
   const raceDay = startOfDay(inputs.raceDate);
-  const sessions = [];
-  const add = (date, week, phase, type, steps) => {
-    sessions.push({ id: `${week}-${new Date(date).getDay()}`, date, week, phase, type, steps, ...estimate(steps, paces) });
-  };
+  const { sessions, add } = sessionList(paces);
 
   for (let w = 0; w < weeks; w++) {
     const week = w + 1, phase = phases[w], { volume, kind } = volumes[w];
@@ -199,41 +268,144 @@ export function generatePlan(inputs, now = Date.now(), fixed = null) {
         i === 0 ? [step('work', 'dist', easy, 'easy'), ...repeat(4, step('work', 'time', 20, 'repetition'), step('rest', 'time', 60))] : [step('work', 'dist', easy, 'easy')]));
       continue;
     }
-
-    const qDays = qualityDays(days, inputs.longDay, phase === 'taper' ? 1 : nq);
-    const types = qualityTypes(phase, qDays.length, w);
-    const quality = qDays.map((d, i) => ({ d, type: types[i], steps: qualitySteps(types[i], inputs.goal, r) }));
-    const qDist = quality.reduce((s, q) => s + estimate(q.steps, paces).distance, 0);
-    const longShare = days.length <= 3 ? 0.35 : 0.3;
-    const long = Math.min(longCap, Math.max(MIN_RUN, round500(volume * longShare)));
-    const easyDays = days.filter((d) => d !== inputs.longDay && !qDays.includes(d));
-    const easy = easyDays.length && Math.min(round500(long * EASY_SHARE), Math.max(MIN_RUN, round500((volume - long - qDist) / easyDays.length)));
-
-    // Goal pace at the end of the long run, in the peak weeks of the long races.
-    const goalFinish = phase === 'peak' && (inputs.goal === 'half' || inputs.goal === 'marathon');
-    const finish = goalFinish ? round500(long * 0.25) : 0;
-    add(dateIn(weekStart, inputs.longDay), week, phase, 'long',
-      finish ? [step('work', 'dist', long - finish, 'easy'), step('work', 'dist', finish, 'marathon')] : [step('work', 'dist', long, 'easy')]);
-    for (const q of quality) add(dateIn(weekStart, q.d), week, phase, q.type, q.steps);
-    easyDays.forEach((d, i) => {
-      const strides = i === 0 && (phase === 'base' || phase === 'build');
-      add(dateIn(weekStart, d), week, phase, 'easy', strides
-        ? [step('work', 'dist', easy, 'easy'), ...repeat(6, step('work', 'time', 20, 'repetition'), step('rest', 'time', 60))]
-        : [step('work', 'dist', easy, 'easy')]);
-    });
+    trainingWeek(add, { inputs, days, weekStart, week, phase, volume, r, nq: phase === 'taper' ? 1 : nq, longCap, paces });
   }
-  sessions.sort((a, b) => a.date - b.date);
-  return {
-    id: String(now),
-    created: now,
-    goal: { kind: inputs.goal, date: raceDay },
-    inputs,
-    vdot: inputs.vdot,
-    vdotHistory: [{ date: now, vdot: inputs.vdot, why: 'start' }],
-    weeks: volumes.map((v, i) => ({ ...v, phase: phases[i] })),
-    sessions,
-    adjustments: [],
-  };
+  return planOf(inputs, now, volumes.map((v, i) => ({ ...v, phase: phases[i] })), sessions, raceDay);
+}
+
+// Programs without a race (M6), see docs/TRAINING_PLANS.md. Effort targets (RPE 1-10) only:
+// beginners have no VDOT, and after a break the old one is too fast.
+
+const effort = (kind, type, value, rpe) => ({ kind, type, value, target: { rpe } });
+const RUN_RPE = 3; // easy: can talk in full sentences
+const WALK_RPE = 2;
+const EASY_RPE = 3;
+
+/**
+ * Walk / run ladder of the start-running program, [run s, walk s, reps]: from 8 × 1 min of
+ * running to 30 min non-stop.
+ */
+export const LADDER = [
+  [60, 90, 8], [90, 90, 6], [120, 90, 6], [180, 90, 5], [240, 90, 4], [360, 90, 3],
+  [480, 90, 3], [720, 90, 2], [1200, 0, 1], [1500, 0, 1], [1800, 0, 1],
+];
+/** "How long can you run non-stop?" answer -> first rung. */
+export const START_LEVELS = { none: 0, five: 4, ten: 6 };
+/** Default length of the start-running program from a rung: about a rung a week. */
+export const startWeeks = (level) => Math.min(PROGRAMS.start.weeks[2], Math.max(PROGRAMS.start.weeks[0], LADDER.length - level));
+
+/** Steps of a rung: 5 min walk, run / walk reps, 5 min walk. */
+export function ladderSteps(level) {
+  const [run, walk, reps] = LADDER[level];
+  return [effort('walk', 'time', 300, WALK_RPE), ...repeat(reps, effort('work', 'time', run, RUN_RPE), effort('walk', 'time', walk, WALK_RPE)), effort('walk', 'time', 300, WALK_RPE)];
+}
+
+/**
+ * Start running: { goal: 'start', start, weeks (6-16), level (rung), days }. Every session of
+ * a week on the same rung, the rungs spread over the weeks up to 30 min non-stop in the last.
+ */
+function startPlan(inputs, now) {
+  const { weeks, level } = inputs, last = LADDER.length - 1;
+  const { sessions, add } = sessionList(null);
+  const out = [];
+  for (let w = 0; w < weeks; w++) {
+    const rung = weeks > 1 ? level + Math.floor(((last - level) * w) / (weeks - 1)) : last;
+    const continuous = LADDER[rung][2] === 1, phase = continuous ? 'build' : 'base';
+    const weekStart = addDays(inputs.start, 7 * w);
+    for (const d of inputs.days) add(dateIn(weekStart, d), w + 1, phase, continuous ? 'easy' : 'walkRun', ladderSteps(rung));
+    out.push({ volume: sessions.filter((s) => s.week === w + 1).reduce((n, s) => n + s.distance, 0), kind: 'build', phase });
+  }
+  return planOf(inputs, now, out, sessions, addDays(inputs.start, 7 * weeks - 1));
+}
+
+/** Break lengths of the return-to-running program: share of the old volume to restart at. */
+export const BREAKS = { short: 0.6, medium: 0.4, long: 0.25 };
+const INJURY_SHARE = 0.75; // after an injury, a quarter lower...
+const INJURY_GROWTH = 1.05; // ...+5 % a week, a lighter week every 3rd
+
+/**
+ * Weeks of a return: from a share of the old weekly volume (break length, injury) back up to
+ * it, +10 % a week (+5 % after an injury) with lighter weeks; 4 to 16 weeks.
+ */
+export function returnVolumes({ weekly, runs, breakLength, injury }) {
+  const target = Math.max(round500(weekly || 0), runs * MIN_RUN);
+  const growth = injury ? INJURY_GROWTH : MAX_GROWTH, every = injury ? 3 : 4;
+  let level = Math.max(runs * MIN_RUN, Math.floor((target * BREAKS[breakLength] * (injury ? INJURY_SHARE : 1)) / 500) * 500);
+  const out = [];
+  while (out.length < 16 && (out.length < 4 || level < target)) {
+    const w = out.length;
+    if ((w + 1) % every === 0) out.push({ volume: round500(level * RECOVERY), kind: 'recovery' });
+    else {
+      if (w > 0) level = Math.min(target, Math.max(level + 500, Math.floor((level * growth) / 500) * 500));
+      out.push({ volume: level, kind: 'build' });
+    }
+  }
+  return out;
+}
+
+/** A week of easy running by effort: a long run, easy runs sharing the rest. */
+function easyWeek(add, { inputs, weekStart, week, phase, volume, longCap, strides }) {
+  const long = Math.min(longCap, Math.max(MIN_RUN, round500(volume * (inputs.days.length <= 3 ? 0.35 : 0.3))));
+  const easyDays = inputs.days.filter((d) => d !== inputs.longDay);
+  const easy = easyDays.length && Math.min(round500(long * EASY_SHARE), Math.max(MIN_RUN, round500((volume - long) / easyDays.length)));
+  add(dateIn(weekStart, inputs.longDay), week, phase, 'long', [effort('work', 'dist', long, EASY_RPE)]);
+  easyDays.forEach((d, i) => add(dateIn(weekStart, d), week, phase, 'easy', strides && i === 0
+    ? [effort('work', 'dist', easy, EASY_RPE), ...repeat(6, effort('work', 'time', 20, 8), step('rest', 'time', 60))]
+    : [effort('work', 'dist', easy, EASY_RPE)]));
+}
+
+/**
+ * Return to running: { goal: 'return', start, weekly (m before the break), breakLength
+ * (BREAKS), injury, days, longDay, runs, vdot? }. Easy runs by effort, strides in the last
+ * 2 weeks unless injured. The VDOT only estimates durations.
+ */
+function returnPlan(inputs, now, fixed) {
+  const volumes = fixed ?? returnVolumes(inputs);
+  const paces = inputs.vdot ? trainingPaces(inputs.vdot) : null;
+  const longCap = longCapOf(GOALS.half.longCap, paces);
+  const { sessions, add } = sessionList(paces);
+  volumes.forEach(({ volume }, w) => easyWeek(add, {
+    inputs, weekStart: addDays(inputs.start, 7 * w), week: w + 1, phase: 'base', volume, longCap,
+    strides: !inputs.injury && w >= volumes.length - 2,
+  }));
+  return planOf(inputs, now, volumes.map((v) => ({ ...v, phase: 'base' })), sessions, addDays(inputs.start, 7 * volumes.length - 1));
+}
+
+const BLOCK = 4; // weeks of a fitness block: 3 steady, 1 lighter
+
+/** Volumes of `weeks` fitness weeks: the same weekly volume, every 4th week lighter. */
+export function fitnessVolumes({ weekly, runs }, weeks) {
+  const level = Math.floor(Math.min(Math.max(weekly || 0, runs * 4000), runs * RUN_CAP) / 500) * 500;
+  return Array.from({ length: weeks }, (_, w) => ((w + 1) % BLOCK ? { volume: level, kind: 'build' } : { volume: round500(level * RECOVERY), kind: 'recovery' }));
+}
+
+/**
+ * Fitness / maintenance: { goal: 'fitness', start, weekly, runs, days, longDay, experience,
+ * vdot? }, open-ended. Rolling 4-week blocks at a steady volume, hills / fartlek blocks and
+ * intervals / threshold blocks in turn, quality sessions a little longer over the first 3
+ * blocks. `fixed`: the volume of every week so far (extendPlan appends blocks).
+ */
+function fitnessPlan(inputs, now, fixed) {
+  const volumes = fixed ?? fitnessVolumes(inputs, BLOCK);
+  const paces = inputs.vdot ? trainingPaces(inputs.vdot) : null;
+  const days = [...new Set([...inputs.days, inputs.longDay])];
+  const nq = qualityCount(inputs, days), longCap = longCapOf(GOALS.half.longCap, paces);
+  const { sessions, add } = sessionList(paces);
+  const phase = (w) => (Math.floor(w / BLOCK) % 2 ? 'build' : 'base');
+  volumes.forEach(({ volume, kind }, w) => trainingWeek(add, {
+    inputs, days, weekStart: addDays(inputs.start, 7 * w), week: w + 1, phase: phase(w), volume,
+    r: kind === 'recovery' ? 0 : Math.min(1, Math.floor(w / BLOCK) / 2), nq, longCap, paces,
+  }));
+  return planOf(inputs, now, volumes.map((v, w) => ({ ...v, phase: phase(w) })), sessions, null);
+}
+
+/** A fitness plan with blocks added until the athlete is 2 weeks or more from its end. */
+export function extendPlan(plan, now) {
+  const n = plan.weeks.length;
+  if (plan.goal.kind !== 'fitness' || weekOf(plan, now) < n - 1) return plan;
+  const volumes = [...plan.weeks.map(({ volume, kind }) => ({ volume, kind })), ...fitnessVolumes(plan.inputs, n + BLOCK).slice(n)];
+  const fresh = generatePlan({ ...plan.inputs, vdot: plan.vdot }, now, volumes);
+  return extendPlan({ ...plan, weeks: [...plan.weeks, ...fresh.weeks.slice(n)], sessions: [...plan.sessions, ...fresh.sessions.filter((s) => s.week > n)] }, now);
 }
 
 /**
@@ -250,7 +422,12 @@ export function planDefaults(metas, now = Date.now()) {
   const days = [...new Set([0, ...busiest, 2, 4])].slice(0, 3).sort((a, b) => a - b); // Sunday long run, then Tue / Thu
   const weeksRun = new Set(metas.filter((a) => a.sport === 'run').map((a) => startOfWeek(a.date))).size;
   const experience = weeksRun < 8 || weekly < 15000 ? 'beginner' : weekly > 45000 ? 'advanced' : 'intermediate';
-  return { fit, vdot: fit?.vdot ?? null, weekly, runs: 3, days, longDay: 0, experience, start: addDays(startOfWeek(now), 7) };
+  // Before a break: the 4 weeks up to the last run, and how long ago it was.
+  const lastRun = Math.max(0, ...metas.filter((a) => a.sport === 'run' && a.date <= now).map((a) => a.date));
+  const before = lastRun ? Math.round(weeklyDistance(metas, addDays(lastRun, 7), 5, 'run').slice(0, 4).reduce((s, w) => s + w.distance, 0) / 4) : 0;
+  const off = (now - lastRun) / DAY;
+  const breakLength = off < 30 ? 'short' : off < 90 ? 'medium' : 'long';
+  return { fit, vdot: fit?.vdot ?? null, weekly, before, breakLength, runs: 3, days, longDay: 0, experience, start: addDays(startOfWeek(now), 7) };
 }
 
 /** Plan week (1-based) a time falls in, 0 before the start, past the end after it. */

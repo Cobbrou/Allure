@@ -11,6 +11,7 @@ import { newlyUnlocked } from './lib/achievements.js';
 import { newlyCompleted } from './lib/challenges.js';
 import { goalLabel, newlyReached } from './lib/goals.js';
 import { healthTasks, importFiles, importTasks } from './lib/importer.js';
+import { extendPlan } from './lib/plan.js';
 import { estimateFtp } from './lib/power.js';
 import { setDisplays } from './lib/sports.js';
 import { setWeekStart } from './lib/stats.js';
@@ -162,6 +163,10 @@ export default function App() {
   }, [light, prefs.accent]);
   const [gears, saveGears] = useSetting('gear', []);
   const [plan, savePlan] = useSetting('plan', null); // active training plan (lib/plan.js)
+  useEffect(() => { // fitness plans roll on, a block at a time
+    const next = plan && extendPlan(plan, Date.now());
+    if (next && next !== plan) savePlan(next);
+  }, [plan]);
   // Finished or stopped plans move to 'planHistory'.
   const endPlan = async (status) => {
     const history = (await getSetting('planHistory')) ?? [];

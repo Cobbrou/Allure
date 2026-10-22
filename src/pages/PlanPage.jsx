@@ -6,9 +6,10 @@ import Segmented from '../components/Segmented.jsx';
 import { fmtRange, workoutSummary } from '../components/WorkoutEditor.jsx';
 import { distUnit, fmtDate, fmtDay, fmtDist, fmtDuration, fmtLength, fromInput, toInput } from '../lib/format.js';
 import { raceTime } from '../lib/paces.js';
-import { changeDays, compliance, GOALS, hardNextTo, isHard, makeUp, makeUpSlot, matchSessions, moveSession, PHASES, planDefaults, SESSION_TYPES, sessionState, sessionWorkout, weekDays, weekOf } from '../lib/plan.js';
+import { changeDays, compliance, GOALS, hardNextTo, isHard, isRace, makeUp, makeUpSlot, matchSessions, moveSession, PHASES, planDefaults, planLabel, SESSION_TYPES, sessionState, sessionWorkout, weekDays, weekOf } from '../lib/plan.js';
 import { earliestRace, holdVolume, logAdjustment, proposals, RAMPS, regenerate, setVdot, unwell } from '../lib/planAdapt.js';
 import { startOfDay } from '../lib/stats.js';
+import { rpeLabel } from '../lib/training.js';
 import { back } from '../router.js';
 import { startWorkout, stepLabel } from '../lib/workout.js';
 
@@ -38,7 +39,7 @@ export default function PlanPage({ plan, activities, sessionId, onSave, onStop }
   const now = Date.now(), today = startOfDay(now), current = weekOf(plan, now);
   return (
     <>
-      <TopBar title={t('Plan {goal}', { goal: GOALS[plan.goal.kind].label })} />
+      <TopBar title={isRace(plan) ? t('Plan {goal}', { goal: planLabel(plan) }) : planLabel(plan)} />
       <main className="detail">
         <section className="card">
           <div className="phase-bar" role="img" aria-label={t('Phases du plan')}>
@@ -78,9 +79,9 @@ export default function PlanPage({ plan, activities, sessionId, onSave, onStop }
             </details>
           );
         })}
-        {current < plan.weeks.length && <UnwellCard plan={plan} matches={matches} onSave={onSave} />}
+        {current < plan.weeks.length && plan.goal.kind !== 'start' && <UnwellCard plan={plan} matches={matches} onSave={onSave} />}
         {current < plan.weeks.length - 1 && <DaysCard plan={plan} onSave={onSave} />}
-        {current < plan.weeks.length - 1 && <RegenerateCard plan={plan} activities={activities ?? []} onSave={onSave} />}
+        {current < plan.weeks.length - 1 && isRace(plan) && <RegenerateCard plan={plan} activities={activities ?? []} onSave={onSave} />}
         <ConfirmButton onConfirm={onStop} confirmLabel={t('Arrêter le plan ?')}>{t('Arrêter le plan')}</ConfirmButton>
       </main>
     </>
@@ -89,15 +90,16 @@ export default function PlanPage({ plan, activities, sessionId, onSave, onStop }
 
 /** Change the run days from next week on. */
 function DaysCard({ plan, onSave }) {
+  const start = plan.goal.kind === 'start'; // no long run, 4 days at most
   const [days, setDays] = useState(plan.inputs.days);
   const [longDay, setLongDay] = useState(plan.inputs.longDay);
   const changed = longDay !== plan.inputs.longDay || days.join() !== plan.inputs.days.join();
   return (
     <details className="card edit">
       <summary><b>{t('Changer mes jours de course')}</b></summary>
-      <RunDays days={days} longDay={longDay} onDays={setDays} onLongDay={setLongDay} />
+      {start ? <RunDays days={days} max={4} onDays={setDays} /> : <RunDays days={days} longDay={longDay} onDays={setDays} onLongDay={setLongDay} />}
       <p className="muted small-label">{t('Les semaines suivantes sont recalculées ; la semaine en cours ne change pas.')}</p>
-      <button type="button" disabled={!changed || days.length < 2 || days.length > 6} onClick={() => onSave(changeDays(plan, days, longDay, Date.now()))}>{t('Appliquer')}</button>
+      <button type="button" disabled={!changed || days.length < 2 || days.length > (start ? 4 : 6)} onClick={() => onSave(changeDays(plan, days, start ? days[0] : longDay, Date.now()))}>{t('Appliquer')}</button>
     </details>
   );
 }
@@ -128,7 +130,7 @@ function Proposals({ plan, activities, matches, onSave }) {
       <section key={p.kind} className="card plan-today proposal">
         <h3>{p.kind === 'pace' ? t('Tes allures') : t('Ton volume')}</h3>
         <p>{text}</p>
-        {p.kind === 'pace' && (
+        {p.kind === 'pace' && goal && (
           <p className="muted small-label">{t('Objectif estimé : {old} → {new}', { old: fmtDuration(raceTime(plan.vdot, goal.m)), new: fmtDuration(raceTime(p.vdot, goal.m)) })}</p>
         )}
         <div className="edit-actions">
@@ -267,11 +269,13 @@ function SessionView({ plan, session: s, matches, activities, onSave }) {
               <li key={i} className={st.kind}>
                 <span>{stepLabel(st, live.reps)}</span>
                 <b>{st.type === 'time' ? fmtDuration(st.value) : fmtLength(st.value)}</b>
-                <span className="muted">{st.target?.range ? fmtRange(st.target.range) : ''}</span>
+                <span className="muted">{st.target?.range ? fmtRange(st.target.range) : st.target?.rpe ? t('Effort perçu {n}/10 · {label}', { n: st.target.rpe, label: rpeLabel(st.target.rpe) }) : ''}</span>
               </li>
             ))}
           </ol>
-          <p className="muted small-label">{t('Allures calculées sur un VDOT de {vdot}.', { vdot: plan.vdot })}</p>
+          <p className="muted small-label">{live.steps.some((st) => st.target?.range)
+            ? t('Allures calculées sur un VDOT de {vdot}.', { vdot: plan.vdot })
+            : t('À l’effort perçu : 1 très facile, 10 maximal. Tu dois pouvoir parler en courant jusqu’à 4.')}</p>
         </section>
       </main>
     </>

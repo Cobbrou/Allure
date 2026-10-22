@@ -19,8 +19,9 @@ import { joinLegs } from '../lib/routes.js';
 import { alertText, checkIn, smsUrl } from '../lib/safety.js';
 import { hasBluetooth } from '../lib/sensors.js';
 import { currentVdot, trainingPaces } from '../lib/paces.js';
-import { sessionsOn, sessionWorkout, SESSION_TYPES } from '../lib/plan.js';
+import { PROGRAMS, sessionsOn, sessionWorkout, SESSION_TYPES } from '../lib/plan.js';
 import { SPORTS } from '../lib/sports.js';
+import { rpeLabel } from '../lib/training.js';
 import { DEFAULT_WORKOUT, INTENSITIES, LIBRARY, livePace, startWorkout, stepLabel, stepStatus } from '../lib/workout.js';
 
 /**
@@ -72,8 +73,8 @@ function Setup({ recording, contacts, routes, routeId, workoutId, plan, segments
   const workout = session && pick === `plan:${session.id}` ? sessionWorkout(session)
     : pick === 'custom' ? custom : LIBRARY.find((w) => w.id === pick) ?? saved.find((w) => w.id === pick) ?? custom;
   const historyFit = useMemo(() => currentVdot(activities), [activities]);
-  // Plan sessions run at the plan's fitness, so the paces match the plan page.
-  const fit = session && pick === `plan:${session.id}` ? { vdot: plan.vdot } : historyFit;
+  // Plan sessions run at the plan's fitness, so the paces match the plan page; effort programs by RPE.
+  const fit = session && pick === `plan:${session.id}` ? (plan.vdot && !PROGRAMS[plan.goal.kind]?.effort ? { vdot: plan.vdot } : null) : historyFit;
   const paces = fit && trainingPaces(fit.vdot);
   const keep = () => onSavePrefs({ ...prefs, workouts: [...saved, { ...custom, id: crypto.randomUUID() }] });
   const drop = (wid) => { if (pick === wid) setPick('custom'); onSavePrefs({ ...prefs, workouts: saved.filter((w) => w.id !== wid) }); };
@@ -199,7 +200,7 @@ function Setup({ recording, contacts, routes, routeId, workoutId, plan, segments
           </>
         )}
         <p className="muted small-label">
-          {fit ? t('Allures cibles calculées sur un VDOT de {vdot}.', { vdot: fit.vdot }) : t('Pas de course récente (90 jours) : la séance se suivra sans allure cible.')}
+          {fit ? t('Allures cibles calculées sur un VDOT de {vdot}.', { vdot: fit.vdot }) : t('Sans VDOT, la séance se suit à l’effort perçu (1 à 10).')}
         </p>
         <div className="edit-actions">
           {withWorkout && <button type="button" className="ghost" onClick={() => { setWithWorkout(false); setSheet(null); }}>{t('Sans séance')}</button>}
@@ -380,6 +381,7 @@ function StepChip({ rec, now }) {
     <span key={rec.workout.i} className={`chip step ${s.step.kind}`}>
       {stepLabel(s.step, rec.workout.reps)} <b>{s.step.type === 'time' ? fmtDuration(s.left) : fmtLength(s.left)}</b>
       {range && <small className={`step-pace ${off ?? ''}`}>{fmtRange(range)}{pace ? ` · ${fmtPaceUnit(pace)}` : ''}</small>}
+      {s.step.target?.rpe && <small className="step-pace">{t('Effort perçu {n}/10 · {label}', { n: s.step.target.rpe, label: rpeLabel(s.step.target.rpe) })}</small>}
     </span>
   );
 }

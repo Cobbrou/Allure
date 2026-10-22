@@ -13,7 +13,7 @@ const amount = (s) => (s.type === 'time' ? fmtDuration(s.value) : fmtLength(s.va
 export function workoutSummary(w) {
   const steps = w.steps ?? workoutSteps(w);
   const work = steps.filter((s) => s.kind === 'work');
-  const rest = steps.find((s) => s.kind === 'rest');
+  const rest = steps.find((s, i) => (s.kind === 'rest' || s.kind === 'walk') && steps[i - 1]?.kind === 'work'); // walk: walk / run
   const same = work.every((s) => s.type === work[0].type && s.value === work[0].value);
   const parts = [same && work.length > 1 ? `${work.length} × ${amount(work[0])}${rest ? ` / ${fmtDuration(rest.value)}` : ''}` : work.map(amount).join(' + ')];
   const warm = steps.find((s) => s.kind === 'warmup'), cool = steps.find((s) => s.kind === 'cooldown');

@@ -699,7 +699,7 @@ ol.splits li.best .split-gap { color: var(--on-accent); }
 .chip.lap { border-color: var(--accent); animation: pop 0.35s var(--ease-out) backwards; }
 .chip.hr b { color: var(--hr-text); }
 .chip.step { border-color: var(--accent); animation: pop 0.35s var(--ease-out) backwards; }
-.chip.step.rest, .chip.step.warmup, .chip.step.cooldown { border-color: var(--good); }
+.chip.step.rest, .chip.step.walk, .chip.step.warmup, .chip.step.cooldown { border-color: var(--good); }
 .step-pace.ok { color: var(--good-text); }
 .intervals .pace.hit { color: var(--good-text); }
 .intervals .pace.miss { color: var(--warn-text); }

@@ -47,7 +47,7 @@ export const LIBRARY = [
     steps: [step('warmup', 'time', min(30), 'easy'), ...repeat(6, step('work', 'time', 20, 'repetition'), step('rest', 'time', 60)), cool(5)] },
 ];
 
-/** Flat step list: [{ kind: 'warmup' | 'work' | 'rest' | 'cooldown', type, value, rep?, target? }]. No rest after the last rep. */
+/** Flat step list: [{ kind: 'warmup' | 'work' | 'rest' | 'walk' | 'cooldown', type, value, rep?, target? }]. No rest after the last rep. */
 export function workoutSteps(w) {
   const steps = [];
   if (w.warmup > 0) steps.push({ kind: 'warmup', type: 'time', value: w.warmup });
@@ -59,9 +59,12 @@ export function workoutSteps(w) {
   return steps;
 }
 
+/** Effort (RPE 1-10) standing in for an intensity without a VDOT. */
+export const INTENSITY_RPE = { easy: 3, marathon: 5, threshold: 7, interval: 8, repetition: 9 };
+
 /**
  * Live state stored in the recording, from a template or a { name?, steps } workout. Pace
- * targets get their s/km range [fast, slow] from the VDOT; without one they are dropped.
+ * targets get their s/km range [fast, slow] from the VDOT; without one, an RPE target.
  */
 export function startWorkout(w, vdot) {
   const paces = vdot && trainingPaces(vdot);
@@ -70,7 +73,7 @@ export function startWorkout(w, vdot) {
     const out = { ...s, rep: s.kind === 'work' ? ++rep : rep };
     if (s.target?.pace) {
       if (paces) out.target = { ...s.target, range: paces[s.target.pace] };
-      else delete out.target;
+      else out.target = { rpe: INTENSITY_RPE[s.target.pace] };
     }
     return out;
   });
@@ -137,7 +140,7 @@ const amount = (step) => (step.type === 'time' ? spokenTime(step.value) : fmtLen
 export function stepLabel(step, reps, spoken = false) {
   if (step.kind === 'work' && reps === 1) return t('Effort');
   if (step.kind === 'work') return t(spoken ? 'Effort {n} sur {reps}' : 'Effort {n}/{reps}', { n: step.rep, reps });
-  return { warmup: t('Échauffement'), rest: t('Récupération'), cooldown: t('Retour au calme') }[step.kind];
+  return { warmup: t('Échauffement'), rest: t('Récupération'), cooldown: t('Retour au calme'), walk: t('Marche') }[step.kind];
 }
 
 /** Spoken prompt for the step the workout just moved to. */

@@ -4,7 +4,7 @@
 // same runs. See docs/TRAINING_PLANS.md.
 
 import { currentVdot, trainingPaces } from './paces.js';
-import { addDays, estimate, GOALS, isHard, MIN_RUN, planWeeks, rebuild, round500, step, weekOf, weeklyVolumes } from './plan.js';
+import { addDays, estimate, GOALS, isHard, MIN_RUN, planWeeks, PROGRAMS, rebuild, round500, step, weekOf, weeklyVolumes } from './plan.js';
 import { startOfDay } from './stats.js';
 
 const DAY = 86400e3;
@@ -33,8 +33,10 @@ export function paceDeviation(a) {
  * Fitness change to propose, or null: a better current VDOT (race, best effort) since the
  * last change; else the last 3 key sessions all faster than target at RPE ≤ 7 (+1), or the
  * last 2 both slower or at RPE ≥ 9 (-1). { kind: 'pace', vdot, why: 'effort' | 'faster' | 'slower' }.
+ * Never on plans without paces (no VDOT, effort programs).
  */
 export function paceProposal(plan, metas, matches, now) {
+  if (!plan.vdot || PROGRAMS[plan.goal.kind]?.effort) return null;
   const since = Math.max(plan.vdotHistory.at(-1).date, lastDate(plan, ['pace']));
   const fit = currentVdot(metas, now);
   if (fit && fit.activity.date > since && fit.vdot >= plan.vdot + 0.5) return { kind: 'pace', vdot: fit.vdot, why: 'effort', activity: fit.activity };
@@ -66,12 +68,13 @@ const weekStart = (plan, week) => addDays(plan.inputs.start, 7 * (week - 1));
 /**
  * Running volume of the last 3 full plan weeks against the plan, or null: under 75 %, propose
  * holding the volume (only when it was about to grow); over 115 %, warn. Not asked again over
- * weeks a volume decision or an unwell break already covers.
+ * weeks a volume decision or an unwell break already covers. Not on start-running plans (timed
+ * walk / run), no hold on fitness plans (steady volume).
  * { kind: 'volume', ratio, hold: true } | { kind: 'volume', ratio, over: true }.
  */
 export function volumeProposal(plan, metas, now) {
   const week = weekOf(plan, now);
-  if (week < 4 || week >= plan.weeks.length) return null;
+  if (week < 4 || week >= plan.weeks.length || plan.goal.kind === 'start') return null;
   const from = weekStart(plan, week - 3), to = weekStart(plan, week);
   if (lastDate(plan, ['volume', 'unwell']) >= from) return null;
   const planned = plan.sessions.filter((s) => s.week >= week - 3 && s.week < week && s.status !== 'moved').reduce((n, s) => n + s.distance, 0);
@@ -79,7 +82,7 @@ export function volumeProposal(plan, metas, now) {
   if (!planned) return null;
   const ratio = done / planned;
   const next = plan.weeks[week], current = plan.weeks[week - 1];
-  if (ratio < VOLUME_LOW && next.kind === 'build' && next.volume > current.volume) return { kind: 'volume', ratio, hold: true };
+  if (ratio < VOLUME_LOW && plan.goal.kind !== 'fitness' && next.kind === 'build' && next.volume > current.volume) return { kind: 'volume', ratio, hold: true };
   if (ratio > VOLUME_HIGH) return { kind: 'volume', ratio, over: true };
   return null;
 }
@@ -113,9 +116,10 @@ export const RAMPS = { slow: [0.7, 0.85], balanced: [0.8], fast: [0.9] };
 export function unwell(plan, { days, mode, ramp }, now, matches = new Map()) {
   const from = startOfDay(now), to = addDays(from, days), shares = RAMPS[ramp];
   const end = addDays(to, 7 * shares.length);
-  const paces = trainingPaces(plan.vdot);
+  const paces = plan.vdot ? trainingPaces(plan.vdot) : null, byEffort = PROGRAMS[plan.goal.kind]?.effort;
   const easy = (s, d) => {
-    const steps = [step('work', 'dist', Math.max(MIN_RUN, round500(d)), 'easy')];
+    const m = Math.max(MIN_RUN, round500(d));
+    const steps = [byEffort ? { kind: 'work', type: 'dist', value: m, target: { rpe: 3 } } : step('work', 'dist', m, 'easy')];
     return { ...s, type: s.type === 'long' ? 'long' : 'easy', steps, ...estimate(steps, paces) };
   };
   const sessions = plan.sessions.map((s) => {

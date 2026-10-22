@@ -120,3 +120,13 @@ test('regenerate keeps past weeks and plans the rest to the new race date', () =
   assert.equal(weekOf(out, earliestRace(plan, now)), 5 + 1 + 3); // next week, then the 3 taper weeks
   assert.equal(regenerate(plan, { raceDate, vdot: plan.vdot, weekly: 40000 }, now).vdotHistory, plan.vdotHistory);
 });
+
+test('programs: no pace proposal on effort plans, no volume check on start running, unwell stays by effort', () => {
+  const start = generatePlan({ goal: 'start', start: START, days: [1, 3, 6], longDay: 1, runs: 3, weeks: 9, level: 0 }, START - DAY);
+  const fast = { id: 'r', sport: 'run', date: START + 3 * DAY, distance: 5000, movingTime: 1200, bestEfforts: [] };
+  assert.equal(paceProposal(start, [fast], new Map(), START + 40 * DAY), null);
+  assert.equal(volumeProposal(start, [], START + 40 * DAY), null);
+  const back = generatePlan({ goal: 'return', start: START, days: [0, 2, 4], longDay: 0, runs: 3, weekly: 30000, breakLength: 'medium', injury: false, vdot: 45 }, START - DAY);
+  const out = unwell(back, { days: 7, mode: 'shorter', ramp: 'balanced' }, START, new Map());
+  assert.ok(out.sessions.every((s) => s.steps.every((x) => !x.target?.pace)));
+});

@@ -62,7 +62,7 @@ IndexedDB database `allure`, version 7:
   `gear` → `[{ id, name, kind, initial, alert, isDefault, retired }]` (see `lib/gear.js`),
   `privacy` → `[{ id, name, lat, lon, radius }]` privacy zones (see `lib/privacy.js`)
   `contacts` → `[{ id, name, phone }]` emergency contacts (see `lib/safety.js`)
-  `plan` → the active training plan `{ id, created, goal: { kind, date }, inputs, vdot, vdotHistory, weeks: [{ volume, kind, phase }], sessions: [{ id, date, week, phase, type, steps, distance, duration, status?, activity?, from? }], adjustments: [{ kind: 'pace' | 'volume' | 'unwell', date, dismissed?, ... }] }` (see `lib/plan.js`, `lib/planAdapt.js`; done is computed from activities, never stored); `planHistory` → finished or stopped plans, with `ended` and `status`
+  `plan` → the active training plan `{ id, created, goal: { kind (GOALS or PROGRAMS key), date (race day, program end, null: open-ended) }, inputs, vdot, vdotHistory, weeks: [{ volume, kind, phase }], sessions: [{ id, date, week, phase, type, steps, distance, duration, status?, activity?, from? }], adjustments: [{ kind: 'pace' | 'volume' | 'unwell', date, dismissed?, ... }] }` (see `lib/plan.js`, `lib/planAdapt.js`; done is computed from activities, never stored); `planHistory` → finished or stopped plans, with `ended` and `status`
   `units` → `'metric' | 'imperial'` display unit system (see `lib/format.js`)
   `lang` → `'fr' | 'en'` UI language, device language when unset (see `lib/i18n.js`)
   `prefs` → `{ name, autoPause, audio, recordScreen, workout, workouts }` display name and recording defaults (Settings page); `workout` is the custom workout template being edited, `workouts` the saved ones `[{ id, ...template }]`;

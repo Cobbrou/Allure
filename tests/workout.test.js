@@ -39,12 +39,12 @@ test('nextStep skips the current step; nothing moves while paused or after the e
   assert.equal(nextStep(rec, 40_000), rec);
 });
 
-test('startWorkout resolves pace targets from the VDOT, drops them without one', () => {
+test('startWorkout resolves pace targets from the VDOT, falls back to an RPE without one', () => {
   const p = trainingPaces(50);
   const w = startWorkout({ ...W, pace: 'threshold' }, 50);
   assert.deepEqual(w.steps[1].target, { pace: 'threshold', range: p.threshold });
   assert.equal(w.steps[0].target, undefined);
-  assert.equal(startWorkout({ ...W, pace: 'threshold' }, null).steps[1].target, undefined);
+  assert.deepEqual(startWorkout({ ...W, pace: 'threshold' }, null).steps[1].target, { rpe: 7 });
   // Flat step lists number their efforts.
   for (const item of LIBRARY) {
     const live = startWorkout(item, 50);

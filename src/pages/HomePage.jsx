@@ -4,7 +4,7 @@ import ImportButton from '../components/ImportButton.jsx';
 import { workoutSummary } from '../components/WorkoutEditor.jsx';
 import { distUnit, fmtDay, fmtDist, fmtDuration } from '../lib/format.js';
 import { raceTime } from '../lib/paces.js';
-import { GOALS, isHard, matchSessions, nextSession, PHASES, SESSION_TYPES, sessionState, weekDays, weekOf } from '../lib/plan.js';
+import { GOALS, isHard, matchSessions, nextSession, PHASES, planLabel, PROGRAMS, SESSION_TYPES, sessionState, weekDays, weekOf } from '../lib/plan.js';
 import { proposals } from '../lib/planAdapt.js';
 import { startOfDay } from '../lib/stats.js';
 import { LIBRARY } from '../lib/workout.js';
@@ -36,13 +36,13 @@ export default function HomePage({ plan, activities, onImport, onEndPlan }) {
 function PlanHub({ plan, activities, onEndPlan }) {
   const now = Date.now(), today = startOfDay(now);
   const runs = useMemo(() => runDays(activities), [activities]);
-  const goal = GOALS[plan.goal.kind];
+  const goal = GOALS[plan.goal.kind]; // undefined for a program (no race)
   const weeks = plan.weeks.length;
   const week = Math.min(Math.max(weekOf(plan, now), 1), weeks);
   const matches = useMemo(() => matchSessions(plan, activities ?? []), [plan, activities]);
   const next = nextSession(plan, now, matches);
   const adjust = useMemo(() => proposals(plan, activities ?? [], matches, Date.now()).length, [plan, activities, matches]);
-  const daysLeft = Math.round((plan.goal.date - today) / DAY);
+  const daysLeft = plan.goal.date && Math.round((plan.goal.date - today) / DAY); // null: open-ended
   const thisWeek = plan.sessions.filter((s) => s.week === week);
   const planned = thisWeek.reduce((n, s) => n + s.distance, 0);
   const strip = weekDays(plan, week);
@@ -52,7 +52,9 @@ function PlanHub({ plan, activities, onEndPlan }) {
     return (
       <section className="card plan-today">
         <h2>{t('Plan terminé 🎉')}</h2>
-        <p className="muted">{t('{goal} le {day}. Bravo pour ces {n} semaines.', { goal: goal.label, day: fmtDay(plan.goal.date), n: weeks })}</p>
+        <p className="muted">{goal
+          ? t('{goal} le {day}. Bravo pour ces {n} semaines.', { goal: goal.label, day: fmtDay(plan.goal.date), n: weeks })
+          : t('{goal} : programme terminé. Bravo pour ces {n} semaines.', { goal: planLabel(plan), n: weeks })}</p>
         <button type="button" onClick={onEndPlan}>{t('Choisir un nouvel objectif')}</button>
       </section>
     );
@@ -61,10 +63,12 @@ function PlanHub({ plan, activities, onEndPlan }) {
     <>
       <section className="card plan-race">
         <div>
-          <b>{goal.label}</b>
-          <span className="muted">{fmtDay(plan.goal.date, 'numeric')} · {t('objectif estimé {time}', { time: fmtDuration(raceTime(plan.vdot, goal.m)) })}</span>
+          <b>{planLabel(plan)}</b>
+          <span className="muted">{goal
+            ? <>{fmtDay(plan.goal.date, 'numeric')} · {t('objectif estimé {time}', { time: fmtDuration(raceTime(plan.vdot, goal.m)) })}</>
+            : plan.goal.date ? t('Fin le {day}', { day: fmtDay(plan.goal.date, 'numeric') }) : t('Par blocs de 4 semaines')}</span>
         </div>
-        <span className="plan-countdown">{daysLeft ? t('J-{n}', { n: daysLeft }) : t('Jour J')}</span>
+        {goal && <span className="plan-countdown">{daysLeft ? t('J-{n}', { n: daysLeft }) : t('Jour J')}</span>}
       </section>
       {adjust > 0 && (
         <section className="card">
@@ -76,7 +80,7 @@ function PlanHub({ plan, activities, onEndPlan }) {
       )}
       {next && <TodayCard session={next} today={today} />}
       <section className="card">
-        <h3>{t('Semaine {n} / {total}', { n: week, total: weeks })} <span className="muted small-label">{PHASES[plan.weeks[week - 1].phase].label}</span></h3>
+        <h3>{plan.goal.date ? t('Semaine {n} / {total}', { n: week, total: weeks }) : t('Semaine {n}', { n: week })} <span className="muted small-label">{PHASES[plan.weeks[week - 1].phase].label}</span></h3>
         <ol className="week-strip">
           {strip.map((d) => {
             const s = thisWeek.find((x) => x.date === d);
@@ -131,6 +135,14 @@ function NoPlan({ activities, onImport }) {
             <ImportButton onImport={onImport} className="button ghost small">{t('+ Importer')}</ImportButton>
           </>
         )}
+      </section>
+      <section className="card">
+        <h3>{t('Sans course en vue')}</h3>
+        <div className="pick-list">
+          <a className="button" href="#/plan/new/start"><span>{PROGRAMS.start.label}</span><small>{t('Course et marche jusqu’à 30 min')}</small></a>
+          <a className="button" href="#/plan/new/return"><span>{PROGRAMS.return.label}</span><small>{t('Après une pause ou une blessure')}</small></a>
+          <a className="button" href="#/plan/new/fitness"><span>{PROGRAMS.fitness.label}</span><small>{t('Entretien, par blocs de 4 semaines')}</small></a>
+        </div>
       </section>
       <section className="card">
         <h3>{t('Séances à la carte')}</h3>

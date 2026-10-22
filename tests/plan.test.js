@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { trainingPaces } from '../src/lib/paces.js';
-import { changeDays, compliance, defaultRaceDate, estimate, GOALS, generatePlan, hardNextTo, isHard, makeUp, makeUpSlot, matchSessions, moveSession, nextSession, planDefaults, planPhases, planWeeks, qualityDays, sessionState, sessionsOn, weekDays, weekOf, weeklyVolumes } from '../src/lib/plan.js';
+import { BREAKS, changeDays, compliance, defaultRaceDate, estimate, extendPlan, fitnessVolumes, GOALS, generatePlan, hardNextTo, isHard, isRace, LADDER, makeUp, makeUpSlot, matchSessions, moveSession, nextSession, planDefaults, planPhases, planWeeks, qualityDays, returnVolumes, sessionState, sessionsOn, startWeeks, weekDays, weekOf, weeklyVolumes } from '../src/lib/plan.js';
 
 const DAY = 86400e3;
 const START = new Date(2026, 10, 2).getTime(); // a Monday
@@ -219,4 +219,89 @@ test('nextSession skips sessions done or skipped', () => {
   const [a, b] = plan.sessions;
   assert.equal(nextSession(plan, a.date, new Map([[a.id, {}]])), b);
   assert.equal(nextSession({ ...plan, sessions: [{ ...a, status: 'skipped' }, b] }, a.date), b);
+});
+
+// Programs without a race (M6)
+
+const START_IN = { goal: 'start', start: START, days: [1, 3, 6], longDay: 1, runs: 3, weeks: 9, level: 0 };
+
+test('start running: walk / run rungs up to 30 min non-stop, RPE targets only', () => {
+  const plan = generatePlan(START_IN, 1);
+  assert.equal(isRace(plan), false);
+  assert.equal(plan.weeks.length, 9);
+  assert.equal(plan.sessions.length, 27);
+  assert.equal(plan.goal.date, START + (9 * 7 - 1) * DAY);
+  const runs = (s) => s.steps.filter((x) => x.kind === 'work').map((x) => x.value);
+  assert.deepEqual(runs(plan.sessions[0]), Array(8).fill(60));
+  assert.deepEqual(runs(plan.sessions.at(-1)), [1800]);
+  assert.equal(plan.sessions[0].type, 'walkRun');
+  assert.equal(plan.sessions.at(-1).type, 'easy');
+  for (const s of plan.sessions) {
+    assert.ok(s.steps.every((x) => x.target.rpe && !x.target.pace), 'effort only');
+    assert.ok(s.duration > 0 && s.distance > 0);
+  }
+  // Running time never goes down from one week to the next.
+  const total = (w) => runs(plan.sessions.find((s) => s.week === w)).reduce((a, b) => a + b, 0);
+  for (let w = 2; w <= 9; w++) assert.ok(total(w) >= total(w - 1) || runs(plan.sessions.find((s) => s.week === w)).length < runs(plan.sessions.find((s) => s.week === w - 1)).length, `week ${w}`);
+  assert.equal(startWeeks(0), 11);
+  assert.equal(startWeeks(6), 6);
+  assert.equal(LADDER.at(-1)[0], 1800);
+});
+
+test('return to running: lower start and slower ramp after an injury, back to the old volume', () => {
+  const base = { weekly: 40000, runs: 4, breakLength: 'medium', injury: false };
+  const v = returnVolumes(base);
+  assert.equal(v[0].volume, 16000); // 40 % of 40 km
+  assert.ok(v.length >= 4 && v.length <= 16);
+  assert.equal(Math.max(...v.map((w) => w.volume)), 40000);
+  let last = v[0].volume;
+  for (const w of v.slice(1)) {
+    if (w.kind === 'build') { assert.ok(w.volume <= last * 1.1 + 500, `${w.volume} after ${last}`); last = w.volume; }
+    else assert.ok(w.volume < last);
+  }
+  const hurt = returnVolumes({ ...base, injury: true });
+  assert.ok(hurt[0].volume < v[0].volume);
+  assert.equal(hurt[2].kind, 'recovery');
+  assert.ok(Math.max(...hurt.map((w) => w.volume)) <= 40000);
+  assert.ok(returnVolumes({ ...base, breakLength: 'short' })[0].volume > returnVolumes({ ...base, breakLength: 'long' })[0].volume);
+  assert.equal(returnVolumes({ ...base, weekly: 0, runs: 3 }).length, 4); // nothing before: 4 weeks at the floor
+  assert.deepEqual(Object.keys(BREAKS), ['short', 'medium', 'long']);
+
+  const plan = generatePlan({ goal: 'return', start: START, days: [0, 2, 4, 6], longDay: 0, runs: 4, ...base, vdot: 45 }, 1);
+  assert.equal(plan.weeks.length, v.length);
+  assert.ok(plan.sessions.every((s) => s.steps.every((x) => !x.target?.pace)), 'no paces');
+  assert.ok(plan.sessions.every((s) => !isHard(s.type) || s.type === 'long'));
+  assert.ok(plan.sessions.filter((s) => s.week >= v.length - 1).some((s) => s.steps.length > 1), 'strides at the end');
+});
+
+test('fitness: steady 4-week blocks, rolled on by extendPlan', () => {
+  const inp = { goal: 'fitness', start: START, days: [0, 2, 4], longDay: 0, runs: 3, weekly: 30000, experience: 'intermediate', vdot: 45 };
+  assert.deepEqual(fitnessVolumes(inp, 8).map((w) => w.volume), [30000, 30000, 30000, 24000, 30000, 30000, 30000, 24000]);
+  const plan = generatePlan(inp, 1);
+  assert.equal(plan.goal.date, null);
+  assert.equal(plan.weeks.length, 4);
+  assert.equal(extendPlan(plan, START + 7 * DAY), plan); // week 2: nothing to add
+  const longer = extendPlan(plan, START + 2 * 7 * DAY); // week 3
+  assert.equal(longer.weeks.length, 8);
+  assert.deepEqual(longer.sessions.slice(0, plan.sessions.length), plan.sessions);
+  assert.deepEqual(longer.weeks.slice(4).map((w) => w.phase), Array(4).fill('build')); // the next block switches kind of quality
+  assert.equal(extendPlan(plan, START + 30 * 7 * DAY).weeks.length, 36); // back in week 31: caught up, 2 weeks or more ahead
+  for (const s of longer.sessions) assert.ok(!hardNextTo(longer, s.date, s) || !isHard(s.type) || s.type === 'long', s.id);
+  // Without a VDOT: estimates at an easy jog, paces resolved as RPE when the session starts.
+  const noFit = generatePlan({ ...inp, vdot: null }, 1);
+  assert.ok(noFit.sessions.every((s) => s.duration > 0));
+});
+
+test('estimate: walking and no VDOT', () => {
+  assert.deepEqual(estimate([{ kind: 'walk', type: 'time', value: 600 }], null), { distance: 1000, duration: 600 });
+  assert.deepEqual(estimate([{ kind: 'work', type: 'dist', value: 1000, target: { pace: 'threshold' } }], null), { distance: 1000, duration: 450 });
+});
+
+test('planDefaults: volume before a break and its length', () => {
+  const now = START + 100 * DAY;
+  const metas = Array.from({ length: 12 }, (_, i) => ({ id: String(i), sport: 'run', date: START + i * 2 * DAY + 3600e3, distance: 10000, movingTime: 3000 }));
+  const d = planDefaults(metas, now);
+  assert.equal(d.breakLength, 'medium'); // last run 78 days ago
+  assert.ok(d.before > 0);
+  assert.equal(d.weekly, 0);
 });
