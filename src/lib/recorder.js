@@ -24,9 +24,11 @@ const HR_ALERT_EVERY = 60000; // ms between two high heart rate alerts
 
 /**
  * route: optional route to follow, from followRoute(). liveSegs: from liveSegments(). safety: check-ins on.
- * workout: optional structured workout, from startWorkout().
+ * workout: optional structured workout, from startWorkout(). indoor: no GPS (treadmill, home
+ * trainer, gym): the clock and the sensors only, `points` holding sensor samples without a position.
  */
-export function startRecording({ sport = 'run', autoPause = true, audio = true, voice = VOICE, safety = false, route = null, liveSegs = [], workout = null }, now) {
+export function startRecording({ sport = 'run', autoPause = true, audio = true, voice = VOICE, safety = false, route = null, liveSegs = [], workout = null, indoor = false }, now) {
+  if (indoor) return { sport, indoor, autoPause: false, audio, voice, safety: false, route: null, workout, liveSegs: [], laps: [], start: now, points: [], distance: 0, active: 0, runningSince: now, paused: false, autoPaused: false, lastMove: now, pos: null };
   return { sport, autoPause, audio, voice, safety, route, workout, follow: null, followAlt: route && { f: null, r: null, f0: null, r0: null }, liveSegs, seg: null, laps: [], start: now, points: [], distance: 0, active: 0, runningSince: now, paused: false, autoPaused: false, lastMove: now, pos: null };
 }
 
@@ -144,6 +146,10 @@ export function addFix(rec, fix) {
  */
 export function addReadings(rec, data, now) {
   const prev = rec.points.at(-1);
+  if (rec.indoor) { // a sample without a position, every SENSOR_EVERY while there are readings
+    if (!Object.keys(data).length || rec.paused || now - (prev?.time ?? 0) < SENSOR_EVERY) return rec;
+    return { ...rec, points: [...rec.points, { time: now, ...data }] };
+  }
   if (!Object.keys(data).length || rec.paused || !prev || now - prev.time < SENSOR_EVERY) return rec;
   return { ...rec, points: [...rec.points, point({ lat: prev.lat, lon: prev.lon, ele: prev.ele, time: now, ...data })] };
 }

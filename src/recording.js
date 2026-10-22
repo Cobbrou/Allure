@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createActivity } from './lib/activity.js';
+import { createActivity, indoorActivity } from './lib/activity.js';
 import { clearDraft, loadDraft, saveActivities, saveDraft } from './lib/db.js';
 import { correctElevation } from './lib/elevation.js';
 import { followCue } from './lib/follow.js';
@@ -15,6 +15,7 @@ import { nextStep, paceCueText, savedWorkout, stepCue, workoutStep } from './lib
 
 const SAVE_EVERY = 5000; // ms between draft autosaves
 const FRESH = 5000; // ms a sensor reading stays valid for the next GPS fix
+const MIN_INDOOR = 60; // s: an indoor recording shorter than this is not saved
 
 /**
  * Live recording state, held by App so it survives tab switches.
@@ -86,11 +87,11 @@ export function useRecording({ onSensorLost } = {}) {
 
   useEffect(() => { loadDraft().then((d) => d && !ref.current && set(recover(d)), () => {}); }, []);
 
-  const active = rec != null;
+  const active = rec != null, indoor = !!rec?.indoor;
   useEffect(() => {
     if (!active) return;
     setGpsError(null);
-    const stop = watchPosition((fix) => {
+    const stop = indoor ? () => {} : watchPosition((fix) => {
       setGpsError(null);
       const data = fresh();
       update((r) => addFix(r, { ...fix, ...data }));
@@ -103,7 +104,7 @@ export function useRecording({ onSensorLost } = {}) {
     }, 1000);
     const release = keepAwake();
     return () => { stop(); clearInterval(timer); release(); };
-  }, [active, update]);
+  }, [active, indoor, update]);
 
   return {
     rec,
@@ -125,11 +126,16 @@ export function useRecording({ onSensorLost } = {}) {
     /** Saves the activity and returns its id, or null if the track is too short. */
     // The draft stays stored until the activity is saved, so waiting on the DEM loses nothing.
     finish: () => (finishing.current ??= (async () => {
-      const r = ref.current;
-      if (r.points.length < 2) return null;
-      const points = await correctElevation(r.points);
-      const act = createActivity({ sport: r.sport, points, source: 'record', laps: lapStarts(r) });
-      if (r.workout) act.meta.workout = savedWorkout(r, Date.now());
+      const r = ref.current, now = Date.now();
+      let act;
+      if (r.indoor) {
+        if (elapsed(r, now) < MIN_INDOOR) return null;
+        act = indoorActivity({ sport: r.sport, samples: [{ time: r.start }, ...r.points, { time: now }], movingTime: Math.round(elapsed(r, now)), source: 'record' });
+      } else {
+        if (r.points.length < 2) return null;
+        act = createActivity({ sport: r.sport, points: await correctElevation(r.points), source: 'record', laps: lapStarts(r) });
+      }
+      if (r.workout) act.meta.workout = savedWorkout(r, now);
       await saveActivities([act]);
       hideLock();
       haptic('success');

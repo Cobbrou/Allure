@@ -6,6 +6,7 @@
 
 import { t } from './i18n.js';
 import { currentVdot, trainingPaces } from './paces.js';
+import { isRun } from './sports.js';
 import { startOfDay, startOfWeek, weeklyDistance } from './stats.js';
 
 /**
@@ -415,15 +416,15 @@ export function extendPlan(plan, now) {
 export function planDefaults(metas, now = Date.now()) {
   const fit = currentVdot(metas, now);
   const weekly = Math.round(weeklyDistance(metas, now, 5, 'run').slice(0, 4).reduce((s, w) => s + w.distance, 0) / 4);
-  const recent = metas.filter((a) => a.sport === 'run' && a.date > now - 56 * 86400e3 && a.date <= now);
+  const recent = metas.filter((a) => isRun(a.sport) && a.date > now - 56 * 86400e3 && a.date <= now);
   const count = Array(7).fill(0);
   for (const a of recent) count[new Date(a.date).getDay()]++;
   const busiest = [0, 1, 2, 3, 4, 5, 6].filter((d) => count[d]).sort((a, b) => count[b] - count[a] || a - b);
   const days = [...new Set([0, ...busiest, 2, 4])].slice(0, 3).sort((a, b) => a - b); // Sunday long run, then Tue / Thu
-  const weeksRun = new Set(metas.filter((a) => a.sport === 'run').map((a) => startOfWeek(a.date))).size;
+  const weeksRun = new Set(metas.filter((a) => isRun(a.sport)).map((a) => startOfWeek(a.date))).size;
   const experience = weeksRun < 8 || weekly < 15000 ? 'beginner' : weekly > 45000 ? 'advanced' : 'intermediate';
   // Before a break: the 4 weeks up to the last run, and how long ago it was.
-  const lastRun = Math.max(0, ...metas.filter((a) => a.sport === 'run' && a.date <= now).map((a) => a.date));
+  const lastRun = Math.max(0, ...metas.filter((a) => isRun(a.sport) && a.date <= now).map((a) => a.date));
   const before = lastRun ? Math.round(weeklyDistance(metas, addDays(lastRun, 7), 5, 'run').slice(0, 4).reduce((s, w) => s + w.distance, 0) / 4) : 0;
   const off = (now - lastRun) / DAY;
   const breakLength = off < 30 ? 'short' : off < 90 ? 'medium' : 'long';
@@ -476,7 +477,7 @@ export function matchSessions(plan, metas) {
     if (a) { out.set(s.id, a); used.add(a.id); }
   }
   const open = plan.sessions.filter((s) => s.activity === undefined && !s.status);
-  const runs = metas.filter((a) => a.sport === 'run' && !used.has(a.id)).sort((a, b) => a.date - b.date);
+  const runs = metas.filter((a) => isRun(a.sport) && !used.has(a.id)).sort((a, b) => a.date - b.date);
   for (const off of [0, 1]) {
     for (const a of runs) {
       if (used.has(a.id)) continue;
@@ -569,7 +570,7 @@ export function evenSplits(time, distance, step) {
 
 /** Median start hour of the runs of the last 60 days (local time), 8 without any. */
 export function usualHour(metas, now = Date.now()) {
-  const h = metas.filter((a) => a.sport === 'run' && a.date > now - 60 * DAY && a.date <= now).map((a) => new Date(a.date).getHours()).sort((a, b) => a - b);
+  const h = metas.filter((a) => isRun(a.sport) && a.date > now - 60 * DAY && a.date <= now).map((a) => new Date(a.date).getHours()).sort((a, b) => a - b);
   return h.length ? h[Math.floor(h.length / 2)] : 8;
 }
 

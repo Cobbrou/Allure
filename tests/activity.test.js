@@ -33,6 +33,15 @@ test('sport helpers', () => {
   assert.equal(sportFromGpxType('Hiking'), 'hike');
   assert.equal(sportFromGpxType('running'), 'run');
   assert.equal(sportFromGpxType(), 'run');
+  assert.equal(sportFromGpxType('trail_running'), 'trail');
+  assert.equal(sportFromGpxType('VirtualRide'), 'virtual');
+  assert.equal(sportFromGpxType('BIKING_STATIONARY'), 'virtual');
+  assert.equal(sportFromGpxType('EBikeRide'), 'ebike');
+  assert.equal(sportFromGpxType('GravelRide'), 'gravel');
+  assert.equal(sportFromGpxType('AlpineSki'), 'ski');
+  assert.equal(sportFromGpxType('STRENGTH_TRAINING'), 'workout');
+  assert.equal(sportFromGpxType('YOGA'), 'yoga');
+  assert.equal(sportFromGpxType('RUNNING_TREADMILL'), 'run');
   assert.deepEqual(effort('ride', 120), { label: 'Vitesse moyenne', short: 'Vitesse', value: '30.0', unit: 'km/h' });
   assert.equal(effort('run', 300).value, '5:00');
   assert.deepEqual([effort('swim', 1200).value, effort('swim', 1200).unit], ['2:00', '/100m']);

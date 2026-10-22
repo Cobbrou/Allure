@@ -3,6 +3,18 @@
 Lightweight decision log. Newest first. Each entry: context, decision, consequences.
 Open questions sit at the bottom until decided.
 
+## 2026-10-22: Sport variants count as a base sport
+
+**Context**: phase 7 adds trail run, gravel, e-bike, virtual ride, ski, workout and yoga.
+Features keyed on `sport === 'run'` (plans, intervals) or `'ride'` (sensors, calories) would
+ignore the variants, and a separate list per feature would drift.
+**Decision**: a sport may name a `base` (`SPORTS.trail.base = 'run'`); `isRun` / `baseSport`
+serve the features that should include variants. Records, best efforts and VDOT stay road runs
+only (a trail time says little about road fitness). `indoor` sports record without GPS by
+default; an indoor recording stores sensor samples without a position and saves through
+`indoorActivity`, like a track-less import.
+**Consequences**: no DB change. Totals and filters stay per exact sport.
+
 ## 2026-10-22: Plan extras: FIT workouts with fitsdk, reminders with local notifications
 
 **Context**: M7 exports a planned session to a watch and reminds of sessions on the phone.

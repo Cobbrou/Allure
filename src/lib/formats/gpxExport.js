@@ -1,4 +1,4 @@
-const GPX_TYPES = { run: 'running', ride: 'cycling', hike: 'hiking', walk: 'walking', swim: 'swimming' };
+const GPX_TYPES = { run: 'running', ride: 'cycling', hike: 'hiking', walk: 'walking', swim: 'swimming', trail: 'trail_running', gravel: 'gravel_cycling', ebike: 'e_biking', virtual: 'virtual_ride', ski: 'skiing', workout: 'workout', yoga: 'yoga' };
 
 const esc = (s) => String(s).replace(/[<>&"']/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' })[c]);
 const iso = (ms) => new Date(ms).toISOString();

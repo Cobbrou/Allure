@@ -1,4 +1,4 @@
-import { locale, t } from './i18n.js';
+import { locale, t, tn } from './i18n.js';
 import { ACCENT, alpha, GOOD, shade, STORY } from '../theme.js';
 import { computeSplits } from './analyze.js';
 import { distUnit, elevUnit, fmtDist, fmtDuration, fmtElev, shortUnit } from './format.js';
@@ -272,21 +272,27 @@ function drawSplits(s, act) {
   text(s, `${fmtDist(act.distance)} ${distUnit()} · ${st.time[1]} · ${st.effort[1]}`, 90, 1800, '700 44px', STORY.TEXT);
 }
 
-/**
- * End-of-plan recap story (lib/plan.js planRecap) on the dark background: plan name and
- * dates, total distance, sessions run, time, fitness before / after, race result.
- */
-export function drawPlanRecap(canvas, recap, { title, from, to }) {
+/** A recap story's background and header: ALLURE, the title and a subtitle line. */
+function recapStart(canvas, title, subtitle) {
   canvas.width = W;
   canvas.height = H;
   const g = canvas.getContext('2d');
   drawDark(g);
   const s = { g, overlay: false, muted: STORY.TICK };
-  const day = (d) => new Date(d).toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' });
   text(s, 'ALLURE', 90, 150, '800 40px', ACCENT);
   g.font = `800 76px ${FONT}`;
   text(s, truncate(g, title, W - 180), 90, 250, '800 76px', STORY.TEXT);
-  text(s, `${day(from)} → ${day(to)}`, 90, 310, '500 36px', s.muted);
+  text(s, subtitle, 90, 310, '500 36px', s.muted);
+  return s;
+}
+
+/**
+ * End-of-plan recap story (lib/plan.js planRecap) on the dark background: plan name and
+ * dates, total distance, sessions run, time, fitness before / after, race result.
+ */
+export function drawPlanRecap(canvas, recap, { title, from, to }) {
+  const day = (d) => new Date(d).toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' });
+  const s = recapStart(canvas, title, `${day(from)} → ${day(to)}`);
   distance(s, recap, 90, 900);
   statGrid(s, [
     [t('SÉANCES'), `${recap.done} / ${recap.planned}`],
@@ -295,4 +301,22 @@ export function drawPlanRecap(canvas, recap, { title, from, to }) {
     ...(recap.vdotFrom && recap.vdotTo && recap.vdotTo !== recap.vdotFrom ? [['VDOT', `${recap.vdotFrom} → ${recap.vdotTo}`]] : []),
     ...(recap.race ? [[t('COURSE'), fmtDuration(recap.race.time)]] : []),
   ], 1080);
+}
+
+/** Year-in-sport story (lib/stats.js yearRecap): totals, active days, busiest month, top sports. */
+export function drawYearRecap(canvas, r) {
+  const s = recapStart(canvas, t('Mon année {year}', { year: r.year }), tn(r.count, '{n} activité', '{n} activités'));
+  distance(s, r, 90, 900);
+  const month = r.month == null ? '—' : new Date(r.year, r.month, 1).toLocaleDateString(locale(), { month: 'long' });
+  statGrid(s, [
+    [t('TEMPS'), fmtDuration(r.movingTime)],
+    [t('JOURS ACTIFS'), String(r.days)],
+    [t('D+'), `${fmtElev(r.gain)} ${elevUnit()}`],
+    [t('MOIS LE PLUS ACTIF'), month],
+  ], 1080);
+  r.sports.slice(0, 4).forEach((x, i) => {
+    const sp = SPORTS[x.sport] ?? SPORTS.run;
+    text(s, `${sp.icon} ${sp.label}`, 90, 1460 + i * 90, '600 44px', STORY.TEXT);
+    text(s, x.distance ? `${fmtDist(x.distance, 0)} ${distUnit()}` : fmtDuration(x.movingTime), W - 90, 1460 + i * 90, '700 44px', s.muted, 'right');
+  });
 }

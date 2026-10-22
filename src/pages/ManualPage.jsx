@@ -17,7 +17,7 @@ const num = (v) => Math.max(0, parseNum(v) || 0);
  */
 export default function ManualPage({ id, activities, onSaved }) {
   // Only manual activities: saving this form over a GPS one would replace its preview and records.
-  const old = id && activities?.find((a) => a.id === id && a.source === 'manual');
+  const old = id && activities?.find((a) => a.id === id && !a.preview?.length); // typed in or recorded indoors
   if (id && !old) {
     return (
       <>
@@ -61,8 +61,9 @@ function Form({ old, onSaved }) {
         id: old?.id, name: name.trim(), sport, date: when, movingTime,
         distance: num(dist) * len, gain: swim || !gain ? null : num(gain) * elevLen(), rpe,
       });
-      // Editing keeps what the numbers don't cover: description, notes, gear.
-      if (old) await updateActivity({ ...old, ...meta, rpe: rpe || undefined });
+      // Editing keeps what the numbers don't cover: description, notes, gear, heart rate, source.
+      const { date: d, movingTime: m, distance: km, avgPace, gain: g } = meta;
+      if (old) await updateActivity({ ...old, name: meta.name, sport, date: d, movingTime: m, distance: km, avgPace, gain: g, rpe: rpe || undefined });
       else await saveActivities([{ meta, points }]);
       await onSaved(meta.id);
     } finally { setBusy(false); }

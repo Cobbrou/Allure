@@ -14,7 +14,7 @@ import { distUnit, elevUnit, fmtDist, fmtDuration, fmtElev } from '../lib/format
 import { personalRecords, predictRaces } from '../lib/records.js';
 import { leaderboard } from '../lib/segments.js';
 import { SPORTS, sportOptions as sportOptionsOf } from '../lib/sports.js';
-import { periodStart, totals, weeklyDistance } from '../lib/stats.js';
+import { periodStart, totals, weeklyDistance, weekStreak, yearRecap } from '../lib/stats.js';
 
 const PERIODS = [
   { id: 'week', get label() { return t('Semaine'); } },
@@ -63,6 +63,7 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
         )}
         {activities && <Goals goals={goals} activities={list} onSave={onSaveGoals} />}
         {activities && <Achievements activities={list} />}
+        {list.length > 0 && <StreakAndYear activities={list} />}
 
         {list.length > 0 && (
           <>
@@ -93,6 +94,44 @@ export default function ProfilePage({ activities, hr, ftp, name, goals, onSaveGo
         {activities && <Gear gears={gears} activities={list} onSave={onSaveGears} />}
       </main>
     </>
+  );
+}
+
+/** Weekly streak, and the year in sport with a story to share. */
+function StreakAndYear({ activities }) {
+  const streak = useMemo(() => weekStreak(activities), [activities]);
+  const years = useMemo(() => [...new Set(activities.map((a) => new Date(a.date).getFullYear()))].sort((a, b) => b - a), [activities]);
+  const [year, setYear] = useState(years[0]);
+  const r = useMemo(() => yearRecap(activities, year), [activities, year]);
+  const [busy, setBusy] = useState(false);
+  const share = async () => {
+    setBusy(true);
+    try {
+      const [{ drawYearRecap }, { shareFile }] = await Promise.all([import('../lib/story.js'), import('../lib/share.js')]);
+      const c = document.createElement('canvas');
+      drawYearRecap(c, r);
+      await shareFile(await new Promise((ok) => c.toBlob(ok, 'image/png')), `allure-${year}.png`);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <section className="card">
+      <h3>{t('Série')} <span className="muted small-label">{t('record : {n}', { n: tn(streak.best, '{n} semaine', '{n} semaines') })}</span></h3>
+      <p className="streak"><b>{streak.current}</b> {tn(streak.current, 'semaine d’affilée avec au moins une activité', 'semaines d’affilée avec au moins une activité')}</p>
+      <h3 className="year-head">
+        {years.length > 1
+          ? <select value={year} onChange={(e) => setYear(Number(e.target.value))} aria-label={t('Année')}>{years.map((y) => <option key={y} value={y}>{t('Mon année {year}', { year: y })}</option>)}</select>
+          : t('Mon année {year}', { year })}
+      </h3>
+      <div className="totals">
+        <div><span>{t('Activités')}</span><b>{r.count}</b></div>
+        <div><span>{t('Distance')}</span><b>{fmtDist(r.distance, 0)} <small>{distUnit()}</small></b></div>
+        <div><span>{t('Temps')}</span><b>{fmtDuration(r.movingTime)}</b></div>
+        <div><span>{t('Jours actifs')}</span><b>{r.days}</b></div>
+      </div>
+      <button type="button" className="ghost" disabled={busy} onClick={share}>{t('Partager mon année')}</button>
+    </section>
   );
 }
 

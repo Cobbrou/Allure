@@ -115,7 +115,7 @@ export async function importTasks(tasks, existing, onProgress = () => {}) {
 }
 
 // Health Connect exercise types Allure has a sport for (sportFromGpxType maps them).
-const HEALTH_SPORTS = /^(RUNNING|RUNNING_TREADMILL|BIKING|BIKING_STATIONARY|HIKING|WALKING|SWIMMING_OPEN_WATER|SWIMMING_POOL)$/;
+const HEALTH_SPORTS = /^(RUNNING|RUNNING_TREADMILL|BIKING|BIKING_STATIONARY|HIKING|WALKING|SWIMMING_OPEN_WATER|SWIMMING_POOL|SKIING|YOGA|STRENGTH_TRAINING|WEIGHTLIFTING|HIGH_INTENSITY_INTERVAL_TRAINING)$/;
 
 /**
  * Health Connect workouts (capacitor-health queryWorkouts) to import tasks, for the sports

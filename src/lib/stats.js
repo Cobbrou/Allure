@@ -104,3 +104,62 @@ export function trainingWeeks(metas, weeks, now = Date.now(), sport) {
 /** Weekday initials from the first day of the week ("L M M J V S D" / "S M T W T F S"); 2026-01-04 is a Sunday. */
 export const weekdayInitials = () =>
   Array.from({ length: 7 }, (_, i) => new Date(2026, 0, 4 + weekStart + i).toLocaleDateString(locale(), { weekday: 'narrow' }));
+
+/** Start of the week `n` weeks after the one starting at `start` (DST-proof). */
+const addWeeks = (start, n) => { const d = new Date(start); d.setDate(d.getDate() + 7 * n); return d.getTime(); };
+
+/**
+ * Weekly streak: weeks in a row with at least one activity, up to this week (a week without
+ * one yet doesn't break it until it is over), and the longest ever. { current, best }.
+ */
+export function weekStreak(metas, now = Date.now()) {
+  const weeks = new Set(metas.filter((a) => a.date <= now).map((a) => startOfWeek(a.date)));
+  let w = startOfWeek(now);
+  if (!weeks.has(w)) w = addWeeks(w, -1);
+  let current = 0;
+  for (; weeks.has(w); w = addWeeks(w, -1)) current++;
+  let best = 0;
+  for (const s of weeks) {
+    if (weeks.has(addWeeks(s, -1))) continue; // not the first week of a run
+    let n = 0;
+    for (let x = s; weeks.has(x); x = addWeeks(x, 1)) n++;
+    best = Math.max(best, n);
+  }
+  return { current, best };
+}
+
+/**
+ * A calendar year in sport: totals, active days, the busiest month (by moving time), the
+ * longest activity and totals per sport (most time first).
+ */
+export function yearRecap(metas, year) {
+  const list = metas.filter((a) => new Date(a.date).getFullYear() === year);
+  const months = Array(12).fill(0), sports = new Map();
+  for (const a of list) {
+    months[new Date(a.date).getMonth()] += a.movingTime ?? 0;
+    const s = sports.get(a.sport) ?? { sport: a.sport, count: 0, distance: 0, movingTime: 0 };
+    s.count++; s.distance += a.distance; s.movingTime += a.movingTime ?? 0;
+    sports.set(a.sport, s);
+  }
+  return {
+    year,
+    ...totals(list),
+    days: new Set(list.map((a) => startOfDay(a.date))).size,
+    month: list.length ? months.indexOf(Math.max(...months)) : null,
+    longest: list.reduce((b, a) => (!b || a.distance > b.distance ? a : b), null),
+    sports: [...sports.values()].sort((a, b) => b.movingTime - a.movingTime),
+  };
+}
+
+/**
+ * Activities matching a search: q (in the name, description or notes, case and accents
+ * ignored), sport, from / to (ms, to excluded), min / max distance (m).
+ */
+export function filterActivities(metas, { q = '', sport, from, to, min, max } = {}) {
+  const fold = (s) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+  const words = fold(q).split(/\s+/).filter(Boolean);
+  return metas.filter((a) => (!sport || a.sport === sport)
+    && !(from != null && a.date < from) && !(to != null && a.date >= to)
+    && !(min != null && a.distance < min) && !(max != null && a.distance > max)
+    && words.every((w) => fold(`${a.name} ${a.description ?? ''} ${a.notes ?? ''}`).includes(w)));
+}

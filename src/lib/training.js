@@ -3,6 +3,7 @@
 // loading tracks.
 
 import { t } from './i18n.js';
+import { baseSport, isRun } from './sports.js';
 
 export const DEFAULT_REST_HR = 60;
 export const DEFAULT_MAX_HR = 190;
@@ -111,10 +112,10 @@ export function calories({ sport, distance, movingTime, gain, avgPower }, weight
   if (!weight || !distance || !movingTime) return null;
   const km = distance / 1000, h = movingTime / 3600;
   const climb = weight * (gain ?? 0) * CLIMB_KCAL;
-  if (sport === 'run') return Math.round(weight * km + climb);
+  if (isRun(sport)) return Math.round(weight * km + climb);
   if (sport === 'walk' || sport === 'hike') return Math.round(weight * km * 0.6 + climb);
   // ponytail: MET from average speed (~4 at 16 km/h, ~8.5 at 25), no wind or drafting.
-  const met = sport === 'ride' ? Math.min(16, Math.max(4, (km / h) * 0.5 - 4)) : 7;
+  const met = baseSport(sport) === 'ride' ? Math.min(16, Math.max(4, (km / h) * 0.5 - 4)) : 7;
   return Math.round(met * weight * h);
 }
 

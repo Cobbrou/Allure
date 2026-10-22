@@ -107,8 +107,9 @@ test('healthTasks keeps the sports Allure has, with or without a route', () => {
     { workoutType: 'RUNNING_TREADMILL', route },
     { workoutType: 'BIKING' },
     { workoutType: 'YOGA', route },
+    { workoutType: 'DANCING' },
   ]);
-  assert.deepEqual(tasks.map((t) => t.label), ['Footing', 'RUNNING_TREADMILL', 'BIKING']);
+  assert.deepEqual(tasks.map((t) => t.label), ['Footing', 'RUNNING_TREADMILL', 'BIKING', 'YOGA']);
 });
 
 test('fromHealthWorkout maps the route and takes the nearest heart rate within 10 s', () => {

@@ -6,6 +6,7 @@ import { distUnit, fmtDay, fmtDist, fmtDuration } from '../lib/format.js';
 import { raceTime } from '../lib/paces.js';
 import { GOALS, isHard, matchSessions, nextSession, PHASES, planLabel, planRecap, PROGRAMS, SESSION_TYPES, sessionState, weekDays, weekOf } from '../lib/plan.js';
 import { proposals } from '../lib/planAdapt.js';
+import { isRun } from '../lib/sports.js';
 import { startOfDay } from '../lib/stats.js';
 import { LIBRARY } from '../lib/workout.js';
 
@@ -14,7 +15,7 @@ const DAY = 86400e3;
 /** Runs per day start, to mark plan days done. */
 function runDays(activities) {
   const out = new Map();
-  for (const a of activities ?? []) if (a.sport === 'run') out.set(startOfDay(a.date), (out.get(startOfDay(a.date)) ?? 0) + a.distance);
+  for (const a of activities ?? []) if (isRun(a.sport)) out.set(startOfDay(a.date), (out.get(startOfDay(a.date)) ?? 0) + a.distance);
   return out;
 }
 
@@ -161,7 +162,7 @@ function NoPlan({ activities, onImport }) {
         <div className="goal-grid">
           {Object.entries(GOALS).map(([id, g]) => <a key={id} className="button ghost" href={`#/plan/new/${id}`}>{g.label}</a>)}
         </div>
-        {activities && !activities.some((a) => a.sport === 'run') && (
+        {activities && !activities.some((a) => isRun(a.sport)) && (
           <>
             <p className="muted small-label">{t('Importe tes sorties : ton historique pré-remplit le plan.')}</p>
             <ImportButton onImport={onImport} className="button ghost small">{t('+ Importer')}</ImportButton>

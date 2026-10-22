@@ -5,6 +5,7 @@
 
 import { currentVdot, trainingPaces } from './paces.js';
 import { addDays, estimate, GOALS, isHard, MIN_RUN, planWeeks, PROGRAMS, rebuild, round500, step, weekOf, weeklyVolumes } from './plan.js';
+import { isRun } from './sports.js';
 import { startOfDay } from './stats.js';
 
 const DAY = 86400e3;
@@ -78,7 +79,7 @@ export function volumeProposal(plan, metas, now) {
   const from = weekStart(plan, week - 3), to = weekStart(plan, week);
   if (lastDate(plan, ['volume', 'unwell']) >= from) return null;
   const planned = plan.sessions.filter((s) => s.week >= week - 3 && s.week < week && s.status !== 'moved').reduce((n, s) => n + s.distance, 0);
-  const done = metas.filter((a) => a.sport === 'run' && a.date >= from && a.date < to).reduce((n, a) => n + a.distance, 0);
+  const done = metas.filter((a) => isRun(a.sport) && a.date >= from && a.date < to).reduce((n, a) => n + a.distance, 0);
   if (!planned) return null;
   const ratio = done / planned;
   const next = plan.weeks[week], current = plan.weeks[week - 1];

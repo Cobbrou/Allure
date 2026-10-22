@@ -2,7 +2,7 @@ import { t } from '../lib/i18n.js';
 import { useEffect, useMemo, useState } from 'react';
 import { fmtDuration, fmtLength } from '../lib/format.js';
 import { detectIntervals, lapIntervals } from '../lib/intervals.js';
-import { effort } from '../lib/sports.js';
+import { effort, isRun } from '../lib/sports.js';
 import { planVsDone } from '../lib/workout.js';
 import { fmtRange } from './WorkoutEditor.jsx';
 import Segmented from './Segmented.jsx';
@@ -19,7 +19,7 @@ const SOURCES = [
 export default function Intervals({ meta, track, range }) {
   // A workout recorded in Allure: one lap per step, with its target.
   const laps = useMemo(() => planVsDone(lapIntervals(track, meta.laps), meta.workout), [track, meta.laps, meta.workout]);
-  const auto = useMemo(() => (meta.sport === 'run' ? detectIntervals(track) : []), [track, meta.sport]);
+  const auto = useMemo(() => (isRun(meta.sport) ? detectIntervals(track) : []), [track, meta.sport]);
   const [source, setSource] = useState(laps.length ? 'laps' : 'auto');
   const [sel, setSel] = useState(null);
   useEffect(() => () => range.current(null), [range]);

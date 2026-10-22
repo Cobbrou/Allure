@@ -20,7 +20,7 @@ import { alertText, checkIn, smsUrl } from '../lib/safety.js';
 import { hasBluetooth } from '../lib/sensors.js';
 import { currentVdot, trainingPaces } from '../lib/paces.js';
 import { PROGRAMS, sessionsOn, sessionWorkout, SESSION_TYPES } from '../lib/plan.js';
-import { SPORTS } from '../lib/sports.js';
+import { baseSport, SPORTS } from '../lib/sports.js';
 import { rpeLabel } from '../lib/training.js';
 import { DEFAULT_WORKOUT, INTENSITIES, LIBRARY, livePace, startWorkout, stepLabel, stepStatus } from '../lib/workout.js';
 
@@ -61,6 +61,8 @@ function Setup({ recording, contacts, routes, routeId, workoutId, plan, segments
   const [autoPause, setAutoPause] = useState(prefs?.autoPause ?? true);
   const [audio, setAudio] = useState(prefs?.audio ?? true);
   const [safety, setSafety] = useState(true);
+  const [indoor, setIndoor] = useState(!!SPORTS[sport].indoor); // no GPS: treadmill, home trainer, gym
+  const pickSport = (sid) => { setSport(sid); setIndoor(!!SPORTS[sid].indoor); setSheet(null); };
   // A plan session: the one asked for, else today's (the race is run free).
   const session = workoutId?.startsWith('plan:')
     ? plan?.sessions.find((s) => `plan:${s.id}` === workoutId)
@@ -81,7 +83,7 @@ function Setup({ recording, contacts, routes, routeId, workoutId, plan, segments
   const [gps, setGps] = useState(null); // last fix { lat, lon, accuracy… } | { error }
 
   // Warm up the GPS so the first recorded fix is precise. An error keeps the last position on the map.
-  useEffect(() => watchPosition(setGps, (error) => setGps((g) => ({ ...g, error }))), []);
+  useEffect(() => (indoor ? undefined : watchPosition(setGps, (error) => setGps((g) => ({ ...g, error })))), [indoor]);
 
   const [count, setCount] = useState(null); // 3, 2, 1 before the clock starts
   const go = () => {
@@ -96,7 +98,7 @@ function Setup({ recording, contacts, routes, routeId, workoutId, plan, segments
     if (sport !== prefs?.sport) onSavePrefs({ ...prefs, sport });
     if (audio) { hush(); speak(t('Enregistrement démarré.')); }
     const full = route && (await getRoute(route.id)); // the list holds metas, not points
-    recording.start({ sport, autoPause, audio, voice: prefs?.voice, safety: safety && contacts.length > 0, route: full && followRoute(full, joinLegs(full.legs)), liveSegs: liveSegments(segments, sport, activities), workout: withWorkout ? startWorkout(workout, fit?.vdot) : null });
+    recording.start({ sport, indoor, autoPause, audio, voice: prefs?.voice, safety: safety && contacts.length > 0, route: !indoor && full && followRoute(full, joinLegs(full.legs)), liveSegs: indoor ? [] : liveSegments(segments, sport, activities), workout: withWorkout ? startWorkout(workout, fit?.vdot) : null });
   };
   useEffect(() => {
     if (count == null) return;
@@ -110,38 +112,39 @@ function Setup({ recording, contacts, routes, routeId, workoutId, plan, segments
   }, [count]);
 
   const [sheet, setSheet] = useState(null); // 'sport' | 'route' picker or 'workout' editor open
-  const pickRoute = (r) => { setRouteSel(r?.id ?? ''); if (r) setSport(r.sport); setSheet(null); };
+  const pickRoute = (r) => { setRouteSel(r?.id ?? ''); if (r) pickSport(r.sport); setSheet(null); };
   const gpsLevel = gps?.error ? 'bad' : !gps ? '' : gps.accuracy <= 20 ? 'good' : 'warn';
   const zero = { rec: { sport, distance: 0, points: [] }, time: 0 }; // the live fields, before the start
 
   return (
     <main className="record-setup">
       <div className="setup-stage">
-        <div className="setup-map">{gps?.lat != null && <LiveMap points={[]} pos={gps} />}</div>
+        <div className="setup-map">{!indoor && gps?.lat != null && <LiveMap points={[]} pos={gps} />}</div>
         <header className="setup-top">
           <h1>{t('Enregistrer|onglet')}</h1>
           <div className="setup-toggles">
-            <button type="button" className={`round ${autoPause ? 'on' : ''}`} aria-pressed={autoPause} aria-label={t('Pause automatique')} title={t('Pause automatique')} onClick={() => setAutoPause(!autoPause)}><Icon name="pause" /></button>
+            <button type="button" className={`round ${indoor ? 'on' : ''}`} aria-pressed={indoor} aria-label={t('En salle, sans GPS')} title={t('En salle, sans GPS')} onClick={() => setIndoor(!indoor)}><Icon name="home" /></button>
+            <button type="button" className={`round ${autoPause ? 'on' : ''}`} aria-pressed={autoPause} disabled={indoor} aria-label={t('Pause automatique')} title={t('Pause automatique')} onClick={() => setAutoPause(!autoPause)}><Icon name="pause" /></button>
             <button type="button" className={`round ${audio ? 'on' : ''}`} aria-pressed={audio} aria-label={t('Annonces vocales')} title={t('Annonces vocales')} onClick={() => setAudio(!audio)}><Icon name="volume" /></button>
             <a className="round" href="#/manual" aria-label={t('Ajouter une activité manuelle')} title={t('Ajouter une activité manuelle')}><Icon name="edit" /></a>
             <button type="button" className="round" aria-label={t("Personnaliser l'écran")} title={t("Personnaliser l'écran")} onClick={() => onEditScreen(sport)}><Icon name="layout" /></button>
           </div>
         </header>
         <div className="setup-pills">
-          {contacts.length > 0
+          {indoor ? null : contacts.length > 0
             ? <button type="button" className={`pill ${safety ? 'on' : ''}`} aria-pressed={safety} onClick={() => setSafety(!safety)}><Icon name={safety ? 'shieldCheck' : 'shieldAlert'} />{t('Alerte si je reste immobile')}</button>
             : <a className="pill warn" href="#/settings"><Icon name="shieldAlert" />{t("Contact d'urgence non configuré")}</a>}
           <button type="button" className={`pill ${withWorkout ? 'on' : ''}`} onClick={() => setSheet('workout')}>
             <Icon name="timer" />{withWorkout ? workout.name ?? workoutSummary(workout) : t('Séance')}
           </button>
           {hasBluetooth() && <SensorButton recording={recording} kind="hr" />}
-          {hasBluetooth() && sport === 'ride' && <SensorButton recording={recording} kind="cadence" />}
-          {hasBluetooth() && sport === 'ride' && <SensorButton recording={recording} kind="power" />}
+          {hasBluetooth() && baseSport(sport) === 'ride' && <SensorButton recording={recording} kind="cadence" />}
+          {hasBluetooth() && baseSport(sport) === 'ride' && <SensorButton recording={recording} kind="power" />}
         </div>
         <section className="telemetry">
-          <p className={`gps-banner ${gpsLevel}`} role="status">
-            <Icon name="signal" />
-            {gps?.error ?? (gps ? t(gpsLevel === 'good' ? 'Signal GPS prêt · précision {dist}' : 'Signal GPS faible · précision {dist}', { dist: fmtLength(gps.accuracy) }) : t('Recherche du GPS…'))}
+          <p className={`gps-banner ${indoor ? 'good' : gpsLevel}`} role="status">
+            <Icon name={indoor ? 'home' : 'signal'} />
+            {indoor ? t('En salle : chrono et capteurs, sans GPS') : gps?.error ?? (gps ? t(gpsLevel === 'good' ? 'Signal GPS prêt · précision {dist}' : 'Signal GPS faible · précision {dist}', { dist: fmtLength(gps.accuracy) }) : t('Recherche du GPS…'))}
           </p>
           <div className="telemetry-grid">
             {['time', 'avg', 'distance'].map((f) => <StatMetric key={f} {...FIELDS[f].get(zero)} size="lg" />)}
@@ -155,7 +158,7 @@ function Setup({ recording, contacts, routes, routeId, workoutId, plan, segments
           <span className="dock-label">{SPORTS[sport].label}</span>
         </button>
         <button type="button" className="dock-go" onClick={go} aria-label={t('GO')}><Icon name="play" /></button>
-        <button type="button" className="dock-side" onClick={() => setSheet('route')}>
+        <button type="button" className="dock-side" onClick={() => setSheet('route')} disabled={indoor}>
           <span className="dock-round"><Icon name="route" /></span>
           <span className="dock-label">{route ? <><i className="dot" />{route.name}</> : t('Itinéraire')}</span>
         </button>
@@ -163,7 +166,7 @@ function Setup({ recording, contacts, routes, routeId, workoutId, plan, segments
       <BottomSheet open={sheet === 'sport'} onClose={() => setSheet(null)} title={t('Sport')}>
         <div className="pick-list">
           {Object.entries(SPORTS).map(([sid, s]) => (
-            <button key={sid} type="button" className={sid === sport ? 'on' : ''} aria-pressed={sid === sport} onClick={() => { setSport(sid); setSheet(null); }}>
+            <button key={sid} type="button" className={sid === sport ? 'on' : ''} aria-pressed={sid === sport} onClick={() => pickSport(sid)}>
               <Icon name={sid} />{s.label}
             </button>
           ))}
@@ -232,8 +235,9 @@ function Setup({ recording, contacts, routes, routeId, workoutId, plan, segments
 }
 
 /** layout: { map, hero, fields } from layoutFor(). */
-function Live({ recording, contacts, layout, maxHr, onSaved }) {
+function Live({ recording, contacts, layout: saved, maxHr, onSaved }) {
   const { rec, gpsError } = recording;
+  const layout = rec.indoor ? { ...saved, map: false } : saved;
   const [now, setNow] = useState(Date.now);
   const [tooShort, setTooShort] = useState(false);
   const [saving, setSaving] = useState(false);

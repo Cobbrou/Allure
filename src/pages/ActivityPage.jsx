@@ -25,6 +25,7 @@ import { defaultGear, GEAR_KINDS, gearFor } from '../lib/gear.js';
 import { SPORTS, splitSize as splitSizeOf } from '../lib/sports.js';
 import { compliance, matchSessions, SESSION_TYPES } from '../lib/plan.js';
 import { rpeLabel } from '../lib/training.js';
+import { fmtWeather, weatherAt } from '../lib/weather.js';
 import { toGpx } from '../lib/formats/gpxExport.js';
 import { hidePrivate } from '../lib/privacy.js';
 import { safeName, shareFile } from '../lib/share.js';
@@ -149,6 +150,7 @@ export default function ActivityPage({ id, activities, plan, hr, ftp, weight, zo
             <p>{SPORTS[act.sport]?.label} · {fmtDate(act.date)}{gear && ` · ${GEAR_KINDS[gear.kind].icon} ${gear.name}`}</p>
           </div>
         </div>
+        <WeatherLine meta={data.meta} start={hasTrack && data.points[0]} onSave={save} />
         {act.description && <p className="description">{act.description}</p>}
         {act.notes && <p className="description notes"><b>{t('Notes privées')} · </b>{act.notes}</p>}
         {planned && <PlanSession session={planned} meta={data.meta} onRpe={(rpe) => save({ rpe })} />}
@@ -251,7 +253,7 @@ function EditForm({ meta, gears, onSave, onDelete, onCrop, onFixElevation, onWat
       <label className="switch"><input type="checkbox" checked={noRecords} onChange={(e) => setNoRecords(e.target.checked)} />{t('Exclure des records')}</label>
       {onCrop
         ? <button type="button" className="ghost" onClick={onCrop}>{t('Recadrer le début ou la fin')}</button>
-        : meta.source === 'manual' && <a className="button ghost" href={`#/manual/${meta.id}`}>{t('Modifier la date, la durée ou la distance')}</a>}
+        : !meta.preview?.length && <a className="button ghost" href={`#/manual/${meta.id}`}>{t('Modifier la date, la durée ou la distance')}</a>}
       {/* <div>, not <label>: a tap on the hint must not run the action. */}
       {onFixElevation && (
         <div className="field">
@@ -348,5 +350,28 @@ function PlanSession({ session: s, meta, onRpe }) {
         </>
       )}
     </section>
+  );
+}
+
+/** Weather at the start, stored on the activity once fetched (Open-Meteo, on a tap). */
+function WeatherLine({ meta, start, onSave }) {
+  const [state, setState] = useState(null); // null | 'busy' | error message
+  if (meta.weather) return <p className="weather muted">{fmtWeather(meta.weather)}</p>;
+  if (!start) return null;
+  const add = async () => {
+    setState('busy');
+    try {
+      const w = await weatherAt(start.lat, start.lon, start.time ?? meta.date);
+      if (!w) throw new Error();
+      await onSave({ weather: w });
+    } catch {
+      setState(t('Météo indisponible.'));
+    }
+  };
+  return (
+    <p className="weather">
+      <button type="button" className="ghost small" disabled={state === 'busy'} onClick={add}>{state === 'busy' ? t('Chargement…') : t('Ajouter la météo')}</button>
+      {state && state !== 'busy' && <span className="muted small-label"> {state}</span>}
+    </p>
   );
 }

@@ -12,6 +12,7 @@ import { personalRecords } from '../lib/records.js';
 import { safeName, shareFile } from '../lib/share.js';
 import { changeDays, compliance, evenSplits, GOALS, hardNextTo, isHard, isRace, makeUp, makeUpSlot, matchSessions, moveSession, PHASES, planDefaults, planLabel, SESSION_TYPES, sessionState, sessionWorkout, usualHour, weekDays, weekOf } from '../lib/plan.js';
 import { earliestRace, holdVolume, logAdjustment, proposals, RAMPS, regenerate, setVdot, unwell } from '../lib/planAdapt.js';
+import { isRun } from '../lib/sports.js';
 import { startOfDay } from '../lib/stats.js';
 import { rpeLabel } from '../lib/training.js';
 import { back } from '../router.js';
@@ -249,7 +250,7 @@ function SessionView({ plan, session: s, matches, activities, onSave }) {
   const canMove = state === 'planned' && s.type !== 'race';
   // Runs around the session no other session took, to link by hand.
   const taken = new Set([...matches.values()].map((x) => x.id));
-  const free = !a && s.date <= today ? activities.filter((x) => x.sport === 'run' && !taken.has(x.id) && Math.abs(x.date - s.date) < 4 * DAY) : [];
+  const free = !a && s.date <= today ? activities.filter((x) => isRun(x.sport) && !taken.has(x.id) && Math.abs(x.date - s.date) < 4 * DAY) : [];
   return (
     <>
       <TopBar title={SESSION_TYPES[s.type].label} to="/plan" />
@@ -397,7 +398,7 @@ function HeatCard({ session: s, activities, onPatch }) {
   const check = async () => {
     setState('busy');
     try {
-      const last = activities.find((a) => a.sport === 'run' && a.preview?.length);
+      const last = activities.find((a) => isRun(a.sport) && a.preview?.length);
       const pos = last ? { lon: last.preview[0][0], lat: last.preview[0][1] } : await (await import('../lib/location.js')).currentPosition();
       if (!pos) throw new Error(t('Position inconnue.'));
       const { forecast, hourAt } = await import('../lib/weather.js');

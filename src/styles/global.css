@@ -174,7 +174,7 @@ button:focus-visible, .button:focus-within, a:focus-visible { outline: 2px solid
 .card h3 { font-size: var(--fs-base); margin-bottom: 12px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 
 /* Feed */
-.feed { display: grid; gap: 12px; padding-top: 12px; }
+.feed { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding-top: 12px; }
 .sport-icon { font-size: var(--fs-2xl); width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: var(--border); flex: none; }
 .route-preview { width: 100%; height: 130px; background: var(--bg); border-radius: var(--radius-md); }
 .route-preview polyline { fill: none; stroke: var(--accent); stroke-width: 0.8; stroke-linejoin: round; stroke-linecap: round; }
@@ -231,6 +231,16 @@ table.splits .pace { font-weight: 600; width: 56px; }
 .description { white-space: pre-line; line-height: 1.45; overflow-wrap: anywhere; }
 .description.notes { color: var(--muted); font-size: var(--fs-md); border-left: 2px solid var(--border-strong); padding-left: 10px; }
 .description.notes b { font-weight: 600; }
+.weather { margin: -4px 0 10px; font-size: var(--fs-md); }
+.streak { margin: 4px 0 14px; }
+.streak b { font-size: var(--fs-2xl); color: var(--accent-text); margin-right: 4px; }
+.year-head select { width: auto; font: inherit; }
+.feed-search { display: grid; gap: 8px; }
+.search-row { display: flex; gap: 8px; }
+.search-row input { flex: 1; min-width: 0; }
+.field-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.feed-search input, .feed-search select { min-width: 0; width: 100%; }
+.feed-search .small-label { display: flex; align-items: center; gap: 8px; margin: 0; }
 .edit fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .hr-settings { gap: 8px; }
 .hr-settings h3 { margin: 0; }

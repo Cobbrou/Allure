@@ -283,9 +283,13 @@ Activity details
 - [x] Crop an activity (trim start / end, e.g. a forgotten stop button)
 - [x] Manual activity entry (no GPS: gym, treadmill, pool): sport, start, duration, optional
       distance and D+, perceived exertion; Record setup → pencil, numbers editable afterwards
-- [ ] Indoor recording (timer + strap, no GPS)
-- [ ] More sport types: trail run, e-bike, gravel, virtual ride, ski, workout, yoga…
-- [ ] Weather at the start of the activity (Open-Meteo history, no key)
+- [x] Indoor recording (timer + strap, no GPS): Record setup → home toggle, on by default for
+      virtual rides, workouts and yoga; saved like a track-less import, numbers editable after
+- [x] More sport types: trail run, gravel, e-bike, virtual ride, ski, workout, yoga (`base`:
+      trail counts as a run for plans, rides for sensors and calories; records and VDOT stay
+      road runs). GPX / FIT / Health Connect types mapped
+- [x] Weather at the start of the activity (Open-Meteo forecast or archive, on a tap, stored
+      on the activity)
 
 Recording
 - [x] 3-2-1 countdown before the clock starts (spoken and buzzed; tap to start now, or cancel)
@@ -310,8 +314,8 @@ Training
       with spoken / haptic prompts, compare plan vs done (each step is a lap; the lap button
       skips a step). Pace targets, saved workouts and a library: phase 10, M2
 - [x] Training plans (5 km → marathon) generated from goals and current fitness (phase 10)
-- [ ] Weekly streaks and a year-in-sport recap (shareable story)
-- [ ] Feed search and filters (sport, date range, distance, name)
+- [x] Weekly streaks and a year-in-sport recap (shareable story), on Profile
+- [x] Feed search and filters (name, description and notes; sport, date range, distance)
 
 Production
 - [ ] Self-hosted or paid BRouter: the route builder depends on the public server (rate
